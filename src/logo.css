@@ -1,0 +1,23 @@
+.logo {
+  /* original logo styles */
+  width: 100px;
+  height: auto;
+}
+
+/* animation keyframes */
+@keyframes fire {
+  0% {
+    filter: brightness(100%);
+  }
+  50% {
+    filter: brightness(150%);
+  }
+  100% {
+    filter: brightness(100%);
+  }
+}
+
+/* fire animation */
+.logo.fire {
+  animation: fire 0.5s ease-in-out infinite;
+}

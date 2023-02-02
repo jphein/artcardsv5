@@ -1,0 +1,17 @@
+body {
+  background-color: black;
+  /* Set the background image */
+  background-image: url(./bg.jpg);
+  /* Set the background size */
+  background-size: cover; /* or contain, or a specific width and height */
+
+  /* Set the background repeat */
+  background-repeat: no-repeat; /* or repeat-x, repeat-y, or repeat */
+
+  /* Set the background position */
+  background-position: center; /* or a specific position like top left, bottom right */
+}
+.App {
+  font-family: sans-serif;
+  text-align: center;
+}
