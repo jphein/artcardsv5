@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "keywords": [],
+  "homepage": "https://jphein.github.io/artcardsv5",
   "main": "src/index.js",
   "dependencies": {
     "@cloudinary/react": "1.9.0",
@@ -13,11 +14,15 @@
     "react-spring-3d-carousel": "1.2.0",
     "uuid": "3.3.2"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
+  },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "eject": "react-scripts eject",
     "post-update": "yarn upgrade"
   },
