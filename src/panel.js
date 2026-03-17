@@ -55,6 +55,13 @@ const CardPanel = ({ onNavigate, onToggle }) => {
           setOpen(next);
           onToggle && onToggle(next);
         }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          if (!open) {
+            setOpen(true);
+            onToggle && onToggle(true);
+          }
+        }}
       >
         <span className="card-panel__toggle-arrow">
           {open ? "\u25BC" : "\u25B2"}
