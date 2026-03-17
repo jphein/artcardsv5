@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/artcardsv5/static/css/main.ab7b2dba.css",
+    "main.js": "/artcardsv5/static/js/main.8df72e28.js",
+    "static/media/bg.jpg": "/artcardsv5/static/media/bg.7213acd9a17d34b9e2dd.jpg",
+    "static/media/logo.png": "/artcardsv5/static/media/logo.9318273f60fedc88bc84.png",
+    "index.html": "/artcardsv5/index.html",
+    "main.ab7b2dba.css.map": "/artcardsv5/static/css/main.ab7b2dba.css.map",
+    "main.8df72e28.js.map": "/artcardsv5/static/js/main.8df72e28.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.ab7b2dba.css",
+    "static/js/main.8df72e28.js"
+  ]
+}
