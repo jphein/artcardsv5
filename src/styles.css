@@ -14,6 +14,72 @@ body {
 .App {
   font-family: sans-serif;
   text-align: center;
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Full-canvas sparkle overlay */
+.App::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1px 1px at 5% 8%, #ffe8a0 0%, transparent 100%),
+    radial-gradient(1px 1px at 12% 45%, #f0d875 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 22% 72%, #ffe8a0 0%, transparent 100%),
+    radial-gradient(1px 1px at 30% 20%, #c9a84c 0%, transparent 100%),
+    radial-gradient(1px 1px at 38% 88%, #f0d875 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 48% 35%, #ffe8a0 0%, transparent 100%),
+    radial-gradient(1px 1px at 55% 60%, #c9a84c 0%, transparent 100%),
+    radial-gradient(1px 1px at 62% 12%, #f0d875 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 70% 78%, #ffe8a0 0%, transparent 100%),
+    radial-gradient(1px 1px at 78% 42%, #c9a84c 0%, transparent 100%),
+    radial-gradient(1px 1px at 85% 90%, #f0d875 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 92% 25%, #ffe8a0 0%, transparent 100%),
+    radial-gradient(1px 1px at 97% 65%, #c9a84c 0%, transparent 100%),
+    radial-gradient(1px 1px at 15% 55%, #ffe8a0 0%, transparent 100%),
+    radial-gradient(1px 1px at 42% 10%, #f0d875 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 58% 92%, #ffe8a0 0%, transparent 100%),
+    radial-gradient(1px 1px at 88% 5%, #c9a84c 0%, transparent 100%),
+    radial-gradient(1px 1px at 33% 50%, #f0d875 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 75% 30%, #ffe8a0 0%, transparent 100%),
+    radial-gradient(1px 1px at 8% 82%, #c9a84c 0%, transparent 100%);
+  animation: canvas-sparkle 5s ease-in-out infinite;
+}
+
+.App::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1px 1px at 3% 30%, #ffe8a0 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 18% 15%, #c9a84c 0%, transparent 100%),
+    radial-gradient(1px 1px at 25% 62%, #f0d875 0%, transparent 100%),
+    radial-gradient(1px 1px at 35% 38%, #ffe8a0 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 45% 85%, #c9a84c 0%, transparent 100%),
+    radial-gradient(1px 1px at 52% 18%, #f0d875 0%, transparent 100%),
+    radial-gradient(1px 1px at 65% 48%, #ffe8a0 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 72% 7%, #c9a84c 0%, transparent 100%),
+    radial-gradient(1px 1px at 80% 55%, #f0d875 0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 72%, #ffe8a0 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 95% 40%, #c9a84c 0%, transparent 100%),
+    radial-gradient(1px 1px at 50% 50%, #f0d875 0%, transparent 100%),
+    radial-gradient(1px 1px at 28% 95%, #ffe8a0 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 68% 22%, #c9a84c 0%, transparent 100%),
+    radial-gradient(1px 1px at 82% 85%, #f0d875 0%, transparent 100%);
+  animation: canvas-sparkle 5s 2.5s ease-in-out infinite;
+}
+
+@keyframes canvas-sparkle {
+  0%, 100% { opacity: 0; }
+  15% { opacity: 0.5; }
+  35% { opacity: 0; }
+  60% { opacity: 0.4; }
+  80% { opacity: 0; }
 }
 
 .app-container:fullscreen,

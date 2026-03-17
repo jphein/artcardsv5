@@ -1,23 +1,112 @@
+.logo-container {
+  position: relative;
+  display: inline-block;
+  padding: 16px;
+}
+
+/* Subtle golden aura behind the logo */
+.logo-container::before {
+  content: "";
+  position: absolute;
+  inset: -10px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(240, 216, 117, 0.12) 0%,
+    rgba(201, 168, 76, 0.06) 40%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  z-index: 0;
+  animation: aura-pulse 4s ease-in-out infinite;
+}
+
 .logo {
-  /* original logo styles */
+  position: relative;
+  z-index: 1;
   width: 100px;
   height: auto;
+  filter:
+    drop-shadow(0 0 6px rgba(201, 168, 76, 0.3))
+    drop-shadow(0 0 20px rgba(240, 216, 117, 0.1));
+  transition: all 0.5s ease;
 }
 
-/* animation keyframes */
-@keyframes fire {
+/* Traveling gold shimmer across the logo */
+.logo::after {
+  content: "";
+}
+
+/* Hover: intensified golden glow */
+.logo:hover {
+  filter:
+    drop-shadow(0 0 8px rgba(240, 216, 117, 0.5))
+    drop-shadow(0 0 25px rgba(201, 168, 76, 0.3))
+    drop-shadow(0 0 50px rgba(166, 124, 0, 0.15));
+  transform: scale(1.03);
+}
+
+/* Fire animation with golden tint */
+.logo.fire {
+  animation: golden-fire 0.5s ease-in-out infinite;
+}
+
+/* Sparkle particles */
+.logo-container::after {
+  content: "";
+  position: absolute;
+  inset: -20px;
+  z-index: 2;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, #ffe8a0 0%, transparent 100%),
+    radial-gradient(1px 1px at 75% 15%, #f0d875 0%, transparent 100%),
+    radial-gradient(1px 1px at 45% 80%, #c9a84c 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 85% 65%, #ffe8a0 0%, transparent 100%),
+    radial-gradient(1px 1px at 10% 70%, #f0d875 0%, transparent 100%);
+  animation: sparkle 3s ease-in-out infinite;
+}
+
+@keyframes golden-fire {
   0% {
-    filter: brightness(100%);
+    filter:
+      brightness(100%)
+      drop-shadow(0 0 8px rgba(240, 216, 117, 0.4));
   }
   50% {
-    filter: brightness(150%);
+    filter:
+      brightness(130%)
+      drop-shadow(0 0 15px rgba(240, 216, 117, 0.7))
+      drop-shadow(0 0 30px rgba(201, 168, 76, 0.3));
   }
   100% {
-    filter: brightness(100%);
+    filter:
+      brightness(100%)
+      drop-shadow(0 0 8px rgba(240, 216, 117, 0.4));
   }
 }
 
-/* fire animation */
-.logo.fire {
-  animation: fire 0.5s ease-in-out infinite;
+@keyframes aura-pulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0;
+  }
+  70% {
+    opacity: 0.6;
+  }
 }
