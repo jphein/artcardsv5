@@ -1,77 +1,76 @@
-/* This is a React component that renders a carousel using the "react-spring-3d-carousel" library. The carousel slides are created by an array of objects, where each object contains a unique key generated using "uuidv4" and a content component "RandomImage". The component tracks the current slide, offset radius, and whether to show the navigation in its state. It also includes touch event handlers to allow for swipe navigation on mobile devices. The component allows for dynamic control over the slide position, offset radius and navigation display, by allowing the user to input values. */
-
 import React, { Component } from "react";
 import Carousel from "react-spring-3d-carousel";
 import uuidv4 from "uuid";
 import { config } from "react-spring";
 import RandomImage from "./random";
+import "./nav.css";
+
+const CLOUD_NAME = "dqm00mcjs";
+const TAG = "carousel";
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 const getTouches = (evt) => {
-  return (
-    evt.touches || evt.originalEvent.touches // browser API
-  );
+  return evt.touches || evt.originalEvent.touches;
 };
 
 export default class Example extends Component {
   state = {
     goToSlide: 1,
-    offsetRadius: 10,
-    showNavigation: true,
+    offsetRadius: 4,
+    showNavigation: false,
     enableSwipe: true,
-    config: config.slow
+    config: config.slow,
+    images: null,
+    flash: false
   };
 
-  slides = [
-    {
-      key: uuidv4(),
-      content: <RandomImage cloud_name="dqm00mcjs" tag="carousel" />
-    },
-    {
-      key: uuidv4(),
-      content: <RandomImage cloud_name="dqm00mcjs" tag="carousel" />
-    },
-    {
-      key: uuidv4(),
-      content: <RandomImage cloud_name="dqm00mcjs" tag="carousel" />
-    },
-    {
-      key: uuidv4(),
-      content: <RandomImage cloud_name="dqm00mcjs" tag="carousel" />
-    },
-    {
-      key: uuidv4(),
-      content: <RandomImage cloud_name="dqm00mcjs" tag="carousel" />
-    },
-    {
-      key: uuidv4(),
-      content: <RandomImage cloud_name="dqm00mcjs" tag="carousel" />
-    },
-    {
-      key: uuidv4(),
-      content: <RandomImage cloud_name="dqm00mcjs" tag="carousel" />
-    },
-    {
-      key: uuidv4(),
-      content: <RandomImage cloud_name="dqm00mcjs" tag="carousel" />
-    }
-  ].map((slide, index) => {
-    return { ...slide, onClick: () => this.setState({ goToSlide: index }) };
-  });
+  componentDidMount() {
+    window.addEventListener("keydown", this.handleKeyDown);
+    window.addEventListener("wheel", this.handleWheel, { passive: false });
+    this.fetchImages();
+  }
 
-  onChangeInput = (e) => {
-    this.setState({
-      [e.target.name]: parseInt(e.target.value, 10) || 0
-    });
+  componentWillUnmount() {
+    window.removeEventListener("keydown", this.handleKeyDown);
+    window.removeEventListener("wheel", this.handleWheel);
+  }
+
+  fetchImages = async () => {
+    const response = await fetch(
+      `https://res.cloudinary.com/${CLOUD_NAME}/image/list/${TAG}.json`
+    );
+    const data = await response.json();
+    const shuffled = shuffle(data.resources);
+    this.setState({ images: shuffled });
   };
+
+  getSlides() {
+    if (!this.state.images) return [];
+    return this.state.images.map((img, index) => ({
+      key: img.public_id,
+      content: (
+        <RandomImage
+          cloud_name={CLOUD_NAME}
+          public_id={img.public_id}
+          slideIndex={index}
+        />
+      ),
+      onClick: () => this.setState({ goToSlide: index })
+    }));
+  }
 
   handleTouchStart = (evt) => {
-    if (!this.state.enableSwipe) {
-      return;
-    }
-
+    if (!this.state.enableSwipe) return;
     const firstTouch = getTouches(evt)[0];
     this.setState({
-      ...this.state,
       xDown: firstTouch.clientX,
       yDown: firstTouch.clientY
     });
@@ -81,38 +80,27 @@ export default class Example extends Component {
     if (!this.state.enableSwipe || (!this.state.xDown && !this.state.yDown)) {
       return;
     }
-
     let xUp = evt.touches[0].clientX;
     let yUp = evt.touches[0].clientY;
-
     let xDiff = this.state.xDown - xUp;
     let yDiff = this.state.yDown - yUp;
     if (Math.abs(xDiff) > Math.abs(yDiff)) {
       if (xDiff > 0) {
-        /* left swipe */
-        this.setState({
-          goToSlide: this.state.goToSlide + 1,
-          xDown: null,
-          yDown: null
-        });
+        this.setState({ goToSlide: this.state.goToSlide + 1, xDown: null, yDown: null });
       } else {
-        /* right swipe */
-        this.setState({
-          goToSlide: this.state.goToSlide - 1,
-          xDown: null,
-          yDown: null
-        });
+        this.setState({ goToSlide: this.state.goToSlide - 1, xDown: null, yDown: null });
       }
     }
   };
 
-  componentDidMount() {
-    window.addEventListener("keydown", this.handleKeyDown);
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener("keydown", this.handleKeyDown);
-  }
+  handleWheel = (e) => {
+    e.preventDefault();
+    if (e.deltaY > 0) {
+      this.setState({ goToSlide: this.state.goToSlide + 1 });
+    } else if (e.deltaY < 0) {
+      this.setState({ goToSlide: this.state.goToSlide - 1 });
+    }
+  };
 
   handleKeyDown = (e) => {
     switch (e.keyCode) {
@@ -127,100 +115,46 @@ export default class Example extends Component {
     }
   };
 
+  moveLeft = () => {
+    this.setState({ goToSlide: this.state.goToSlide - 1 });
+  };
+
+  moveRight = () => {
+    this.setState({ goToSlide: this.state.goToSlide + 1 });
+  };
+
   render() {
+    const slides = this.getSlides();
+    if (slides.length === 0) return null;
+
     return (
       <div
-        style={{ width: "80%", height: "500px", margin: "0 auto" }}
+        className="carousel-wrapper"
         onTouchStart={this.handleTouchStart}
         onTouchMove={this.handleTouchMove}
       >
+        <div className={`carousel-flash ${this.state.flash ? "carousel-flash--active" : ""}`} />
         <Carousel
-          slides={this.slides}
+          slides={slides}
           goToSlide={this.state.goToSlide}
           offsetRadius={this.state.offsetRadius}
           showNavigation={this.state.showNavigation}
           animationConfig={this.state.config}
         />
-        <div
-          style={{
-            margin: "0 auto",
-            marginTop: "2rem",
-            width: "50%",
-            display: "flex",
-            justifyContent: "space-around"
-          }}
-        >
-          {/*         <div>
-            <label>Go to slide: </label>
-            <input name="goToSlide" onChange={this.onChangeInput} />
-          </div>
-          <div>
-            <label>Offset Radius: </label>
-            <input name="offsetRadius" onChange={this.onChangeInput} />
-          </div>
-          <div>
-            <label>Show navigation: </label>
-            <input
-              type="checkbox"
-              checked={this.state.showNavigation}
-              name="showNavigation"
-              onChange={(e) => {
-                this.setState({ showNavigation: e.target.checked });
-              }}
-            />
-          </div>
-          <div>
-            <label>Enable swipe: </label>
-            <input
-              type="checkbox"
-              checked={this.state.enableSwipe}
-              name="enableSwipe"
-              onChange={(e) => {
-                this.setState({ enableSwipe: e.target.checked });
-              }}
-            />
-          </div>
-          <div>
-            <button
-              onClick={() => {
-                this.setState({ config: config.gentle });
-              }}
-              disabled={this.state.config === config.gentle}
-            >
-              Gentle Transition
-            </button>
-          </div>
-          <div>
-            <button
-              onClick={() => {
-                this.setState({ config: config.slow });
-              }}
-              disabled={this.state.config === config.slow}
-            >
-              Slow Transition
-            </button>
-          </div>
-          <div>
-            <button
-              onClick={() => {
-                this.setState({ config: config.wobbly });
-              }}
-              disabled={this.state.config === config.wobbly}
-            >
-              Wobbly Transition
-            </button>
-          </div>
-          <div>
-            <button
-              onClick={() => {
-                this.setState({ config: config.stiff });
-              }}
-              disabled={this.state.config === config.stiff}
-            >
-              Stiff Transition
-            </button>
-            </div> */}
-        </div>
+        <button className="nav-btn nav-btn--left" onClick={this.moveLeft}>
+          <span className="nav-btn__corner nav-btn__corner--tl" />
+          <span className="nav-btn__corner nav-btn__corner--tr" />
+          <span className="nav-btn__corner nav-btn__corner--bl" />
+          <span className="nav-btn__corner nav-btn__corner--br" />
+          <span className="nav-btn__icon">{"\u276E"}</span>
+        </button>
+        <button className="nav-btn nav-btn--right" onClick={this.moveRight}>
+          <span className="nav-btn__corner nav-btn__corner--tl" />
+          <span className="nav-btn__corner nav-btn__corner--tr" />
+          <span className="nav-btn__corner nav-btn__corner--bl" />
+          <span className="nav-btn__corner nav-btn__corner--br" />
+          <span className="nav-btn__icon">{"\u276F"}</span>
+        </button>
       </div>
     );
   }

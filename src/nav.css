@@ -1,0 +1,255 @@
+.carousel-wrapper {
+  width: 80%;
+  height: 500px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* ─── Navigate-back Flash Overlay ─── */
+
+.carousel-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(240, 216, 117, 0.25) 0%,
+    rgba(201, 168, 76, 0.1) 40%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease-out;
+}
+
+.carousel-flash--active {
+  opacity: 1;
+  transition: opacity 0.05s ease-in;
+}
+
+/* ─── Ornate Navigation Buttons ─── */
+
+.nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  width: 60px;
+  height: 80px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+
+  /* Gold gradient body */
+  background:
+    linear-gradient(
+      160deg,
+      #2a1a00 0%,
+      #1a0f00 20%,
+      #2a1a00 40%,
+      #1a0f00 60%,
+      #2a1a00 80%,
+      #1a0f00 100%
+    );
+
+  /* Ornate gold border */
+  border: 2px solid;
+  border-image: linear-gradient(
+    180deg,
+    #f0d875 0%,
+    #c9a84c 25%,
+    #a67c00 50%,
+    #c9a84c 75%,
+    #f0d875 100%
+  ) 1;
+
+  /* Golden glow */
+  box-shadow:
+    0 0 15px rgba(201, 168, 76, 0.4),
+    0 0 30px rgba(201, 168, 76, 0.15),
+    inset 0 0 20px rgba(201, 168, 76, 0.1);
+
+  transition: all 0.3s ease;
+}
+
+.nav-btn--left {
+  left: 2%;
+}
+
+.nav-btn--right {
+  right: 2%;
+}
+
+/* ─── Corner Filigree Ornaments ─── */
+
+.nav-btn__corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+
+.nav-btn__corner::before,
+.nav-btn__corner::after {
+  content: "";
+  position: absolute;
+  background: linear-gradient(135deg, #f0d875, #a67c00);
+  border-radius: 50%;
+}
+
+.nav-btn__corner::before {
+  width: 6px;
+  height: 6px;
+  top: 0;
+  left: 0;
+}
+
+.nav-btn__corner::after {
+  width: 3px;
+  height: 3px;
+  top: 3px;
+  left: 3px;
+  background: linear-gradient(135deg, #ffe8a0, #c9a84c);
+}
+
+.nav-btn__corner--tl {
+  top: 4px;
+  left: 4px;
+}
+
+.nav-btn__corner--tr {
+  top: 4px;
+  right: 4px;
+  transform: scaleX(-1);
+}
+
+.nav-btn__corner--bl {
+  bottom: 4px;
+  left: 4px;
+  transform: scaleY(-1);
+}
+
+.nav-btn__corner--br {
+  bottom: 4px;
+  right: 4px;
+  transform: scale(-1, -1);
+}
+
+/* ─── Arrow Icon ─── */
+
+.nav-btn__icon {
+  font-size: 28px;
+  line-height: 1;
+  background: linear-gradient(
+    180deg,
+    #ffe8a0 0%,
+    #f0d875 30%,
+    #c9a84c 60%,
+    #a67c00 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 4px rgba(240, 216, 117, 0.6));
+  transition: all 0.3s ease;
+}
+
+/* ─── Hover: Magical Glow ─── */
+
+.nav-btn:hover {
+  background:
+    linear-gradient(
+      160deg,
+      #3a2800 0%,
+      #2a1a00 20%,
+      #3a2800 40%,
+      #2a1a00 60%,
+      #3a2800 80%,
+      #2a1a00 100%
+    );
+
+  box-shadow:
+    0 0 20px rgba(240, 216, 117, 0.5),
+    0 0 40px rgba(201, 168, 76, 0.3),
+    0 0 60px rgba(166, 124, 0, 0.15),
+    inset 0 0 25px rgba(240, 216, 117, 0.15);
+
+  border-image: linear-gradient(
+    180deg,
+    #ffe8a0 0%,
+    #f0d875 25%,
+    #c9a84c 50%,
+    #f0d875 75%,
+    #ffe8a0 100%
+  ) 1;
+}
+
+.nav-btn:hover .nav-btn__icon {
+  filter: drop-shadow(0 0 8px rgba(255, 232, 160, 0.9));
+  transform: scale(1.15);
+}
+
+.nav-btn:hover .nav-btn__corner::before {
+  box-shadow: 0 0 6px rgba(240, 216, 117, 0.8);
+}
+
+/* ─── Active: Press Effect ─── */
+
+.nav-btn:active {
+  transform: translateY(-50%) scale(0.95);
+  box-shadow:
+    0 0 10px rgba(240, 216, 117, 0.6),
+    0 0 25px rgba(201, 168, 76, 0.4),
+    inset 0 0 30px rgba(201, 168, 76, 0.2);
+}
+
+/* ─── Shimmer Animation ─── */
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.nav-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(240, 216, 117, 0.08) 45%,
+    rgba(255, 232, 160, 0.15) 50%,
+    rgba(240, 216, 117, 0.08) 55%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* ─── Decorative Top/Bottom Edge Lines ─── */
+
+.nav-btn::after {
+  content: "";
+  position: absolute;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  top: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #f0d875 30%,
+    #ffe8a0 50%,
+    #f0d875 70%,
+    transparent
+  );
+  box-shadow: 0 0 4px rgba(240, 216, 117, 0.5);
+}
