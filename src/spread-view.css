@@ -266,12 +266,22 @@
 /* ─── Active Cards Container ─── */
 
 .spread-view__cards {
+  min-height: 300px;
+  padding: 20px;
+}
+
+/* Positioned (non-freeform) spreads: absolute positioning container */
+.spread-view__cards--positioned {
+  position: relative;
+  height: 450px;
+}
+
+/* Freeform spread: flexbox grid layout */
+.spread-view__cards--freeform {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 24px;
-  min-height: 300px;
-  padding: 20px;
   flex-wrap: wrap;
 }
 
@@ -290,6 +300,14 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
+}
+
+/* Positioned card wrapper: absolute within the relative container */
+.spread-view__card-wrapper--positioned {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .spread-view__card-label {
@@ -462,4 +480,83 @@
   gap: 12px;
   padding: 10px 20px 4px;
   flex-wrap: wrap;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Card Dealing Entrance Animation
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── 1. Card Deal Keyframes & Class ─── */
+
+@keyframes cardDeal {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5) rotate(0deg);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    /* final position set by inline styles */
+  }
+}
+
+.spread-view__card--dealing {
+  animation: cardDeal 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* ─── 2. Golden Particle Burst on Card Land ─── */
+
+@keyframes cardLandBurst {
+  0% {
+    opacity: 0.8;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2);
+  }
+}
+
+.spread-view__card--dealt {
+  position: relative;
+}
+
+.spread-view__card--dealt::after {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(240, 216, 117, 0.3),
+    transparent 70%
+  );
+  animation: cardLandBurst 0.5s ease-out forwards;
+  pointer-events: none;
+}
+
+/* ─── 3. Shimmer Flash on Spread Type Change ─── */
+
+@keyframes typeFlash {
+  0% {
+    background-color: rgba(240, 216, 117, 0.15);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.spread-view__type-btn--flash {
+  animation: typeFlash 0.4s ease-out forwards;
+}
+
+/* ─── 4. Enhanced Card Hover Lift & Golden Glow ─── */
+
+.spread-view__card--active.spread-view__card--dealt:hover {
+  transform: translateY(-8px) scale(1.05);
+  box-shadow:
+    0 0 25px rgba(240, 216, 117, 0.6),
+    0 8px 30px rgba(0, 0, 0, 0.5);
 }
