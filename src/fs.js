@@ -5,6 +5,8 @@ import CardTable from "./card-table";
 import CardPanel from "./panel";
 import AuthButton from "./auth-button";
 import PhysicalCardsSeal from "./physical-cards";
+import Welcome from "./welcome";
+import HelpOverlay from "./help-overlay";
 
 const FullScreenButton = ({ autoFullscreen }) => {
   const appContainerRef = useRef(null);
@@ -71,6 +73,8 @@ const FullScreenButton = ({ autoFullscreen }) => {
           onDockDragEnd={() => setDockDragging(false)}
         />
         <PhysicalCardsSeal />
+        <Welcome />
+        <HelpOverlay />
         <div
           className="top-bar"
           style={{

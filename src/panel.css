@@ -98,26 +98,19 @@
   filter: drop-shadow(0 0 3px rgba(240, 216, 117, 0.5));
 }
 
-/* ─── Tray: Enchanted Dark Chamber ─── */
+/* ═══════════════════════════════════════════════════════
+   Tab Bar
+   ═══════════════════════════════════════════════════════ */
 
-.card-panel__tray {
+.card-panel__tabs {
   display: flex;
-  flex-direction: column;
-  gap: 0;
-  min-height: 160px;
-  max-height: 50vh;
-  padding: 16px 24px 20px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  position: relative;
   background:
-    radial-gradient(
-      ellipse at 50% 0%,
-      rgba(42, 26, 0, 0.5) 0%,
-      rgba(15, 10, 2, 0.85) 60%,
-      rgba(5, 3, 0, 0.95) 100%
+    linear-gradient(
+      180deg,
+      rgba(26, 15, 0, 0.95) 0%,
+      rgba(15, 10, 2, 0.98) 100%
     );
-  border-top: 2px solid;
+  border-top: 1px solid;
   border-image: linear-gradient(
     90deg,
     transparent 0%,
@@ -128,6 +121,128 @@
     #a67c00 85%,
     transparent 100%
   ) 1;
+  position: relative;
+}
+
+/* Shimmer line under the tab bar */
+.card-panel__tabs::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(166, 124, 0, 0.2) 20%,
+    rgba(240, 216, 117, 0.35) 50%,
+    rgba(166, 124, 0, 0.2) 80%,
+    transparent 100%
+  );
+}
+
+.card-panel__tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 8px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  color: #8a7340;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-family: sans-serif;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.card-panel__tab:hover {
+  color: #c9a84c;
+  background: rgba(42, 26, 0, 0.3);
+}
+
+.card-panel__tab--active {
+  color: #f0d875;
+  border-bottom-color: #f0d875;
+  background: rgba(42, 26, 0, 0.4);
+  text-shadow: 0 0 8px rgba(240, 216, 117, 0.4);
+}
+
+/* Active tab bottom glow */
+.card-panel__tab--active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: #f0d875;
+  box-shadow:
+    0 0 8px rgba(240, 216, 117, 0.6),
+    0 0 16px rgba(240, 216, 117, 0.3);
+  border-radius: 1px;
+}
+
+.card-panel__tab-icon {
+  font-size: 14px;
+  filter: drop-shadow(0 0 2px rgba(240, 216, 117, 0.3));
+  transition: filter 0.3s ease;
+}
+
+.card-panel__tab--active .card-panel__tab-icon {
+  filter: drop-shadow(0 0 6px rgba(240, 216, 117, 0.7));
+}
+
+.card-panel__tab-label {
+  font-size: 10px;
+}
+
+.card-panel__tab-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 8px;
+  min-width: 16px;
+  text-align: center;
+  background: rgba(201, 168, 76, 0.15);
+  color: #c9a84c;
+  border: 1px solid rgba(166, 124, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.card-panel__tab--active .card-panel__tab-badge {
+  background: rgba(240, 216, 117, 0.2);
+  color: #f0d875;
+  border-color: rgba(240, 216, 117, 0.4);
+  box-shadow: 0 0 6px rgba(240, 216, 117, 0.2);
+}
+
+/* ─── Tray: Enchanted Dark Chamber ─── */
+
+.card-panel__tray {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 140px;
+  max-height: 45vh;
+  padding: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(42, 26, 0, 0.5) 0%,
+      rgba(15, 10, 2, 0.85) 60%,
+      rgba(5, 3, 0, 0.95) 100%
+    );
   backdrop-filter: blur(16px);
   transition: background 0.3s ease, box-shadow 0.3s ease;
 }
@@ -216,6 +331,30 @@
     inset 0 0 80px rgba(201, 168, 76, 0.06);
 }
 
+/* ═══════════════════════════════════════════════════════
+   Tab Content
+   ═══════════════════════════════════════════════════════ */
+
+.card-panel__tab-content {
+  padding: 16px 24px 20px;
+  position: relative;
+  animation: tab-fade-in 0.25s ease both;
+}
+
+@keyframes tab-fade-in {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Hand Tab ─── */
+
+.card-panel__hand-scroll {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+}
+
 .card-panel__empty {
   color: #8a7340;
   font-size: 15px;
@@ -223,6 +362,21 @@
   user-select: none;
   letter-spacing: 0.5px;
   text-shadow: 0 0 8px rgba(138, 115, 64, 0.3);
+  text-align: center;
+  padding: 20px 0;
+}
+
+.card-panel__empty-arrow {
+  font-size: 20px;
+  color: #a67c00;
+  margin-bottom: 8px;
+  animation: empty-arrow-bounce 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px rgba(240, 216, 117, 0.4));
+}
+
+@keyframes empty-arrow-bounce {
+  0%, 100% { transform: translateY(0); opacity: 0.5; }
+  50% { transform: translateY(-6px); opacity: 1; }
 }
 
 /* ─── Card Slots: Enchanted Gold Thumbnails ─── */
@@ -324,13 +478,153 @@
     0 8px 20px rgba(0, 0, 0, 0.5);
 }
 
+/* Dreamscape card name overlay */
+
+.card-panel__card-name {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 4px 4px;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-align: center;
+  color: #e9d5ff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Spread Tab ─── */
+
+.card-panel__spread-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.card-panel__spread-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 14px;
+  background:
+    linear-gradient(
+      160deg,
+      rgba(26, 15, 0, 0.7) 0%,
+      rgba(35, 22, 0, 0.6) 50%,
+      rgba(26, 15, 0, 0.7) 100%
+    );
+  border: 1px solid rgba(166, 124, 0, 0.25);
+  border-radius: 6px;
+  cursor: pointer;
+  color: #8a7340;
+  transition: all 0.3s ease;
+  min-width: 90px;
+}
+
+.card-panel__spread-option:hover {
+  border-color: rgba(240, 216, 117, 0.4);
+  color: #c9a84c;
+  background:
+    linear-gradient(
+      160deg,
+      rgba(42, 26, 0, 0.7) 0%,
+      rgba(50, 32, 0, 0.6) 50%,
+      rgba(42, 26, 0, 0.7) 100%
+    );
+  box-shadow: 0 0 10px rgba(201, 168, 76, 0.15);
+}
+
+.card-panel__spread-option--active {
+  color: #f0d875;
+  border-color: #f0d875;
+  background:
+    linear-gradient(
+      160deg,
+      rgba(58, 40, 0, 0.7) 0%,
+      rgba(42, 26, 0, 0.8) 50%,
+      rgba(58, 40, 0, 0.7) 100%
+    );
+  box-shadow:
+    0 0 14px rgba(240, 216, 117, 0.3),
+    0 0 28px rgba(201, 168, 76, 0.1),
+    inset 0 0 10px rgba(240, 216, 117, 0.05);
+  text-shadow: 0 0 6px rgba(240, 216, 117, 0.4);
+}
+
+.card-panel__spread-option-name {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.card-panel__spread-option-count {
+  font-size: 9px;
+  opacity: 0.7;
+  letter-spacing: 0.3px;
+}
+
+.card-panel__spread-desc {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 0;
+  margin-bottom: 8px;
+}
+
+.card-panel__spread-desc-icon {
+  color: #f0d875;
+  font-size: 14px;
+  filter: drop-shadow(0 0 4px rgba(240, 216, 117, 0.5));
+}
+
+.card-panel__spread-desc-text {
+  color: #c9a84c;
+  font-size: 12px;
+  font-style: italic;
+  letter-spacing: 0.3px;
+  text-shadow: 0 0 4px rgba(201, 168, 76, 0.2);
+}
+
+.card-panel__spread-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.card-panel__spread-status-count {
+  color: #c9a84c;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.card-panel__spread-status-hint {
+  color: #8a7340;
+  font-size: 10px;
+  font-style: italic;
+}
+
 /* ─── View Spread: Enchanted Button ─── */
 
 .card-panel__spread-btn {
-  align-self: center;
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto;
   flex-shrink: 0;
   padding: 14px 28px;
-  margin-left: 8px;
   background:
     linear-gradient(
       160deg,
@@ -353,6 +647,11 @@
   transition: all 0.4s ease;
   position: relative;
   overflow: hidden;
+}
+
+.card-panel__spread-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 /* Shimmer sweep */
@@ -383,7 +682,7 @@
   pointer-events: none;
 }
 
-.card-panel__spread-btn:hover {
+.card-panel__spread-btn:hover:not(:disabled) {
   color: #ffe8a0;
   border-color: #f0d875;
   background:
@@ -402,7 +701,7 @@
   text-shadow: 0 0 10px rgba(240, 216, 117, 0.6);
 }
 
-.card-panel__spread-btn:active {
+.card-panel__spread-btn:active:not(:disabled) {
   transform: scale(0.97);
   box-shadow:
     0 0 10px rgba(240, 216, 117, 0.4),
@@ -425,7 +724,7 @@
   }
 }
 
-/* ─── Card Sections ─── */
+/* ─── Card Sections (legacy, kept for compatibility) ─── */
 
 .card-panel__section {
   position: relative;
@@ -553,27 +852,6 @@
   border: 1px solid rgba(124, 58, 237, 0.3);
 }
 
-/* Dreamscape card name overlay */
-
-.card-panel__card-name {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 16px 4px 4px;
-  font-size: 8px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  text-align: center;
-  color: #e9d5ff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
-  pointer-events: none;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 /* ─── Actions Row ─── */
 
 .card-panel__actions {
@@ -589,11 +867,6 @@
     rgba(166, 124, 0, 0.3) 65%,
     transparent 85%
   ) 1;
-}
-
-.card-panel__empty {
-  text-align: center;
-  padding: 20px 0;
 }
 
 /* ═══════════════════════════════════════════════════════

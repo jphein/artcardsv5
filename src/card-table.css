@@ -465,56 +465,132 @@
 }
 
 /* ═══════════════════════════════════════════════════════
-   Undealt Deck Pile — Click/tap to deal
+   Undealt Deck Pile — Premium magical deck
    ═══════════════════════════════════════════════════════ */
 
 .card-table__deck-pile {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -55%);
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
+  gap: 32px;
   z-index: 10;
-  animation: deck-pile-appear 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: deck-pile-appear 1s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
 @keyframes deck-pile-appear {
   0% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.6) translateY(30px);
+    transform: translate(-50%, -55%) scale(0.5) translateY(50px);
+    filter: blur(6px);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(-50%, -55%) scale(1.04) translateY(-5px);
+    filter: blur(0);
   }
   100% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1) translateY(0);
+    transform: translate(-50%, -55%) scale(1) translateY(0);
+    filter: blur(0);
   }
 }
 
-.card-table__deck-pile:hover .card-table__deck-stack {
-  transform: scale(1.05);
-  filter: drop-shadow(0 0 30px rgba(240, 216, 117, 0.5));
+/* ─── Magical Glow Under the Deck ─── */
+
+.card-table__deck-glow {
+  position: absolute;
+  top: 55%;
+  left: 50%;
+  transform: translate(-50%, 0);
+  width: 200px;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(201, 168, 76, 0.3) 0%,
+    rgba(166, 124, 0, 0.1) 40%,
+    transparent 70%
+  );
+  animation: deck-glow-breathe 3s ease-in-out infinite;
+  pointer-events: none;
 }
+
+.card-table__deck-pile--hovered .card-table__deck-glow {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(240, 216, 117, 0.45) 0%,
+    rgba(201, 168, 76, 0.2) 40%,
+    transparent 70%
+  );
+}
+
+@keyframes deck-glow-breathe {
+  0%, 100% {
+    opacity: 0.6;
+    transform: translate(-50%, 0) scaleX(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, 0) scaleX(1.1);
+  }
+}
+
+/* ─── Deck Stack Container ─── */
 
 .card-table__deck-stack {
   position: relative;
-  width: 180px;
-  height: 260px;
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  filter: drop-shadow(0 0 20px rgba(201, 168, 76, 0.3));
-  animation: deck-breathe 3s ease-in-out infinite;
+  width: 190px;
+  height: 270px;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+              filter 0.5s ease;
+  perspective: 800px;
+  transform-style: preserve-3d;
+  /* Subtle 3D tilt to show thickness */
+  transform: rotateX(8deg) rotateY(-3deg);
 }
 
-@keyframes deck-breathe {
-  0%, 100% {
-    filter: drop-shadow(0 0 20px rgba(201, 168, 76, 0.3));
-  }
-  50% {
-    filter: drop-shadow(0 0 35px rgba(240, 216, 117, 0.5));
-  }
+.card-table__deck-pile--hovered .card-table__deck-stack {
+  transform: rotateX(12deg) rotateY(-5deg) scale(1.04);
+  filter: drop-shadow(0 0 35px rgba(240, 216, 117, 0.4));
 }
+
+/* ─── Deck Edge (visible spine from 3D tilt) ─── */
+
+.card-table__deck-edge {
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%) rotateX(-90deg);
+  transform-origin: bottom center;
+  width: 158px;
+  border-radius: 0 0 4px 4px;
+  background: linear-gradient(
+    180deg,
+    #2a1800 0%,
+    #1a0f00 30%,
+    #3d2600 50%,
+    #1a0f00 70%,
+    #0f0a02 100%
+  );
+  /* Repeating thin lines to simulate individual card edges */
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(201, 168, 76, 0.08) 0px,
+    transparent 1px,
+    transparent 3px
+  );
+  border-left: 1px solid rgba(166, 124, 0, 0.3);
+  border-right: 1px solid rgba(166, 124, 0, 0.3);
+  border-bottom: 1px solid rgba(166, 124, 0, 0.4);
+  pointer-events: none;
+}
+
+/* ─── Individual Deck Card ─── */
 
 .card-table__deck-card {
   position: absolute;
@@ -523,47 +599,152 @@
   border: 2px solid #a67c00;
   overflow: hidden;
   box-shadow:
-    4px 6px 12px rgba(0, 0, 0, 0.5),
-    0 0 8px rgba(201, 168, 76, 0.15);
-  transition: transform 0.3s ease;
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    0 0 6px rgba(201, 168, 76, 0.1);
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+              filter 0.3s ease,
+              box-shadow 0.3s ease;
 }
 
-.card-table__deck-pile:hover .card-table__deck-card:nth-child(1) {
-  transform: translate(-50%, -50%) rotate(-10deg) translateX(-8px) !important;
-}
-.card-table__deck-pile:hover .card-table__deck-card:nth-child(2) {
-  transform: translate(-50%, -50%) rotate(-5deg) translateX(-4px) !important;
-}
-.card-table__deck-pile:hover .card-table__deck-card:nth-child(4) {
-  transform: translate(-50%, -50%) rotate(3deg) translateX(3px) !important;
-}
-.card-table__deck-pile:hover .card-table__deck-card:nth-child(5) {
-  transform: translate(-50%, -50%) rotate(8deg) translateX(6px) !important;
-}
-.card-table__deck-pile:hover .card-table__deck-card:nth-child(6) {
-  transform: translate(-50%, -50%) rotate(12deg) translateX(10px) !important;
+/* ─── Top Card: Shimmer + Hover Lift ─── */
+
+.card-table__deck-card--top {
+  border-color: #c9a84c;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.5),
+    0 0 12px rgba(201, 168, 76, 0.2),
+    inset 0 0 20px rgba(201, 168, 76, 0.05);
 }
 
-/* Label below deck */
+/* Holographic shimmer on top card */
+.card-table__deck-card--top::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    transparent 30%,
+    rgba(240, 216, 117, 0.08) 40%,
+    rgba(255, 232, 160, 0.15) 50%,
+    rgba(240, 216, 117, 0.08) 60%,
+    transparent 70%,
+    transparent 100%
+  );
+  background-size: 300% 300%;
+  animation: deck-top-shimmer 4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes deck-top-shimmer {
+  0% {
+    background-position: 150% 150%;
+  }
+  50% {
+    background-position: -50% -50%;
+  }
+  100% {
+    background-position: 150% 150%;
+  }
+}
+
+/* Top card breathing glow */
+.card-table__deck-card--top {
+  animation: deck-top-breathe 3s ease-in-out infinite;
+}
+
+@keyframes deck-top-breathe {
+  0%, 100% {
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.5),
+      0 0 12px rgba(201, 168, 76, 0.2),
+      inset 0 0 20px rgba(201, 168, 76, 0.05);
+  }
+  50% {
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.5),
+      0 0 20px rgba(240, 216, 117, 0.35),
+      0 0 40px rgba(201, 168, 76, 0.12),
+      inset 0 0 20px rgba(201, 168, 76, 0.05);
+  }
+}
+
+/* Hover: top card lifts and tilts, revealing card below */
+.card-table__deck-pile--hovered .card-table__deck-card--top {
+  transform: translate(-50%, -50%) translateY(-18px) translateX(4px) rotate(3deg) !important;
+  box-shadow:
+    0 16px 30px rgba(0, 0, 0, 0.6),
+    0 0 25px rgba(240, 216, 117, 0.4),
+    0 0 50px rgba(201, 168, 76, 0.15);
+  border-color: #f0d875;
+  filter: brightness(1.1) !important;
+}
+
+/* ─── Dealing Animation: Deck shrinks and top card flies off ─── */
+
+.card-table__deck-pile--dealing .card-table__deck-stack {
+  animation: deck-deal-shrink 0.35s ease-in forwards;
+}
+
+@keyframes deck-deal-shrink {
+  0% {
+    transform: rotateX(8deg) rotateY(-3deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: rotateX(8deg) rotateY(-3deg) scale(0.85);
+    opacity: 0;
+  }
+}
+
+.card-table__deck-pile--dealing .card-table__deck-card--top {
+  animation: deck-top-fly-off 0.35s cubic-bezier(0.4, 0, 1, 1) forwards !important;
+}
+
+@keyframes deck-top-fly-off {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateY(0) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translateY(-120px) translateX(60px) rotate(25deg) scale(0.7);
+  }
+}
+
+/* ─── Label Below Deck ─── */
 
 .card-table__deck-label {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  animation: deck-label-pulse 2s ease-in-out infinite;
+  gap: 8px;
+  animation: deck-label-pulse 2.5s ease-in-out infinite;
+  margin-top: 8px;
 }
 
 @keyframes deck-label-pulse {
-  0%, 100% { opacity: 0.7; }
-  50% { opacity: 1; }
+  0%, 100% { opacity: 0.65; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-2px); }
+}
+
+.card-table__deck-pile--hovered .card-table__deck-label {
+  opacity: 1 !important;
+  animation: none;
 }
 
 .card-table__deck-label-icon {
-  font-size: 24px;
+  font-size: 22px;
   color: #f0d875;
   filter: drop-shadow(0 0 8px rgba(240, 216, 117, 0.6));
-  animation: deck-icon-spin 6s linear infinite;
+  animation: deck-icon-spin 8s linear infinite;
+}
+
+.card-table__deck-pile--hovered .card-table__deck-label-icon {
+  filter: drop-shadow(0 0 14px rgba(240, 216, 117, 0.9));
+  animation-duration: 3s;
 }
 
 @keyframes deck-icon-spin {
@@ -572,45 +753,74 @@
 }
 
 .card-table__deck-label-text {
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   letter-spacing: 3px;
   text-transform: uppercase;
   color: #c9a84c;
   text-shadow: 0 0 10px rgba(201, 168, 76, 0.4);
-  font-family: sans-serif;
+  font-family: "Georgia", "Times New Roman", serif;
+  display: flex;
+  align-items: center;
+  gap: 0;
 }
 
-.card-table__deck-pile:hover .card-table__deck-label-text {
+.card-table__deck-label-dot {
+  display: inline-block;
+  margin: 0 8px;
+  font-size: 16px;
+  color: #a67c00;
+}
+
+.card-table__deck-pile--hovered .card-table__deck-label-text {
   color: #f0d875;
-  text-shadow: 0 0 14px rgba(240, 216, 117, 0.6);
+  text-shadow:
+    0 0 14px rgba(240, 216, 117, 0.6),
+    0 0 30px rgba(201, 168, 76, 0.2);
+  letter-spacing: 4px;
 }
 
-.card-table__deck-label-count {
-  font-size: 11px;
-  color: #8a7340;
-  letter-spacing: 1px;
-  font-family: sans-serif;
-}
+/* ─── Responsive Deck ─── */
 
 @media (max-width: 768px) {
   .card-table__deck-stack {
-    width: 140px;
-    height: 200px;
+    width: 150px;
+    height: 215px;
   }
 
   .card-table__deck-card {
-    width: 120px;
+    width: 130px;
+  }
+
+  .card-table__deck-edge {
+    width: 128px;
+  }
+
+  .card-table__deck-glow {
+    width: 160px;
   }
 }
 
 @media (max-width: 480px) {
   .card-table__deck-stack {
-    width: 110px;
-    height: 160px;
+    width: 120px;
+    height: 175px;
   }
 
   .card-table__deck-card {
-    width: 90px;
+    width: 100px;
+  }
+
+  .card-table__deck-edge {
+    width: 98px;
+  }
+
+  .card-table__deck-glow {
+    width: 130px;
+  }
+
+  .card-table__deck-label-text {
+    font-size: 11px;
+    letter-spacing: 2px;
   }
 }

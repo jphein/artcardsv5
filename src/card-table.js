@@ -10,6 +10,7 @@ import { CloudinaryImage } from "@cloudinary/url-gen";
 import { AdvancedImage } from "@cloudinary/react";
 import { db } from "./db";
 import CardBack from "./card-back";
+import { useHints } from "./hints";
 import "./card-table.css";
 
 const CLOUD_NAME = "dqm00mcjs";
@@ -113,6 +114,10 @@ const CardTable = forwardRef((props, ref) => {
   const zCounterRef = useRef(1);
   const draggingIndexRef = useRef(null);
   const imagesRef = useRef(null);
+  const hoverHintFiredRef = useRef(false);
+  const flipHintTimerRef = useRef(null);
+  const dragHintFiredRef = useRef(false);
+  const { showHint, HintOverlay } = useHints();
 
   // Fetch Dreamscape cards + file URLs from InstantDB (live subscription)
   const { data: instantData } = db.useQuery({ cards: {}, $files: {} });
@@ -255,6 +260,14 @@ const CardTable = forwardRef((props, ref) => {
         const dy = ev.clientY - d.startY;
         if (dx * dx + dy * dy < 64) return; // 8px threshold
         d.active = true;
+        // Fire drag-to-dock hint on first drag
+        if (!dragHintFiredRef.current) {
+          dragHintFiredRef.current = true;
+          showHint("drag-to-dock", {
+            x: window.innerWidth / 2,
+            y: window.innerHeight - 100,
+          });
+        }
         d.el.style.position = "fixed";
         d.el.style.zIndex = "1200";
         d.el.style.transition = "none";
@@ -343,7 +356,7 @@ const CardTable = forwardRef((props, ref) => {
 
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
-  }, [bringToFront, props.onCardToDock]);
+  }, [bringToFront, props.onCardToDock, showHint]);
 
   // Drop-from-dock: only enable table as drop target when a dock drag is active
   // The `dockDragging` prop is set by the parent when a card is being dragged from the dock
@@ -473,6 +486,7 @@ const CardTable = forwardRef((props, ref) => {
   }, [bringToFront]);
 
   // 3D tilt effect — sets CSS custom properties on hover for GPU-accelerated transforms
+  // Also fires contextual hints on first card hover
   useEffect(() => {
     const table = tableRef.current;
     if (!table) return;
@@ -481,6 +495,11 @@ const CardTable = forwardRef((props, ref) => {
     const onMove = (e) => {
       const cardEl = e.target.closest(".card-table__card");
       if (cardEl !== activeCard) {
+        // Clear flip hint timer when leaving a card
+        if (flipHintTimerRef.current) {
+          clearTimeout(flipHintTimerRef.current);
+          flipHintTimerRef.current = null;
+        }
         if (activeCard) {
           activeCard.style.removeProperty("--tilt-x");
           activeCard.style.removeProperty("--tilt-y");
@@ -488,6 +507,24 @@ const CardTable = forwardRef((props, ref) => {
           activeCard.style.removeProperty("--light-y");
         }
         activeCard = cardEl;
+
+        // Fire card-hover hint on first card hover
+        if (cardEl && !hoverHintFiredRef.current) {
+          hoverHintFiredRef.current = true;
+          const rect = cardEl.getBoundingClientRect();
+          showHint("card-hover", {
+            x: rect.left + rect.width / 2,
+            y: rect.top,
+          });
+          // Start timer for flip hint (2s hover without action)
+          flipHintTimerRef.current = setTimeout(() => {
+            const rect2 = cardEl.getBoundingClientRect();
+            showHint("card-flip", {
+              x: rect2.left + rect2.width / 2,
+              y: rect2.top,
+            });
+          }, 2000);
+        }
       }
       if (!cardEl) return;
       const rect = cardEl.getBoundingClientRect();
@@ -507,7 +544,13 @@ const CardTable = forwardRef((props, ref) => {
         cardEl.style.removeProperty("--light-x");
         cardEl.style.removeProperty("--light-y");
       }
-      if (activeCard === cardEl) activeCard = null;
+      if (activeCard === cardEl) {
+        activeCard = null;
+        if (flipHintTimerRef.current) {
+          clearTimeout(flipHintTimerRef.current);
+          flipHintTimerRef.current = null;
+        }
+      }
     };
 
     table.addEventListener("mousemove", onMove);
@@ -515,8 +558,11 @@ const CardTable = forwardRef((props, ref) => {
     return () => {
       table.removeEventListener("mousemove", onMove);
       table.removeEventListener("mouseleave", onLeave, true);
+      if (flipHintTimerRef.current) {
+        clearTimeout(flipHintTimerRef.current);
+      }
     };
-  }, []);
+  }, [showHint]);
 
   // Cleanup timers on unmount
   useEffect(() => {
@@ -612,6 +658,7 @@ const CardTable = forwardRef((props, ref) => {
           <span className="card-table__mode-label">Carousel</span>
         </button>
       </div>
+      <HintOverlay />
       {images.map((img, index) => {
         const pos = positions[index];
         if (!pos) return null;

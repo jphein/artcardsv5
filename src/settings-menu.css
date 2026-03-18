@@ -1,0 +1,332 @@
+/* ═══════════════════════════════════════════════
+   Settings Menu — Gold Filigree Floating Panel
+   ═══════════════════════════════════════════════ */
+
+.settings-menu {
+  position: relative;
+  display: inline-block;
+  pointer-events: auto;
+}
+
+/* ─── Gear Button ─── */
+
+.settings-menu__gear {
+  width: 36px;
+  height: 36px;
+  background: rgba(26, 15, 0, 0.85);
+  color: #c9a84c;
+  border: 1px solid #a67c00;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 34px;
+  text-align: center;
+  padding: 0;
+  box-shadow: 0 0 10px rgba(201, 168, 76, 0.2);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.settings-menu__gear::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(240, 216, 117, 0.06) 40%,
+    rgba(255, 232, 160, 0.12) 50%,
+    rgba(240, 216, 117, 0.06) 60%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  background-position: 200% center;
+  transition: background-position 0.6s ease;
+  pointer-events: none;
+}
+
+.settings-menu__gear:hover::before {
+  background-position: -200% center;
+}
+
+.settings-menu__gear:hover {
+  color: #f0d875;
+  border-color: #f0d875;
+  box-shadow:
+    0 0 16px rgba(240, 216, 117, 0.35),
+    0 0 32px rgba(201, 168, 76, 0.15);
+  text-shadow: 0 0 8px rgba(240, 216, 117, 0.5);
+}
+
+.settings-menu__gear--open {
+  color: #f0d875;
+  border-color: #f0d875;
+  box-shadow:
+    0 0 16px rgba(240, 216, 117, 0.35),
+    inset 0 0 8px rgba(240, 216, 117, 0.05);
+}
+
+/* ─── Backdrop (click-outside catcher) ─── */
+
+.settings-menu__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1199;
+}
+
+/* ─── Floating Panel ─── */
+
+.settings-menu__panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 260px;
+  z-index: 1200;
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(42, 26, 0, 0.55) 0%,
+      rgba(15, 10, 2, 0.92) 60%,
+      rgba(5, 3, 0, 0.97) 100%
+    );
+  border: 1px solid;
+  border-image: linear-gradient(
+    180deg,
+    #f0d875 0%,
+    #a67c00 40%,
+    #f0d875 100%
+  ) 1;
+  backdrop-filter: blur(16px);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    0 0 20px rgba(201, 168, 76, 0.15),
+    inset 0 0 30px rgba(201, 168, 76, 0.03);
+  padding: 16px;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: none;
+}
+
+.settings-menu__panel--open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Top shimmer edge */
+.settings-menu__panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(240, 216, 117, 0.15) 20%,
+    rgba(255, 232, 160, 0.35) 50%,
+    rgba(240, 216, 117, 0.15) 80%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: settings-shimmer 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes settings-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* ─── Panel Title ─── */
+
+.settings-menu__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid transparent;
+  border-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(166, 124, 0, 0.3) 20%,
+    rgba(240, 216, 117, 0.4) 50%,
+    rgba(166, 124, 0, 0.3) 80%,
+    transparent 100%
+  ) 1;
+}
+
+.settings-menu__title-icon {
+  font-size: 14px;
+  color: #f0d875;
+  filter: drop-shadow(0 0 4px rgba(240, 216, 117, 0.6));
+}
+
+.settings-menu__title-text {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #c9a84c;
+  font-family: sans-serif;
+}
+
+/* ─── Setting Row ─── */
+
+.settings-menu__row {
+  margin-bottom: 14px;
+}
+
+.settings-menu__row:last-child {
+  margin-bottom: 0;
+}
+
+.settings-menu__label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #8a7340;
+  margin-bottom: 8px;
+  font-family: sans-serif;
+}
+
+/* ─── Toggle Button Group (Animation Speed) ─── */
+
+.settings-menu__toggle-group {
+  display: flex;
+  gap: 4px;
+}
+
+.settings-menu__toggle-btn {
+  flex: 1;
+  padding: 6px 0;
+  background: rgba(26, 15, 0, 0.8);
+  color: #8a7340;
+  border: 1px solid rgba(166, 124, 0, 0.25);
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-align: center;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.settings-menu__toggle-btn:hover {
+  color: #c9a84c;
+  border-color: rgba(166, 124, 0, 0.5);
+  background: rgba(42, 26, 0, 0.8);
+}
+
+.settings-menu__toggle-btn--active {
+  color: #f0d875;
+  border-color: #a67c00;
+  background:
+    linear-gradient(160deg, rgba(42, 26, 0, 0.9) 0%, rgba(26, 15, 0, 0.95) 100%);
+  box-shadow:
+    0 0 10px rgba(240, 216, 117, 0.25),
+    inset 0 0 8px rgba(240, 216, 117, 0.04);
+  text-shadow: 0 0 6px rgba(240, 216, 117, 0.4);
+}
+
+/* ─── Toggle Switch (Auto-Deal) ─── */
+
+.settings-menu__switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-menu__switch-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #8a7340;
+  font-family: sans-serif;
+}
+
+.settings-menu__switch {
+  position: relative;
+  width: 38px;
+  height: 20px;
+  background: rgba(26, 15, 0, 0.85);
+  border: 1px solid rgba(166, 124, 0, 0.3);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.settings-menu__switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #8a7340;
+  transition: all 0.3s ease;
+}
+
+.settings-menu__switch--on {
+  border-color: #a67c00;
+  box-shadow: 0 0 8px rgba(240, 216, 117, 0.2);
+}
+
+.settings-menu__switch--on::after {
+  left: 20px;
+  background: #f0d875;
+  box-shadow: 0 0 6px rgba(240, 216, 117, 0.5);
+}
+
+/* ─── Select Dropdown (Spread Type) ─── */
+
+.settings-menu__select {
+  width: 100%;
+  padding: 7px 10px;
+  background: rgba(26, 15, 0, 0.9);
+  color: #c9a84c;
+  border: 1px solid rgba(166, 124, 0, 0.35);
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23a67c00'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.settings-menu__select:hover {
+  border-color: rgba(240, 216, 117, 0.5);
+  color: #f0d875;
+}
+
+.settings-menu__select:focus {
+  border-color: #f0d875;
+  box-shadow:
+    0 0 10px rgba(240, 216, 117, 0.25),
+    inset 0 0 6px rgba(201, 168, 76, 0.06);
+}
+
+.settings-menu__select option {
+  background: #1a0f00;
+  color: #c9a84c;
+}

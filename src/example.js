@@ -1,9 +1,22 @@
-import React, { Component } from "react";
+import React, { Component, useEffect } from "react";
 import Carousel from "react-spring-3d-carousel";
 import uuidv4 from "uuid";
 import { config } from "react-spring";
 import RandomImage from "./random";
+import { useHints } from "./hints";
 import "./nav.css";
+
+// Functional helper: fires carousel-nav hint on first mount
+function CarouselHints() {
+  const { showHint, HintOverlay } = useHints();
+  useEffect(() => {
+    showHint("carousel-nav", {
+      x: window.innerWidth / 2,
+      y: window.innerHeight / 2,
+    });
+  }, [showHint]);
+  return <HintOverlay />;
+}
 
 const CLOUD_NAME = "dqm00mcjs";
 const TAG = "carousel";
@@ -134,6 +147,7 @@ export default class Example extends Component {
         onTouchMove={this.handleTouchMove}
       >
         <div className={`carousel-flash ${this.state.flash ? "carousel-flash--active" : ""}`} />
+        <CarouselHints />
         <Carousel
           slides={slides}
           goToSlide={this.state.goToSlide}

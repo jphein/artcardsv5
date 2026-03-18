@@ -1,0 +1,346 @@
+/* ═══════════════════════════════════════════════════════
+   Welcome Overlay — First-visit intro experience
+   Dark/gold filigree theme with magical feel
+   ═══════════════════════════════════════════════════════ */
+
+.welcome-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  animation: welcome-backdrop-in 0.6s ease-out forwards;
+}
+
+.welcome-overlay--exiting {
+  animation: welcome-backdrop-out 0.5s ease-in forwards;
+}
+
+@keyframes welcome-backdrop-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes welcome-backdrop-out {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ─── Card Container ─── */
+
+.welcome-card {
+  position: relative;
+  width: 380px;
+  max-width: 90vw;
+  padding: 40px 36px 32px;
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(42, 26, 0, 0.6) 0%,
+      rgba(15, 10, 2, 0.95) 60%,
+      rgba(5, 3, 0, 0.98) 100%
+    );
+  border: 2px solid;
+  border-image: linear-gradient(
+    180deg,
+    #f0d875 0%,
+    #c9a84c 25%,
+    #a67c00 50%,
+    #c9a84c 75%,
+    #f0d875 100%
+  ) 1;
+  box-shadow:
+    0 0 30px rgba(201, 168, 76, 0.3),
+    0 0 60px rgba(201, 168, 76, 0.1),
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    inset 0 0 40px rgba(201, 168, 76, 0.04);
+  animation: welcome-card-in 0.6s 0.1s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.welcome-overlay--exiting .welcome-card {
+  animation: welcome-card-out 0.4s ease-in forwards;
+}
+
+@keyframes welcome-card-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes welcome-card-out {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9) translateY(-10px);
+  }
+}
+
+/* Gold shimmer across card */
+.welcome-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(240, 216, 117, 0.04) 45%,
+    rgba(255, 232, 160, 0.1) 50%,
+    rgba(240, 216, 117, 0.04) 55%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: welcome-shimmer 5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Decorative gold line at top */
+.welcome-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #f0d875 30%,
+    #ffe8a0 50%,
+    #f0d875 70%,
+    transparent
+  );
+  box-shadow: 0 0 6px rgba(240, 216, 117, 0.4);
+}
+
+@keyframes welcome-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* ─── Skip Link ─── */
+
+.welcome-skip {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: #8a7340;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  font-family: sans-serif;
+  padding: 4px 8px;
+}
+
+.welcome-skip:hover {
+  color: #f0d875;
+  text-shadow: 0 0 6px rgba(240, 216, 117, 0.3);
+}
+
+/* ─── Step Content ─── */
+
+.welcome-step {
+  text-align: center;
+  animation: welcome-step-in 0.35s ease-out forwards;
+}
+
+.welcome-step--exiting {
+  animation: welcome-step-out 0.25s ease-in forwards;
+}
+
+@keyframes welcome-step-in {
+  0% {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes welcome-step-out {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+}
+
+/* Step 1: Hero */
+
+.welcome-title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin: 0 0 12px;
+  background: linear-gradient(
+    180deg,
+    #ffe8a0 0%,
+    #f0d875 40%,
+    #c9a84c 80%,
+    #a67c00 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 8px rgba(240, 216, 117, 0.5));
+  font-family: sans-serif;
+}
+
+.welcome-subtitle {
+  color: #8a7340;
+  font-size: 14px;
+  font-style: italic;
+  letter-spacing: 1px;
+  margin: 0;
+  font-family: sans-serif;
+}
+
+/* Step 2: Features */
+
+.welcome-features {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 8px 0;
+}
+
+.welcome-feature {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+}
+
+.welcome-feature__icon {
+  font-size: 28px;
+  flex-shrink: 0;
+  width: 40px;
+  text-align: center;
+  filter: drop-shadow(0 0 6px rgba(240, 216, 117, 0.4));
+}
+
+.welcome-feature__text {
+  color: #c9a84c;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  line-height: 1.4;
+  font-family: sans-serif;
+}
+
+/* Step 3: Begin button */
+
+.welcome-begin {
+  display: inline-block;
+  padding: 14px 48px;
+  margin-top: 8px;
+  background:
+    linear-gradient(
+      160deg,
+      rgba(42, 26, 0, 0.9) 0%,
+      rgba(26, 15, 0, 0.95) 50%,
+      rgba(42, 26, 0, 0.9) 100%
+    );
+  color: #f0d875;
+  border: 2px solid #a67c00;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-family: sans-serif;
+  box-shadow:
+    0 0 15px rgba(201, 168, 76, 0.4),
+    0 0 30px rgba(201, 168, 76, 0.15),
+    inset 0 0 12px rgba(201, 168, 76, 0.06);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-begin::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(240, 216, 117, 0.08) 45%,
+    rgba(255, 232, 160, 0.18) 50%,
+    rgba(240, 216, 117, 0.08) 55%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: welcome-shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.welcome-begin:hover {
+  color: #ffe8a0;
+  border-color: #f0d875;
+  box-shadow:
+    0 0 25px rgba(240, 216, 117, 0.6),
+    0 0 50px rgba(201, 168, 76, 0.25),
+    0 0 80px rgba(166, 124, 0, 0.1),
+    inset 0 0 20px rgba(240, 216, 117, 0.1);
+  text-shadow: 0 0 10px rgba(240, 216, 117, 0.6);
+  transform: scale(1.05);
+}
+
+.welcome-begin:active {
+  transform: scale(0.97);
+  box-shadow:
+    0 0 10px rgba(240, 216, 117, 0.4),
+    inset 0 0 20px rgba(201, 168, 76, 0.1);
+}
+
+/* ─── Step Indicator Dots ─── */
+
+.welcome-dots {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.welcome-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3a2800;
+  border: 1px solid #a67c00;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.3s ease;
+}
+
+.welcome-dot--active {
+  background: #f0d875;
+  border-color: #f0d875;
+  box-shadow: 0 0 8px rgba(240, 216, 117, 0.6);
+  transform: scale(1.2);
+}
+
+.welcome-dot:hover:not(.welcome-dot--active) {
+  background: #a67c00;
+  box-shadow: 0 0 4px rgba(201, 168, 76, 0.4);
+}

@@ -1,0 +1,121 @@
+/* ═══════════════════════════════════════════════════════
+   Contextual Hints — Gold-themed whisper tooltips
+   Matches the ornate dark/gold filigree aesthetic
+   ═══════════════════════════════════════════════════════ */
+
+.hint-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  pointer-events: none;
+}
+
+.hint-tooltip {
+  position: absolute;
+  max-width: 240px;
+  padding: 10px 16px;
+  background: rgba(15, 10, 2, 0.92);
+  border: 1px solid #a67c00;
+  border-radius: 6px;
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+
+  /* Gold glow */
+  box-shadow:
+    0 0 12px rgba(201, 168, 76, 0.3),
+    0 0 24px rgba(201, 168, 76, 0.1),
+    inset 0 0 8px rgba(201, 168, 76, 0.04);
+
+  /* Text */
+  color: #f0d875;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  line-height: 1.5;
+  text-align: center;
+  font-family: sans-serif;
+  text-shadow: 0 0 6px rgba(240, 216, 117, 0.3);
+  white-space: nowrap;
+
+  /* Animation */
+  animation: hint-enter 0.3s ease-out forwards;
+}
+
+.hint-tooltip--exiting {
+  animation: hint-exit 0.5s ease-out forwards;
+}
+
+/* Shimmer sweep across tooltip */
+.hint-tooltip::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(240, 216, 117, 0.06) 45%,
+    rgba(255, 232, 160, 0.12) 50%,
+    rgba(240, 216, 117, 0.06) 55%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: hint-shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Gold edge line */
+.hint-tooltip::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #f0d875 30%,
+    #ffe8a0 50%,
+    #f0d875 70%,
+    transparent
+  );
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Hint separator dot */
+.hint-tooltip__sep {
+  display: inline-block;
+  margin: 0 6px;
+  color: #a67c00;
+  font-size: 8px;
+  vertical-align: middle;
+}
+
+@keyframes hint-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hint-exit {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes hint-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}

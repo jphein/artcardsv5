@@ -26,6 +26,11 @@ const schema = i.schema({
       userId: i.string(),
       createdAt: i.number(),
     }),
+    preferences: i.entity({
+      userId: i.string(),
+      key: i.string(),
+      value: i.json(),
+    }),
     $files: i.entity({
       path: i.string().unique().indexed(),
       url: i.string(),
