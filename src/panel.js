@@ -100,17 +100,22 @@ const CardPanel = ({ onNavigate, onToggle }) => {
             </div>
           )}
           {cards.map((card) => {
-            const cldImg = new CloudinaryImage(card.public_id, {
-              cloudName: card.cloud_name
-            });
+            const isDreamscape = card.source === "dreamscape";
             return (
               <div
                 key={card.public_id}
-                className="card-panel__card"
+                className={`card-panel__card${isDreamscape ? " card-panel__card--dreamscape" : ""}`}
                 onClick={() => onNavigate && onNavigate(card.slideIndex)}
-                title="Click to spin carousel to this card"
+                title={isDreamscape ? card.cardName || "Dreamscape card" : "Click to spin to this card"}
               >
-                <AdvancedImage cldImg={cldImg} alt={card.public_id} />
+                {isDreamscape ? (
+                  <img src={card.imageUrl} alt={card.cardName || "Dreamscape card"} />
+                ) : (
+                  <AdvancedImage
+                    cldImg={new CloudinaryImage(card.public_id, { cloudName: card.cloud_name })}
+                    alt={card.public_id}
+                  />
+                )}
                 <button
                   className="card-panel__remove"
                   onClick={(e) => {

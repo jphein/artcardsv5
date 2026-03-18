@@ -1,0 +1,196 @@
+/* ═══════════════════════════════════════════════════════
+   Card Table — Scattered card layout
+   Dark/gold filigree theme consistent with nav, panel, etc.
+   ═══════════════════════════════════════════════════════ */
+
+/* ─── Full-Viewport Container ─── */
+
+.card-table {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  display: block;
+  padding-top: 5vh;
+}
+
+/* ─── Positioned Card Wrapper ─── */
+/* Outer div: absolutely positioned via inline style (left, top, transform: rotate/translate) */
+
+.card-table__card {
+  position: absolute;
+  will-change: transform;
+}
+
+/* ─── Visual Card (the draggable span) ─── */
+
+.card-table__card > span {
+  display: block;
+  width: 160px;
+  border-radius: 8px;
+  border: 2px solid #a67c00;
+  overflow: hidden;
+  cursor: grab;
+  transform-origin: center center;
+  backface-visibility: hidden;
+  transition:
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.35s ease,
+    border-color 0.35s ease;
+
+  /* Multi-layer shadow for physical card depth */
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.05),
+    4px 6px 12px rgba(0, 0, 0, 0.5),
+    0 0 8px rgba(201, 168, 76, 0.15);
+}
+
+.card-table__card > span:active {
+  cursor: grabbing;
+}
+
+/* ─── Hover: Lift + Golden Glow Bloom ─── */
+
+.card-table__card > span:hover {
+  transform: scale(1.15) translateY(-8px);
+  border-color: #f0d875;
+  z-index: 50;
+  box-shadow:
+    0 12px 25px rgba(0, 0, 0, 0.6),
+    0 0 20px rgba(240, 216, 117, 0.4),
+    0 0 40px rgba(201, 168, 76, 0.2),
+    inset 0 0 10px rgba(201, 168, 76, 0.05);
+}
+
+/* ─── Card Image ─── */
+
+.card-table__card > span img {
+  width: 100%;
+  height: auto;
+  display: block;
+  pointer-events: none;
+  filter: brightness(0.95) contrast(1.05);
+}
+
+/* ─── Dealing Entrance Animation ─── */
+
+.card-table__card--dealing > span {
+  animation: card-deal-in 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes card-deal-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(40px) rotate(15deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.08) translateY(-5px) rotate(-2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0) rotate(0deg);
+  }
+}
+
+/* ─── Focus Glow (navigate-back highlight) ─── */
+
+.card-table__card--focused > span {
+  animation: card-focus-glow 1.5s ease-out;
+  border-color: #ffe8a0;
+}
+
+@keyframes card-focus-glow {
+  0% {
+    box-shadow:
+      0 0 30px rgba(240, 216, 117, 0.8),
+      0 0 60px rgba(201, 168, 76, 0.4),
+      0 8px 20px rgba(0, 0, 0, 0.5);
+  }
+  100% {
+    box-shadow:
+      4px 6px 12px rgba(0, 0, 0, 0.5),
+      0 0 8px rgba(201, 168, 76, 0.15);
+  }
+}
+
+/* ─── Full-Screen Golden Flash Overlay ─── */
+
+.card-table__flash {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(240, 216, 117, 0.3),
+    transparent 70%
+  );
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.card-table__flash--active {
+  opacity: 1;
+}
+
+/* ─── Dreamscape Card Label ─── */
+
+.card-table__card-label {
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #c4b5fd;
+  text-shadow: 0 0 8px rgba(167, 139, 250, 0.4);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.card-table__card:hover .card-table__card-label {
+  opacity: 1;
+}
+
+.card-table__card--dreamscape > span {
+  border-color: #7c3aed;
+  box-shadow:
+    inset 0 1px 2px rgba(196, 181, 253, 0.08),
+    4px 6px 12px rgba(0, 0, 0, 0.5),
+    0 0 10px rgba(124, 58, 237, 0.2);
+}
+
+.card-table__card--dreamscape > span:hover {
+  border-color: #a78bfa;
+  box-shadow:
+    0 12px 25px rgba(0, 0, 0, 0.6),
+    0 0 20px rgba(167, 139, 250, 0.4),
+    0 0 40px rgba(124, 58, 237, 0.2),
+    inset 0 0 10px rgba(167, 139, 250, 0.05);
+}
+
+.card-table__dreamscape-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  pointer-events: none;
+  filter: brightness(0.95) contrast(1.05);
+}
+
+/* ─── Responsive ─── */
+
+@media (max-width: 768px) {
+  .card-table__card > span {
+    width: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-table__card > span {
+    width: 90px;
+  }
+}

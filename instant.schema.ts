@@ -1,4 +1,4 @@
-import { init, id, i } from "@instantdb/react";
+import { i } from "@instantdb/react";
 
 const schema = i.schema({
   entities: {
@@ -21,9 +21,4 @@ const schema = i.schema({
   },
 });
 
-const db = init({
-  appId: process.env.REACT_APP_INSTANTDB_ID,
-  schema,
-});
-
-export { db, id, schema };
+export default schema;
