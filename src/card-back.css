@@ -1,0 +1,368 @@
+/* ─── Card Back: Mystical Reverse Face ─── */
+
+.card-back {
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(
+      ellipse at center,
+      #1a0f00 0%,
+      #0f0a02 60%,
+      #080500 100%
+    );
+  overflow: hidden;
+  position: relative;
+}
+
+/* Subtle full-surface shimmer */
+.card-back::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    rgba(240, 216, 117, 0.03) 25%,
+    rgba(255, 232, 160, 0.06) 50%,
+    rgba(240, 216, 117, 0.03) 75%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: card-back-shimmer 6s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* ─── Outer Ornamental Border ─── */
+
+.card-back__border {
+  position: absolute;
+  inset: 6px;
+  border: 1px solid rgba(166, 124, 0, 0.6);
+  border-radius: 2px;
+}
+
+/* Finer inner line */
+.card-back__border::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(201, 168, 76, 0.3);
+  border-radius: 1px;
+}
+
+/* ─── Corner Ornaments ─── */
+
+.card-back__corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+}
+
+.card-back__corner::before,
+.card-back__corner::after {
+  content: "";
+  position: absolute;
+  background: linear-gradient(135deg, #f0d875, #a67c00);
+}
+
+/* Dot */
+.card-back__corner::before {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  top: 0;
+  left: 0;
+  box-shadow: 0 0 4px rgba(240, 216, 117, 0.6);
+}
+
+/* Small flourish line */
+.card-back__corner::after {
+  width: 12px;
+  height: 1px;
+  top: 2px;
+  left: 6px;
+  opacity: 0.7;
+}
+
+.card-back__corner--tl {
+  top: 2px;
+  left: 2px;
+}
+
+.card-back__corner--tr {
+  top: 2px;
+  right: 2px;
+  transform: scaleX(-1);
+}
+
+.card-back__corner--bl {
+  bottom: 2px;
+  left: 2px;
+  transform: scaleY(-1);
+}
+
+.card-back__corner--br {
+  bottom: 2px;
+  right: 2px;
+  transform: scale(-1, -1);
+}
+
+/* ─── Inner Decorative Frame ─── */
+
+.card-back__inner {
+  position: absolute;
+  inset: 14px;
+  border: 1px solid rgba(166, 124, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Top and bottom edge accent lines */
+.card-back__inner::before,
+.card-back__inner::after {
+  content: "";
+  position: absolute;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #c9a84c 30%,
+    #f0d875 50%,
+    #c9a84c 70%,
+    transparent
+  );
+  opacity: 0.5;
+}
+
+.card-back__inner::before {
+  top: 0;
+}
+
+.card-back__inner::after {
+  bottom: 0;
+}
+
+/* ─── Central Sacred Geometry Motif ─── */
+
+.card-back__motif {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: motif-pulse 4s ease-in-out infinite;
+}
+
+/* ─── Diamond Shape ─── */
+
+.card-back__diamond {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(201, 168, 76, 0.5);
+  transform: rotate(45deg);
+  box-shadow:
+    0 0 8px rgba(201, 168, 76, 0.15),
+    inset 0 0 8px rgba(201, 168, 76, 0.08);
+}
+
+/* Second rotated diamond for star-of-david / overlapping effect */
+.card-back__diamond::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 1px solid rgba(240, 216, 117, 0.35);
+}
+
+/* Third tiny diamond at center */
+.card-back__diamond::after {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border: 1px solid rgba(255, 232, 160, 0.4);
+  box-shadow: 0 0 6px rgba(240, 216, 117, 0.2);
+}
+
+/* ─── Eye / Vesica Piscis ─── */
+
+.card-back__eye {
+  position: absolute;
+  width: 32px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid rgba(201, 168, 76, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(124, 58, 237, 0.15) 0%,
+    transparent 70%
+  );
+  box-shadow: 0 0 12px rgba(124, 58, 237, 0.2);
+}
+
+/* Upper lid arc */
+.card-back__eye::before {
+  content: "";
+  position: absolute;
+  width: 32px;
+  height: 16px;
+  border-radius: 50%;
+  border-top: 1px solid rgba(240, 216, 117, 0.4);
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  top: -4px;
+}
+
+/* Lower lid arc */
+.card-back__eye::after {
+  content: "";
+  position: absolute;
+  width: 32px;
+  height: 16px;
+  border-radius: 50%;
+  border-bottom: 1px solid rgba(240, 216, 117, 0.4);
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  bottom: -4px;
+}
+
+/* ─── Pupil (inner circle with glow) ─── */
+
+.card-back__pupil {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at center,
+    #ffe8a0 0%,
+    #c9a84c 40%,
+    #7c3aed 80%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 6px rgba(255, 232, 160, 0.8),
+    0 0 12px rgba(201, 168, 76, 0.4),
+    0 0 20px rgba(124, 58, 237, 0.3);
+  animation: pupil-glow 3s ease-in-out infinite;
+}
+
+/* ─── Starburst Rays ─── */
+
+.card-back__rays {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+}
+
+/* Vertical and horizontal cross lines */
+.card-back__rays::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  transform: translate(-50%, -50%);
+  background:
+    /* Vertical line */
+    linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(201, 168, 76, 0.3) 35%,
+      rgba(240, 216, 117, 0.5) 50%,
+      rgba(201, 168, 76, 0.3) 65%,
+      transparent 100%
+    ),
+    /* Horizontal line */
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(201, 168, 76, 0.3) 35%,
+      rgba(240, 216, 117, 0.5) 50%,
+      rgba(201, 168, 76, 0.3) 65%,
+      transparent 100%
+    );
+  background-size: 1px 100%, 100% 1px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Diagonal cross lines */
+.card-back__rays::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background:
+    linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(201, 168, 76, 0.2) 38%,
+      rgba(240, 216, 117, 0.35) 50%,
+      rgba(201, 168, 76, 0.2) 62%,
+      transparent 100%
+    ),
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(201, 168, 76, 0.2) 38%,
+      rgba(240, 216, 117, 0.35) 50%,
+      rgba(201, 168, 76, 0.2) 62%,
+      transparent 100%
+    );
+  background-size: 1px 100%, 100% 1px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* ─── Animations ─── */
+
+@keyframes card-back-shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes motif-pulse {
+  0%, 100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes pupil-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 6px rgba(255, 232, 160, 0.8),
+      0 0 12px rgba(201, 168, 76, 0.4),
+      0 0 20px rgba(124, 58, 237, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 0 8px rgba(255, 232, 160, 1),
+      0 0 18px rgba(201, 168, 76, 0.6),
+      0 0 30px rgba(124, 58, 237, 0.5),
+      0 0 40px rgba(167, 139, 250, 0.2);
+  }
+}

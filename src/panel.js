@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { CloudinaryImage } from "@cloudinary/url-gen";
 import { AdvancedImage } from "@cloudinary/react";
 import SpreadView from "./spread-view";
@@ -8,7 +8,7 @@ import { useCurrentUser } from "./auth-button";
 import { PhysicalCardsHint } from "./physical-cards";
 import "./panel.css";
 
-const CardPanel = ({ onNavigate, onToggle }) => {
+const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, onDockDragStart, onDockDragEnd }, ref) => {
   const { user } = useCurrentUser();
   const [open, setOpen] = useState(false);
   const [cards, setCards] = useState([]);
@@ -18,6 +18,18 @@ const CardPanel = ({ onNavigate, onToggle }) => {
   const [lightboxCard, setLightboxCard] = useState(null);
   const [lightboxLabel, setLightboxLabel] = useState(null);
   const [lightboxSublabel, setLightboxSublabel] = useState(null);
+
+  useImperativeHandle(ref, () => ({
+    addCard(cardData) {
+      if (cards.some((c) => c.public_id === cardData.public_id)) return;
+      setCards((prev) => [...prev, cardData]);
+      onCollect && onCollect(cardData.public_id);
+      if (!open) {
+        setOpen(true);
+        onToggle && onToggle(true);
+      }
+    },
+  }));
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -37,6 +49,7 @@ const CardPanel = ({ onNavigate, onToggle }) => {
       const data = JSON.parse(e.dataTransfer.getData("application/json"));
       if (cards.some((c) => c.public_id === data.public_id)) return;
       setCards((prev) => [...prev, data]);
+      onCollect && onCollect(data.public_id);
     } catch {
       return;
     }
@@ -49,6 +62,7 @@ const CardPanel = ({ onNavigate, onToggle }) => {
 
   const removeCard = (public_id) => {
     setCards((prev) => prev.filter((c) => c.public_id !== public_id));
+    onUncollect && onUncollect(public_id);
   };
 
   const handleLoadDeck = (deckCards, deckSpreadType) => {
@@ -106,8 +120,23 @@ const CardPanel = ({ onNavigate, onToggle }) => {
               <div
                 key={card.public_id}
                 className={`card-panel__card${isDreamscape ? " card-panel__card--dreamscape" : ""}`}
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData(
+                    "application/json",
+                    JSON.stringify({ ...card, fromDock: true })
+                  );
+                  e.dataTransfer.effectAllowed = "move";
+                  onDockDragStart && onDockDragStart();
+                }}
+                onDragEnd={(e) => {
+                  onDockDragEnd && onDockDragEnd();
+                  if (e.dataTransfer.dropEffect === "move") {
+                    removeCard(card.public_id);
+                  }
+                }}
                 onClick={() => onNavigate && onNavigate(card.slideIndex)}
-                title={isDreamscape ? card.cardName || "Dreamscape card" : "Click to spin to this card"}
+                title={isDreamscape ? card.cardName || "Dreamscape card" : "Drag back to table, or click to focus"}
               >
                 {isDreamscape ? (
                   <img src={card.imageUrl} alt={card.cardName || "Dreamscape card"} />
@@ -162,6 +191,8 @@ const CardPanel = ({ onNavigate, onToggle }) => {
       />
     </>
   );
-};
+});
+
+CardPanel.displayName = "CardPanel";
 
 export default CardPanel;

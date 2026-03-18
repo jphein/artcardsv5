@@ -13,6 +13,11 @@ const rules = {
       view: "true",
     },
   },
+  creations: {
+    allow: {
+      view: "true",
+    },
+  },
   $files: {
     allow: {
       view: "true",

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import FireApp from "./logo";
 import Example from "./example";
 import CardTable from "./card-table";
@@ -9,6 +9,8 @@ import PhysicalCardsSeal from "./physical-cards";
 const FullScreenButton = ({ autoFullscreen }) => {
   const appContainerRef = useRef(null);
   const cardTableRef = useRef(null);
+  const cardPanelRef = useRef(null);
+  const [dockDragging, setDockDragging] = useState(false);
 
   const requestFullscreen = () => {
     if (appContainerRef.current.requestFullscreen) {
@@ -32,46 +34,71 @@ const FullScreenButton = ({ autoFullscreen }) => {
     <div>
       <div ref={appContainerRef} className="app-container">
         <FireApp />
-        <CardTable ref={cardTableRef} />
+        <CardTable
+          ref={cardTableRef}
+          dockDragging={dockDragging}
+          onCardToDock={(cardData) => {
+            if (cardPanelRef.current) {
+              cardPanelRef.current.addCard(cardData);
+            }
+          }}
+        />
         <CardPanel
+          ref={cardPanelRef}
           onNavigate={(slideIndex) => {
             if (cardTableRef.current) {
               cardTableRef.current.focusCard(slideIndex);
             }
           }}
+          onCollect={(publicId) => {
+            if (cardTableRef.current) {
+              cardTableRef.current.collectCard(publicId);
+            }
+          }}
+          onUncollect={(publicId) => {
+            if (cardTableRef.current) {
+              cardTableRef.current.uncollectCard(publicId);
+            }
+          }}
           onToggle={() => {}}
+          onDockDragStart={() => setDockDragging(true)}
+          onDockDragEnd={() => setDockDragging(false)}
         />
-        <AuthButton />
         <PhysicalCardsSeal />
-      </div>
-      <div
-        style={{
-          position: "fixed",
-          top: "0%",
-          left: "0%",
-          margin: "2%",
-          padding: "10px",
-          backgroundColor: "transparent",
-          borderRadius: "5px 0 0 0"
-        }}
-      >
-        <button
-          onClick={requestFullscreen}
+        <div
+          className="top-bar"
           style={{
-            color: "#c9a84c",
-            backgroundColor: "rgba(26, 15, 0, 0.85)",
-            border: "1px solid #a67c00",
-            padding: "8px 14px",
-            borderRadius: "4px",
-            cursor: "pointer",
-            fontSize: "12px",
-            fontWeight: "600",
-            letterSpacing: "1px",
-            boxShadow: "0 0 10px rgba(201, 168, 76, 0.2)"
+            position: "fixed",
+            top: 14,
+            left: 14,
+            right: 14,
+            zIndex: 1100,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            pointerEvents: "none",
           }}
         >
-          Fullscreen
-        </button>
+          <button
+            onClick={requestFullscreen}
+            style={{
+              pointerEvents: "auto",
+              color: "#c9a84c",
+              backgroundColor: "rgba(26, 15, 0, 0.85)",
+              border: "1px solid #a67c00",
+              padding: "8px 14px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
+              fontWeight: "600",
+              letterSpacing: "1px",
+              boxShadow: "0 0 10px rgba(201, 168, 76, 0.2)",
+            }}
+          >
+            Fullscreen
+          </button>
+          <AuthButton />
+        </div>
       </div>
     </div>
   );

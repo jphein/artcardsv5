@@ -9,9 +9,8 @@
   position: relative;
   width: 100%;
   height: 100vh;
-  overflow: hidden;
+  overflow: visible;
   display: block;
-  padding-top: 5vh;
 }
 
 /* ─── Positioned Card Wrapper ─── */
@@ -20,15 +19,53 @@
 .card-table__card {
   position: absolute;
   will-change: transform;
+  perspective: 800px;
   /* Smooth animation when switching between layout modes */
   transition: left 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
               top 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
               transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* ─── Card Inner (3D flip container) ─── */
+
+.card-table__card-inner {
+  position: relative;
+  width: 160px;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.card-table__card--flipped .card-table__card-inner {
+  transform: rotateY(180deg);
+}
+
+/* ─── Front and Back Faces ─── */
+
+.card-table__card-front,
+.card-table__card-back {
+  backface-visibility: hidden;
+}
+
+.card-table__card-front {
+  /* This wraps the existing span content */
+}
+
+.card-table__card-back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotateY(180deg);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid #a67c00;
+  box-shadow: 4px 6px 12px rgba(0, 0, 0, 0.5), 0 0 8px rgba(201, 168, 76, 0.15);
+}
+
 /* ─── Visual Card (the draggable span) ─── */
 
-.card-table__card > span {
+.card-table__card .card-table__card-front {
   display: block;
   width: 160px;
   border-radius: 8px;
@@ -49,13 +86,13 @@
     0 0 8px rgba(201, 168, 76, 0.15);
 }
 
-.card-table__card > span:active {
+.card-table__card .card-table__card-front:active {
   cursor: grabbing;
 }
 
 /* ─── Hover: Lift + Golden Glow Bloom ─── */
 
-.card-table__card > span:hover {
+.card-table__card .card-table__card-front:hover {
   transform: scale(1.15) translateY(-8px);
   border-color: #f0d875;
   z-index: 50;
@@ -66,9 +103,27 @@
     inset 0 0 10px rgba(201, 168, 76, 0.05);
 }
 
+/* ─── Dragging on Table ─── */
+
+.card-table__card--dragging {
+  z-index: 1100 !important;
+  cursor: grabbing !important;
+}
+
+.card-table__card--dragging .card-table__card-front {
+  transform: scale(1.1);
+  box-shadow:
+    0 16px 35px rgba(0, 0, 0, 0.7),
+    0 0 25px rgba(240, 216, 117, 0.35),
+    0 0 50px rgba(201, 168, 76, 0.15);
+  border-color: #f0d875;
+  cursor: grabbing;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
 /* ─── Card Image ─── */
 
-.card-table__card > span img {
+.card-table__card .card-table__card-front img {
   width: 100%;
   height: auto;
   display: block;
@@ -78,7 +133,7 @@
 
 /* ─── Dealing Entrance Animation ─── */
 
-.card-table__card--dealing > span {
+.card-table__card--dealing .card-table__card-front {
   animation: card-deal-in 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
@@ -104,7 +159,7 @@
 
 /* ─── Focus Glow (navigate-back highlight) ─── */
 
-.card-table__card--focused > span {
+.card-table__card--focused .card-table__card-front {
   animation: card-focus-glow 1.5s ease-out;
   border-color: #ffe8a0;
 }
@@ -165,7 +220,7 @@
   opacity: 1;
 }
 
-.card-table__card--dreamscape > span {
+.card-table__card--dreamscape .card-table__card-front {
   border-color: #7c3aed;
   box-shadow:
     inset 0 1px 2px rgba(196, 181, 253, 0.08),
@@ -173,7 +228,7 @@
     0 0 10px rgba(124, 58, 237, 0.2);
 }
 
-.card-table__card--dreamscape > span:hover {
+.card-table__card--dreamscape .card-table__card-front:hover {
   border-color: #a78bfa;
   box-shadow:
     0 12px 25px rgba(0, 0, 0, 0.6),
@@ -190,15 +245,32 @@
   filter: brightness(0.95) contrast(1.05);
 }
 
+/* ─── Drop Zone Overlay (appears when dragging from dock) ─── */
+
+.card-table__drop-zone {
+  position: absolute;
+  inset: 0;
+  z-index: 95;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(240, 216, 117, 0.08),
+    transparent 70%
+  );
+  border: 2px dashed rgba(201, 168, 76, 0.3);
+  border-radius: 8px;
+  pointer-events: auto;
+}
+
 /* ─── Mode Switcher ─── */
 
 .card-table__mode-switcher {
-  position: absolute;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
+  position: fixed;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 80;
   display: flex;
+  flex-direction: column;
   gap: 4px;
   padding: 4px;
   background: rgba(15, 10, 2, 0.7);
@@ -299,12 +371,16 @@
 /* ─── Responsive ─── */
 
 @media (max-width: 768px) {
-  .card-table__card > span {
+  .card-table__card .card-table__card-front {
+    width: 120px;
+  }
+
+  .card-table__card-inner {
     width: 120px;
   }
 
   .card-table__mode-switcher {
-    top: 8px;
+    right: 8px;
     gap: 2px;
     padding: 3px;
   }
@@ -324,7 +400,11 @@
 }
 
 @media (max-width: 480px) {
-  .card-table__card > span {
+  .card-table__card .card-table__card-front {
+    width: 90px;
+  }
+
+  .card-table__card-inner {
     width: 90px;
   }
 }

@@ -9,6 +9,7 @@ import React, {
 import { CloudinaryImage } from "@cloudinary/url-gen";
 import { AdvancedImage } from "@cloudinary/react";
 import { db } from "./db";
+import CardBack from "./card-back";
 import "./card-table.css";
 
 const CLOUD_NAME = "dqm00mcjs";
@@ -26,21 +27,18 @@ function shuffle(arr) {
 function computeScatter(count) {
   const positions = [];
   for (let i = 0; i < count; i++) {
-    // Cluster toward center using a gaussian-ish distribution
-    // Mean at 47.5% (center of 10-85 range), spread organically
-    const rangeX = 75; // 85 - 10
+    const rangeX = 75;
     const rangeY = 75;
     const offsetX = 10;
     const offsetY = 10;
 
-    // Use sum of randoms for a bell-curve-like distribution centered in the range
     const rawX = (Math.random() + Math.random() + Math.random()) / 3;
     const rawY = (Math.random() + Math.random() + Math.random()) / 3;
 
     const x = offsetX + rawX * rangeX;
     const y = offsetY + rawY * rangeY;
-    const rotation = -15 + Math.random() * 30; // -15 to +15
-    const scale = 0.85 + Math.random() * 0.2; // 0.85 to 1.05
+    const rotation = -15 + Math.random() * 30;
+    const scale = 0.85 + Math.random() * 0.2;
 
     positions.push({ x, y, rotation, scale });
   }
@@ -49,11 +47,10 @@ function computeScatter(count) {
 
 function computeSpiral(count) {
   const positions = [];
-  const goldenAngle = 137.508 * (Math.PI / 180); // golden angle in radians
+  const goldenAngle = 137.508 * (Math.PI / 180);
   const centerX = 50;
-  const centerY = 48; // slightly above center for logo room
-  // Scale factor so the spiral fits in the viewport
-  const maxRadius = 38; // percentage units
+  const centerY = 48;
+  const maxRadius = 38;
   const sqrtTotal = Math.sqrt(count);
 
   for (let i = 0; i < count; i++) {
@@ -61,9 +58,7 @@ function computeSpiral(count) {
     const radius = (Math.sqrt(i) / sqrtTotal) * maxRadius;
     const x = centerX + radius * Math.cos(angle);
     const y = centerY + radius * Math.sin(angle);
-    // Rotation follows the tangent of the spiral
     const rotation = (angle * 180 / Math.PI) % 360 - 180;
-    // Scale: center cards bigger, outer smaller
     const scale = 1.05 - (i / count) * 0.35;
     positions.push({ x: Math.max(5, Math.min(95, x)), y: Math.max(5, Math.min(95, y)), rotation: rotation * 0.15, scale });
   }
@@ -72,11 +67,11 @@ function computeSpiral(count) {
 
 function computeArc(count) {
   const positions = [];
-  const arcDegrees = 140; // total arc sweep
+  const arcDegrees = 140;
   const startAngle = -(arcDegrees / 2);
   const centerX = 50;
-  const centerY = 110; // pivot point below viewport
-  const radius = 65; // percentage units - large arc
+  const centerY = 110;
+  const radius = 65;
 
   for (let i = 0; i < count; i++) {
     const t = count === 1 ? 0.5 : i / (count - 1);
@@ -84,9 +79,8 @@ function computeArc(count) {
     const angleRad = angleDeg * (Math.PI / 180);
     const x = centerX + radius * Math.sin(angleRad);
     const y = centerY - radius * Math.cos(angleRad);
-    const rotation = angleDeg * 0.4; // cards tilt along the arc
-    // Center cards slightly bigger
-    const distFromCenter = Math.abs(t - 0.5) * 2; // 0 at center, 1 at edges
+    const rotation = angleDeg * 0.4;
+    const distFromCenter = Math.abs(t - 0.5) * 2;
     const scale = 1.0 - distFromCenter * 0.15;
     positions.push({ x: Math.max(2, Math.min(98, x)), y: Math.max(5, Math.min(85, y)), rotation, scale });
   }
@@ -106,8 +100,19 @@ const CardTable = forwardRef((props, ref) => {
   const [focusedIndex, setFocusedIndex] = useState(null);
   const [flash, setFlash] = useState(false);
   const [mode, setMode] = useState("chaos");
+  const [draggingIndex, setDraggingIndex] = useState(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [dragStart, setDragStart] = useState(null);
+  const [collectedIds, setCollectedIds] = useState(new Set());
+  const [flippedIds, setFlippedIds] = useState(new Set());
+  const [zMap, setZMap] = useState({});
+  const [scaleMap, setScaleMap] = useState({});
+  const tableRef = useRef(null);
   const focusTimerRef = useRef(null);
   const dealTimerRef = useRef(null);
+  const zCounterRef = useRef(1);
+  const draggingIndexRef = useRef(null);
+  const imagesRef = useRef(null);
 
   // Fetch Dreamscape cards + file URLs from InstantDB (live subscription)
   const { data: instantData } = db.useQuery({ cards: {}, $files: {} });
@@ -152,6 +157,20 @@ const CardTable = forwardRef((props, ref) => {
     };
   }, [dreamscapeCards.length, instantFiles.length]);
 
+  // Initialize z-counter when images load
+  useEffect(() => {
+    if (images) {
+      zCounterRef.current = images.length + 1;
+    }
+  }, [images]);
+
+  // Helper to bring a card to the front
+  const bringToFront = useCallback((publicId) => {
+    const nextZ = zCounterRef.current + 1;
+    zCounterRef.current = nextZ;
+    setZMap((prev) => ({ ...prev, [publicId]: nextZ }));
+  }, []);
+
   // Compute positions when images load, mode changes, or window resizes
   const recomputePositions = useCallback(() => {
     if (images) {
@@ -169,7 +188,7 @@ const CardTable = forwardRef((props, ref) => {
     return () => window.removeEventListener("resize", recomputePositions);
   }, [recomputePositions]);
 
-  // Dealing animation: after all cards have staggered in, remove dealing state
+  // Dealing animation
   useEffect(() => {
     if (images && images.length > 0 && dealing) {
       const totalDelay = 80 * images.length + 800;
@@ -180,10 +199,130 @@ const CardTable = forwardRef((props, ref) => {
     }
   }, [images, dealing]);
 
+  // Keep refs in sync for use in pointer event handlers
+  draggingIndexRef.current = draggingIndex;
+  imagesRef.current = images;
+
+  // Free-drag cards on the table (pointer events only — no HTML5 drag)
+  const handlePointerDown = useCallback((e, index, publicId) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    bringToFront(publicId);
+    setDragStart({ index, startX: e.clientX, startY: e.clientY });
+  }, [bringToFront]);
+
+  const handlePointerMove = useCallback((e) => {
+    if (!dragStart || !tableRef.current) return;
+
+    // Haven't committed to table-drag yet — check movement threshold
+    if (draggingIndex === null) {
+      const dx = e.clientX - dragStart.startX;
+      const dy = e.clientY - dragStart.startY;
+      if (Math.sqrt(dx * dx + dy * dy) < 10) return;
+      // Commit to table-drag
+      const rect = tableRef.current.getBoundingClientRect();
+      const mx = ((e.clientX - rect.left) / rect.width) * 100;
+      const my = ((e.clientY - rect.top) / rect.height) * 100;
+      setDragOffset({ x: mx - positions[dragStart.index].x, y: my - positions[dragStart.index].y });
+      setDraggingIndex(dragStart.index);
+      return;
+    }
+
+    // Already dragging — update position
+    const rect = tableRef.current.getBoundingClientRect();
+    const mx = ((e.clientX - rect.left) / rect.width) * 100;
+    const my = ((e.clientY - rect.top) / rect.height) * 100;
+    setPositions(prev => {
+      const next = [...prev];
+      next[draggingIndex] = {
+        ...next[draggingIndex],
+        x: mx - dragOffset.x,
+        y: my - dragOffset.y,
+      };
+      return next;
+    });
+  }, [dragStart, draggingIndex, dragOffset, positions]);
+
+  const handlePointerUp = useCallback((e) => {
+    const idx = draggingIndexRef.current;
+    const imgs = imagesRef.current;
+    // If we were actively dragging a card, check if released over dock area
+    if (idx !== null && imgs && props.onCardToDock) {
+      const dockEl = document.querySelector(".card-panel__tray");
+      if (dockEl) {
+        const dockRect = dockEl.getBoundingClientRect();
+        if (
+          e.clientX >= dockRect.left && e.clientX <= dockRect.right &&
+          e.clientY >= dockRect.top && e.clientY <= dockRect.bottom
+        ) {
+          const img = imgs[idx];
+          if (img) {
+            const cardData = img.source === "dreamscape"
+              ? { public_id: img.public_id, imageUrl: img.imageUrl, cardName: img.cardName, cardDescription: img.cardDescription, source: "dreamscape", slideIndex: idx }
+              : { public_id: img.public_id, cloud_name: CLOUD_NAME, slideIndex: idx };
+            props.onCardToDock(cardData);
+          }
+        }
+      }
+    }
+    setDraggingIndex(null);
+    setDragStart(null);
+  }, [props.onCardToDock]);
+
+  useEffect(() => {
+    if (dragStart !== null) {
+      window.addEventListener("pointermove", handlePointerMove);
+      window.addEventListener("pointerup", handlePointerUp);
+      return () => {
+        window.removeEventListener("pointermove", handlePointerMove);
+        window.removeEventListener("pointerup", handlePointerUp);
+      };
+    }
+  }, [dragStart, handlePointerMove, handlePointerUp]);
+
+  // Drop-from-dock: only enable table as drop target when a dock drag is active
+  // The `dockDragging` prop is set by the parent when a card is being dragged from the dock
+  const handleDropZoneDragOver = useCallback((e) => {
+    e.preventDefault();
+  }, []);
+
+  const handleDropZoneDrop = useCallback((e) => {
+    e.preventDefault();
+    if (!tableRef.current) return;
+    try {
+      const data = JSON.parse(e.dataTransfer.getData("application/json"));
+      if (!data.fromDock) return;
+
+      const rect = tableRef.current.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+      const idx = images.findIndex(img => img.public_id === data.public_id);
+      if (idx === -1) return;
+
+      setPositions(prev => {
+        const next = [...prev];
+        if (next[idx]) {
+          next[idx] = { ...next[idx], x, y };
+        }
+        return next;
+      });
+
+      setCollectedIds(prev => {
+        const next = new Set(prev);
+        next.delete(data.public_id);
+        return next;
+      });
+
+      bringToFront(data.public_id);
+    } catch {
+      // ignore
+    }
+  }, [images, bringToFront]);
+
   // Expose imperative API
   useImperativeHandle(ref, () => ({
     focusCard(slideIndex) {
-      // Clear any existing focus timer
       if (focusTimerRef.current) {
         clearTimeout(focusTimerRef.current);
       }
@@ -198,7 +337,45 @@ const CardTable = forwardRef((props, ref) => {
         setFlash(update.flash);
       }
     },
+    collectCard(publicId) {
+      setCollectedIds(prev => new Set(prev).add(publicId));
+    },
+    uncollectCard(publicId) {
+      setCollectedIds(prev => {
+        const next = new Set(prev);
+        next.delete(publicId);
+        return next;
+      });
+    },
   }));
+
+  // Non-passive wheel listener for card scaling (React 16 registers wheel as passive)
+  useEffect(() => {
+    const table = tableRef.current;
+    if (!table) return;
+
+    const onWheel = (e) => {
+      // Walk up from e.target to find a .card-table__card element
+      let cardEl = e.target.closest(".card-table__card");
+      if (!cardEl) return;
+
+      e.preventDefault();
+
+      const publicId = cardEl.dataset.publicId;
+      if (!publicId) return;
+
+      const delta = e.deltaY < 0 ? 0.05 : -0.05;
+      setScaleMap((prev) => {
+        const current = prev[publicId] || 1;
+        const next = Math.min(2.0, Math.max(0.5, current + delta));
+        return { ...prev, [publicId]: next };
+      });
+      bringToFront(publicId);
+    };
+
+    table.addEventListener("wheel", onWheel, { passive: false });
+    return () => table.removeEventListener("wheel", onWheel);
+  }, [bringToFront]);
 
   // Cleanup timers on unmount
   useEffect(() => {
@@ -211,12 +388,22 @@ const CardTable = forwardRef((props, ref) => {
   if (!images || positions.length === 0) return null;
 
   return (
-    <div className="card-table">
+    <div
+      className="card-table"
+      ref={tableRef}
+    >
       <div
         className={`card-table__flash${
           flash ? " card-table__flash--active" : ""
         }`}
       />
+      {props.dockDragging && (
+        <div
+          className="card-table__drop-zone"
+          onDragOver={handleDropZoneDragOver}
+          onDrop={handleDropZoneDrop}
+        />
+      )}
       {/* Mode Switcher */}
       <div className="card-table__mode-switcher">
         {MODES.map((m) => (
@@ -234,75 +421,86 @@ const CardTable = forwardRef((props, ref) => {
       {images.map((img, index) => {
         const pos = positions[index];
         if (!pos) return null;
+        if (collectedIds.has(img.public_id)) return null;
 
         const isFocused = focusedIndex === index;
-        const zIndex = isFocused ? 100 : index + 1;
+        const isDragging = draggingIndex === index;
+        const isFlipped = flippedIds.has(img.public_id);
+        const zIndex = isFocused || isDragging ? 100 : (zMap[img.public_id] || (index + 1));
         const isDreamscape = img.source === "dreamscape";
+        const userScale = scaleMap[img.public_id] || 1;
+        const combinedScale = pos.scale * userScale;
 
         const cardClasses = [
           "card-table__card",
           dealing ? "card-table__card--dealing" : "",
           isFocused ? "card-table__card--focused" : "",
+          isDragging ? "card-table__card--dragging" : "",
           isDreamscape ? "card-table__card--dreamscape" : "",
+          isFlipped ? "card-table__card--flipped" : "",
         ]
           .filter(Boolean)
           .join(" ");
 
-        const handleDragStart = (e) => {
-          const dragData = isDreamscape
-            ? {
-                public_id: img.public_id,
-                imageUrl: img.imageUrl,
-                cardName: img.cardName,
-                cardDescription: img.cardDescription,
-                source: "dreamscape",
-                slideIndex: index,
-              }
-            : {
-                public_id: img.public_id,
-                cloud_name: CLOUD_NAME,
-                slideIndex: index,
-              };
-          e.dataTransfer.setData("application/json", JSON.stringify(dragData));
-          e.dataTransfer.effectAllowed = "copy";
+        const handleDoubleClick = (e) => {
+          e.stopPropagation();
+          setFlippedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(img.public_id)) {
+              next.delete(img.public_id);
+            } else {
+              next.add(img.public_id);
+            }
+            return next;
+          });
+          bringToFront(img.public_id);
         };
 
         return (
           <div
             key={img.public_id}
             className={cardClasses}
+            data-public-id={img.public_id}
             style={{
               position: "absolute",
               left: `${pos.x}%`,
               top: `${pos.y}%`,
-              transform: `rotate(${pos.rotation}deg) scale(${pos.scale})`,
+              transform: `rotate(${pos.rotation}deg) scale(${combinedScale})`,
               zIndex,
+              transition: isDragging ? "none" : undefined,
             }}
+            onPointerDown={(e) => handlePointerDown(e, index, img.public_id)}
+            onDoubleClick={handleDoubleClick}
+            onDragStart={(e) => e.preventDefault()}
           >
-            <span
-              draggable
-              onDragStart={handleDragStart}
-              style={{
-                animationDelay: dealing ? `${index * 80}ms` : undefined,
-              }}
-            >
-              {isDreamscape ? (
-                <img
-                  src={img.imageUrl}
-                  alt={img.cardName || "Dreamscape card"}
-                  className="card-table__dreamscape-img"
-                />
-              ) : (
-                <AdvancedImage
-                  cldImg={
-                    new CloudinaryImage(img.public_id, {
-                      cloudName: CLOUD_NAME,
-                    })
-                  }
-                  alt={img.public_id}
-                />
-              )}
-            </span>
+            <div className="card-table__card-inner">
+              <span
+                className="card-table__card-front"
+                style={{
+                  animationDelay: dealing ? `${index * 80}ms` : undefined,
+                }}
+              >
+                {isDreamscape ? (
+                  <img
+                    src={img.imageUrl}
+                    alt={img.cardName || "Dreamscape card"}
+                    className="card-table__dreamscape-img"
+                  />
+                ) : (
+                  <AdvancedImage
+                    cldImg={
+                      new CloudinaryImage(img.public_id, {
+                        cloudName: CLOUD_NAME,
+                      })
+                    }
+                    alt={img.public_id}
+                  />
+                )}
+              </span>
+              <div className="card-table__card-back">
+                <CardBack />
+              </div>
+            </div>
             {isDreamscape && img.cardName && (
               <div className="card-table__card-label">{img.cardName}</div>
             )}

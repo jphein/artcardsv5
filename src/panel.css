@@ -189,10 +189,12 @@
   box-shadow: 0 0 8px rgba(240, 216, 117, 0.4);
 }
 
+/* ─── View Spread: Enchanted Button ─── */
+
 .card-panel__spread-btn {
   align-self: center;
   flex-shrink: 0;
-  padding: 12px 24px;
+  padding: 14px 28px;
   margin-left: 8px;
   background:
     linear-gradient(
@@ -201,27 +203,54 @@
       rgba(26, 15, 0, 0.95) 50%,
       rgba(42, 26, 0, 0.9) 100%
     );
-  color: #c9a84c;
-  border: 2px solid;
-  border-image: linear-gradient(
-    180deg,
-    #f0d875 0%,
-    #c9a84c 50%,
-    #f0d875 100%
-  ) 1;
+  color: #f0d875;
+  border: 2px solid #a67c00;
+  border-radius: 0;
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
   text-transform: uppercase;
   box-shadow:
-    0 0 10px rgba(201, 168, 76, 0.3),
-    inset 0 0 10px rgba(201, 168, 76, 0.05);
-  transition: all 0.3s ease;
+    0 0 12px rgba(201, 168, 76, 0.3),
+    0 0 24px rgba(201, 168, 76, 0.1),
+    inset 0 0 12px rgba(201, 168, 76, 0.06);
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Shimmer sweep */
+.card-panel__spread-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(240, 216, 117, 0.08) 40%,
+    rgba(255, 232, 160, 0.18) 50%,
+    rgba(240, 216, 117, 0.08) 60%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: spread-btn-shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Pulsing glow ring */
+.card-panel__spread-btn::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border: 1px solid rgba(240, 216, 117, 0.3);
+  animation: spread-btn-pulse 2s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .card-panel__spread-btn:hover {
   color: #ffe8a0;
+  border-color: #f0d875;
   background:
     linear-gradient(
       160deg,
@@ -230,7 +259,33 @@
       rgba(58, 40, 0, 0.95) 100%
     );
   box-shadow:
-    0 0 15px rgba(240, 216, 117, 0.5),
-    0 0 30px rgba(201, 168, 76, 0.2),
-    inset 0 0 15px rgba(240, 216, 117, 0.08);
+    0 0 20px rgba(240, 216, 117, 0.6),
+    0 0 40px rgba(201, 168, 76, 0.25),
+    0 0 60px rgba(201, 168, 76, 0.1),
+    inset 0 0 18px rgba(240, 216, 117, 0.1);
+  transform: scale(1.05);
+  text-shadow: 0 0 10px rgba(240, 216, 117, 0.6);
+}
+
+.card-panel__spread-btn:active {
+  transform: scale(0.97);
+  box-shadow:
+    0 0 10px rgba(240, 216, 117, 0.4),
+    inset 0 0 20px rgba(201, 168, 76, 0.1);
+}
+
+@keyframes spread-btn-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes spread-btn-pulse {
+  0%, 100% {
+    opacity: 0.3;
+    border-color: rgba(240, 216, 117, 0.2);
+  }
+  50% {
+    opacity: 1;
+    border-color: rgba(240, 216, 117, 0.5);
+  }
 }

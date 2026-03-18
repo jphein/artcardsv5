@@ -1,10 +1,7 @@
 /* ─── Auth Button: Fixed Top-Right Badge ─── */
 
 .auth-btn {
-  position: fixed;
-  top: 14px;
-  right: 14px;
-  z-index: 1100;
+  pointer-events: auto;
   font-family: sans-serif;
   font-size: 12px;
   font-weight: 600;
