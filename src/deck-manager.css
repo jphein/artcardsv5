@@ -1,4 +1,6 @@
-/* ─── Deck Manager: Collapsible Side Section ─── */
+/* ═══════════════════════════════════════════════════════
+   Deck Manager — Saved Decks with enchanted styling
+   ═══════════════════════════════════════════════════════ */
 
 .deck-manager {
   margin-top: 16px;
@@ -9,6 +11,31 @@
   box-shadow:
     0 0 10px rgba(201, 168, 76, 0.15),
     inset 0 0 15px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ambient shimmer across the whole manager */
+.deck-manager::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    rgba(240, 216, 117, 0.03) 40%,
+    rgba(255, 232, 160, 0.06) 50%,
+    rgba(240, 216, 117, 0.03) 60%,
+    transparent 100%
+  );
+  background-size: 300% 100%;
+  animation: deck-ambient-shimmer 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes deck-ambient-shimmer {
+  0% { background-position: 300% center; }
+  100% { background-position: -300% center; }
 }
 
 .deck-manager--signed-out {
@@ -33,7 +60,7 @@
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 10px 14px;
+  padding: 12px 16px;
   background:
     linear-gradient(
       160deg,
@@ -46,9 +73,18 @@
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.8px;
+  letter-spacing: 1.2px;
   text-align: left;
   transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.deck-manager__header::before {
+  content: "\2727";
+  margin-right: 4px;
+  font-size: 12px;
+  filter: drop-shadow(0 0 3px rgba(240, 216, 117, 0.5));
 }
 
 .deck-manager__header:hover {
@@ -61,47 +97,58 @@
     );
   color: #f0d875;
   box-shadow: inset 0 0 15px rgba(240, 216, 117, 0.05);
+  text-shadow: 0 0 8px rgba(240, 216, 117, 0.4);
 }
 
 .deck-manager__header-icon {
   font-size: 10px;
   color: #a67c00;
   filter: drop-shadow(0 0 2px rgba(240, 216, 117, 0.4));
-  transition: color 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .deck-manager__header:hover .deck-manager__header-icon {
   color: #f0d875;
+  filter: drop-shadow(0 0 4px rgba(240, 216, 117, 0.7));
 }
 
 .deck-manager__count {
   margin-left: auto;
   font-size: 11px;
-  color: #8a7340;
-  background: rgba(201, 168, 76, 0.1);
-  border: 1px solid rgba(166, 124, 0, 0.3);
+  color: #f0d875;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(201, 168, 76, 0.15) 0%,
+      rgba(240, 216, 117, 0.08) 100%
+    );
+  border: 1px solid rgba(201, 168, 76, 0.35);
   border-radius: 10px;
-  padding: 1px 8px;
-  min-width: 20px;
+  padding: 2px 10px;
+  min-width: 24px;
   text-align: center;
+  font-weight: 700;
+  box-shadow: 0 0 6px rgba(201, 168, 76, 0.15);
 }
 
 /* ─── Body ─── */
 
 .deck-manager__body {
-  padding: 10px 14px 14px;
+  padding: 14px 16px 16px;
   border-top: 1px solid rgba(166, 124, 0, 0.25);
+  position: relative;
+  z-index: 1;
 }
 
 /* ─── Save Section ─── */
 
 .deck-manager__save-section {
-  margin-bottom: 10px;
+  margin-bottom: 14px;
 }
 
 .deck-manager__save-btn {
   width: 100%;
-  padding: 8px 12px;
+  padding: 10px 14px;
   background:
     linear-gradient(
       160deg,
@@ -110,29 +157,54 @@
       rgba(42, 26, 0, 0.9) 100%
     );
   color: #c9a84c;
-  border: 1px solid;
-  border-image: linear-gradient(180deg, #f0d875, #c9a84c, #f0d875) 1;
+  border: 1px solid #a67c00;
   cursor: pointer;
   font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.8px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
   box-shadow:
-    0 0 6px rgba(201, 168, 76, 0.2),
-    inset 0 0 8px rgba(201, 168, 76, 0.03);
+    0 0 8px rgba(201, 168, 76, 0.2),
+    inset 0 0 10px rgba(201, 168, 76, 0.04);
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.deck-manager__save-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(240, 216, 117, 0.06) 45%,
+    rgba(255, 232, 160, 0.12) 50%,
+    rgba(240, 216, 117, 0.06) 55%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: deck-save-shimmer 3.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes deck-save-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
 }
 
 .deck-manager__save-btn:hover:not(:disabled) {
   color: #ffe8a0;
+  border-color: #f0d875;
   box-shadow:
-    0 0 12px rgba(240, 216, 117, 0.4),
-    0 0 25px rgba(201, 168, 76, 0.15),
-    inset 0 0 12px rgba(240, 216, 117, 0.06);
+    0 0 14px rgba(240, 216, 117, 0.45),
+    0 0 28px rgba(201, 168, 76, 0.15),
+    inset 0 0 14px rgba(240, 216, 117, 0.06);
+  text-shadow: 0 0 6px rgba(240, 216, 117, 0.5);
 }
 
 .deck-manager__save-btn:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: default;
 }
 
@@ -146,7 +218,7 @@
 
 .deck-manager__name-input {
   flex: 1;
-  padding: 6px 10px;
+  padding: 8px 12px;
   background: rgba(26, 15, 0, 0.9);
   color: #f0d875;
   border: 1px solid #a67c00;
@@ -154,7 +226,7 @@
   font-size: 12px;
   letter-spacing: 0.3px;
   outline: none;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   font-family: inherit;
 }
 
@@ -166,12 +238,12 @@
 .deck-manager__name-input:focus {
   border-color: #f0d875;
   box-shadow:
-    0 0 8px rgba(240, 216, 117, 0.3),
-    inset 0 0 6px rgba(201, 168, 76, 0.08);
+    0 0 10px rgba(240, 216, 117, 0.35),
+    inset 0 0 8px rgba(201, 168, 76, 0.1);
 }
 
 .deck-manager__confirm-btn {
-  padding: 6px 12px;
+  padding: 8px 14px;
   background:
     linear-gradient(
       160deg,
@@ -184,26 +256,27 @@
   border-radius: 3px;
   cursor: pointer;
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
+  font-weight: 700;
+  letter-spacing: 1px;
   text-transform: uppercase;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
 }
 
 .deck-manager__confirm-btn:hover:not(:disabled) {
   color: #ffe8a0;
   border-color: #f0d875;
-  box-shadow: 0 0 8px rgba(240, 216, 117, 0.3);
+  box-shadow: 0 0 10px rgba(240, 216, 117, 0.35);
+  text-shadow: 0 0 4px rgba(240, 216, 117, 0.4);
 }
 
 .deck-manager__confirm-btn:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: default;
 }
 
 .deck-manager__cancel-btn {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   padding: 0;
   background: rgba(42, 26, 0, 0.85);
   color: #c9a84c;
@@ -211,7 +284,7 @@
   border-radius: 50%;
   cursor: pointer;
   font-size: 14px;
-  line-height: 22px;
+  line-height: 24px;
   text-align: center;
   transition: all 0.2s ease;
   flex-shrink: 0;
@@ -221,7 +294,7 @@
   background: rgba(160, 50, 30, 0.9);
   border-color: #f0d875;
   color: #ffe8a0;
-  box-shadow: 0 0 6px rgba(240, 216, 117, 0.3);
+  box-shadow: 0 0 8px rgba(240, 216, 117, 0.3);
 }
 
 /* ─── Deck List ─── */
@@ -229,8 +302,8 @@
 .deck-manager__list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  max-height: 200px;
+  gap: 6px;
+  max-height: 240px;
   overflow-y: auto;
 }
 
@@ -254,8 +327,8 @@
   font-size: 12px;
   font-style: italic;
   text-align: center;
-  padding: 12px 0;
-  letter-spacing: 0.3px;
+  padding: 16px 0;
+  letter-spacing: 0.5px;
   user-select: none;
 }
 
@@ -263,58 +336,131 @@
   color: #a05030;
 }
 
-/* ─── Deck Item ─── */
+/* ─── Deck Item: Enchanted Card ─── */
 
 .deck-manager__deck-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  background: rgba(26, 15, 0, 0.6);
+  gap: 10px;
+  padding: 10px 12px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(26, 15, 0, 0.7) 0%,
+      rgba(35, 22, 0, 0.6) 50%,
+      rgba(26, 15, 0, 0.7) 100%
+    );
   border: 1px solid rgba(166, 124, 0, 0.2);
-  border-radius: 3px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Hover shimmer sweep */
+.deck-manager__deck-item::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(240, 216, 117, 0.05) 40%,
+    rgba(255, 232, 160, 0.1) 50%,
+    rgba(240, 216, 117, 0.05) 60%,
+    transparent 100%
+  );
+  background-size: 300% 100%;
+  background-position: 300% center;
+  transition: background-position 0.6s ease;
+  pointer-events: none;
+}
+
+.deck-manager__deck-item:hover::before {
+  background-position: -300% center;
 }
 
 .deck-manager__deck-item:hover {
-  background: rgba(42, 26, 0, 0.8);
-  border-color: rgba(240, 216, 117, 0.4);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(42, 26, 0, 0.85) 0%,
+      rgba(50, 32, 0, 0.8) 50%,
+      rgba(42, 26, 0, 0.85) 100%
+    );
+  border-color: rgba(240, 216, 117, 0.45);
   box-shadow:
-    0 0 10px rgba(201, 168, 76, 0.2),
-    0 0 20px rgba(201, 168, 76, 0.08),
-    inset 0 0 10px rgba(240, 216, 117, 0.03);
+    0 0 12px rgba(201, 168, 76, 0.25),
+    0 0 24px rgba(201, 168, 76, 0.08),
+    inset 0 0 12px rgba(240, 216, 117, 0.04);
+  transform: translateX(2px);
+}
+
+/* Deck icon */
+.deck-manager__deck-item::after {
+  content: "\2660";
+  position: absolute;
+  right: 36px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: rgba(201, 168, 76, 0.08);
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.deck-manager__deck-item:hover::after {
+  color: rgba(240, 216, 117, 0.15);
+  filter: drop-shadow(0 0 4px rgba(240, 216, 117, 0.3));
 }
 
 .deck-manager__deck-info {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   min-width: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .deck-manager__deck-name {
   color: #f0d875;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: text-shadow 0.3s ease;
+}
+
+.deck-manager__deck-item:hover .deck-manager__deck-name {
+  text-shadow: 0 0 6px rgba(240, 216, 117, 0.4);
 }
 
 .deck-manager__deck-meta {
   color: #8a7340;
   font-size: 10px;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-/* ─── Delete Button (appears on hover, like panel remove) ─── */
+.deck-manager__deck-meta::before {
+  content: "\2726";
+  font-size: 8px;
+  color: #a67c00;
+  filter: drop-shadow(0 0 2px rgba(201, 168, 76, 0.3));
+}
+
+/* ─── Delete Button ─── */
 
 .deck-manager__delete-btn {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   padding: 0;
   background: rgba(42, 26, 0, 0.85);
   color: #c9a84c;
@@ -322,11 +468,13 @@
   border-radius: 50%;
   cursor: pointer;
   font-size: 12px;
-  line-height: 18px;
+  line-height: 20px;
   text-align: center;
   opacity: 0;
   flex-shrink: 0;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
+  position: relative;
+  z-index: 1;
 }
 
 .deck-manager__deck-item:hover .deck-manager__delete-btn {
@@ -337,5 +485,6 @@
   background: rgba(160, 50, 30, 0.9);
   border-color: #f0d875;
   color: #ffe8a0;
-  box-shadow: 0 0 8px rgba(240, 216, 117, 0.4);
+  box-shadow: 0 0 10px rgba(240, 216, 117, 0.4);
+  transform: scale(1.1);
 }

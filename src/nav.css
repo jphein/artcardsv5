@@ -83,6 +83,81 @@
   right: 2%;
 }
 
+/* ─── Back-to-Table Button (bottom center) ─── */
+
+.nav-btn--table {
+  top: auto;
+  bottom: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px solid;
+  border-image: none;
+  border-color: #a67c00;
+  background:
+    radial-gradient(
+      circle at 30% 30%,
+      #3a2800 0%,
+      #1a0f00 60%,
+      #0f0800 100%
+    );
+  box-shadow:
+    0 0 18px rgba(201, 168, 76, 0.5),
+    0 0 36px rgba(201, 168, 76, 0.2),
+    inset 0 0 12px rgba(201, 168, 76, 0.15);
+  animation: table-btn-pulse 3s ease-in-out infinite;
+}
+
+.nav-btn--table .nav-btn__icon {
+  font-size: 22px;
+}
+
+.nav-btn--table-label {
+  display: block;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #c9a84c;
+  font-family: sans-serif;
+  margin-top: 2px;
+}
+
+.nav-btn--table .nav-btn__corner {
+  display: none;
+}
+
+.nav-btn--table:hover {
+  border-color: #f0d875;
+  box-shadow:
+    0 0 24px rgba(240, 216, 117, 0.6),
+    0 0 48px rgba(201, 168, 76, 0.35),
+    0 0 72px rgba(166, 124, 0, 0.15),
+    inset 0 0 16px rgba(240, 216, 117, 0.2);
+  transform: translateX(-50%) scale(1.12);
+}
+
+.nav-btn--table:active {
+  transform: translateX(-50%) scale(0.92);
+}
+
+@keyframes table-btn-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 18px rgba(201, 168, 76, 0.5),
+      0 0 36px rgba(201, 168, 76, 0.2),
+      inset 0 0 12px rgba(201, 168, 76, 0.15);
+  }
+  50% {
+    box-shadow:
+      0 0 24px rgba(240, 216, 117, 0.6),
+      0 0 44px rgba(201, 168, 76, 0.3),
+      inset 0 0 16px rgba(201, 168, 76, 0.2);
+  }
+}
+
 /* ─── Corner Filigree Ornaments ─── */
 
 .nav-btn__corner {

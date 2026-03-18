@@ -32,11 +32,12 @@
   position: relative;
   width: 160px;
   transform-style: preserve-3d;
-  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s ease-out;
+  transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
 }
 
 .card-table__card--flipped .card-table__card-inner {
-  transform: rotateY(180deg);
+  transform: rotateX(var(--tilt-x, 0deg)) rotateY(calc(180deg + var(--tilt-y, 0deg)));
 }
 
 /* ─── Front and Back Faces ─── */
@@ -67,6 +68,7 @@
 
 .card-table__card .card-table__card-front {
   display: block;
+  position: relative;
   width: 160px;
   border-radius: 8px;
   border: 2px solid #a67c00;
@@ -106,7 +108,7 @@
 /* ─── Dragging on Table ─── */
 
 .card-table__card--dragging {
-  z-index: 1100 !important;
+  z-index: 1200 !important;
   cursor: grabbing !important;
 }
 
@@ -119,6 +121,29 @@
   border-color: #f0d875;
   cursor: grabbing;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* ─── Holographic Light Overlay ─── */
+
+.card-table__card .card-table__card-front::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  background: radial-gradient(
+    circle at var(--light-x, 50%) var(--light-y, 50%),
+    rgba(255, 232, 160, 0.2) 0%,
+    rgba(240, 216, 117, 0.08) 30%,
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.card-table__card:hover .card-table__card-front::after {
+  opacity: 1;
 }
 
 /* ─── Card Image ─── */
@@ -134,7 +159,7 @@
 /* ─── Dealing Entrance Animation ─── */
 
 .card-table__card--dealing .card-table__card-front {
-  animation: card-deal-in 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: card-deal-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
 @keyframes card-deal-in {
@@ -268,7 +293,7 @@
   right: 16px;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 80;
+  z-index: 1050;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -345,6 +370,36 @@
   color: #f0d875;
 }
 
+/* ─── Mode Divider ─── */
+
+.card-table__mode-divider {
+  width: 70%;
+  height: 1px;
+  margin: 4px auto;
+  background: linear-gradient(90deg, transparent, #a67c00, transparent);
+}
+
+/* ─── Shuffle Button ─── */
+
+.card-table__shuffle-btn .card-table__mode-icon {
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.3s ease, filter 0.3s ease;
+}
+
+.card-table__shuffle-btn:hover .card-table__mode-icon {
+  transform: rotate(180deg);
+}
+
+.card-table__shuffle-btn--active .card-table__mode-icon {
+  animation: shuffle-spin 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+  color: #f0d875;
+  filter: drop-shadow(0 0 8px rgba(240, 216, 117, 0.8));
+}
+
+@keyframes shuffle-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* Shimmer on active button */
 .card-table__mode-btn--active::before {
   content: "";
@@ -405,6 +460,157 @@
   }
 
   .card-table__card-inner {
+    width: 90px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   Undealt Deck Pile — Click/tap to deal
+   ═══════════════════════════════════════════════════════ */
+
+.card-table__deck-pile {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  z-index: 10;
+  animation: deck-pile-appear 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes deck-pile-appear {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.6) translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) translateY(0);
+  }
+}
+
+.card-table__deck-pile:hover .card-table__deck-stack {
+  transform: scale(1.05);
+  filter: drop-shadow(0 0 30px rgba(240, 216, 117, 0.5));
+}
+
+.card-table__deck-stack {
+  position: relative;
+  width: 180px;
+  height: 260px;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  filter: drop-shadow(0 0 20px rgba(201, 168, 76, 0.3));
+  animation: deck-breathe 3s ease-in-out infinite;
+}
+
+@keyframes deck-breathe {
+  0%, 100% {
+    filter: drop-shadow(0 0 20px rgba(201, 168, 76, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 35px rgba(240, 216, 117, 0.5));
+  }
+}
+
+.card-table__deck-card {
+  position: absolute;
+  width: 160px;
+  border-radius: 8px;
+  border: 2px solid #a67c00;
+  overflow: hidden;
+  box-shadow:
+    4px 6px 12px rgba(0, 0, 0, 0.5),
+    0 0 8px rgba(201, 168, 76, 0.15);
+  transition: transform 0.3s ease;
+}
+
+.card-table__deck-pile:hover .card-table__deck-card:nth-child(1) {
+  transform: translate(-50%, -50%) rotate(-10deg) translateX(-8px) !important;
+}
+.card-table__deck-pile:hover .card-table__deck-card:nth-child(2) {
+  transform: translate(-50%, -50%) rotate(-5deg) translateX(-4px) !important;
+}
+.card-table__deck-pile:hover .card-table__deck-card:nth-child(4) {
+  transform: translate(-50%, -50%) rotate(3deg) translateX(3px) !important;
+}
+.card-table__deck-pile:hover .card-table__deck-card:nth-child(5) {
+  transform: translate(-50%, -50%) rotate(8deg) translateX(6px) !important;
+}
+.card-table__deck-pile:hover .card-table__deck-card:nth-child(6) {
+  transform: translate(-50%, -50%) rotate(12deg) translateX(10px) !important;
+}
+
+/* Label below deck */
+
+.card-table__deck-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  animation: deck-label-pulse 2s ease-in-out infinite;
+}
+
+@keyframes deck-label-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+.card-table__deck-label-icon {
+  font-size: 24px;
+  color: #f0d875;
+  filter: drop-shadow(0 0 8px rgba(240, 216, 117, 0.6));
+  animation: deck-icon-spin 6s linear infinite;
+}
+
+@keyframes deck-icon-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.card-table__deck-label-text {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #c9a84c;
+  text-shadow: 0 0 10px rgba(201, 168, 76, 0.4);
+  font-family: sans-serif;
+}
+
+.card-table__deck-pile:hover .card-table__deck-label-text {
+  color: #f0d875;
+  text-shadow: 0 0 14px rgba(240, 216, 117, 0.6);
+}
+
+.card-table__deck-label-count {
+  font-size: 11px;
+  color: #8a7340;
+  letter-spacing: 1px;
+  font-family: sans-serif;
+}
+
+@media (max-width: 768px) {
+  .card-table__deck-stack {
+    width: 140px;
+    height: 200px;
+  }
+
+  .card-table__deck-card {
+    width: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-table__deck-stack {
+    width: 110px;
+    height: 160px;
+  }
+
+  .card-table__deck-card {
     width: 90px;
   }
 }

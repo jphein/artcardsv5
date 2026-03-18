@@ -11,6 +11,7 @@ const FullScreenButton = ({ autoFullscreen }) => {
   const cardTableRef = useRef(null);
   const cardPanelRef = useRef(null);
   const [dockDragging, setDockDragging] = useState(false);
+  const [viewMode, setViewMode] = useState("table");
 
   const requestFullscreen = () => {
     if (appContainerRef.current.requestFullscreen) {
@@ -34,15 +35,20 @@ const FullScreenButton = ({ autoFullscreen }) => {
     <div>
       <div ref={appContainerRef} className="app-container">
         <FireApp />
-        <CardTable
-          ref={cardTableRef}
-          dockDragging={dockDragging}
-          onCardToDock={(cardData) => {
-            if (cardPanelRef.current) {
-              cardPanelRef.current.addCard(cardData);
-            }
-          }}
-        />
+        {viewMode === "table" ? (
+          <CardTable
+            ref={cardTableRef}
+            dockDragging={dockDragging}
+            onCardToDock={(cardData) => {
+              if (cardPanelRef.current) {
+                cardPanelRef.current.addCard(cardData);
+              }
+            }}
+            onSwitchToCarousel={() => setViewMode("carousel")}
+          />
+        ) : (
+          <Example onSwitchToTable={() => setViewMode("table")} />
+        )}
         <CardPanel
           ref={cardPanelRef}
           onNavigate={(slideIndex) => {

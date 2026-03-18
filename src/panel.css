@@ -12,6 +12,35 @@
   transform: translateY(0);
 }
 
+.card-panel--peek:not(.card-panel--open) {
+  transform: translateY(calc(100% - 90px));
+}
+
+.card-panel--peek:not(.card-panel--open) .card-panel__toggle {
+  color: #f0d875;
+  text-shadow: 0 0 12px rgba(240, 216, 117, 0.6);
+  box-shadow:
+    0 -8px 30px rgba(240, 216, 117, 0.5),
+    0 -4px 60px rgba(201, 168, 76, 0.25),
+    inset 0 0 20px rgba(240, 216, 117, 0.1);
+  animation: peek-glow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes peek-glow {
+  0% {
+    box-shadow:
+      0 -8px 30px rgba(240, 216, 117, 0.5),
+      0 -4px 60px rgba(201, 168, 76, 0.25),
+      inset 0 0 20px rgba(240, 216, 117, 0.1);
+  }
+  100% {
+    box-shadow:
+      0 -12px 40px rgba(240, 216, 117, 0.7),
+      0 -6px 80px rgba(201, 168, 76, 0.35),
+      inset 0 0 25px rgba(240, 216, 117, 0.15);
+  }
+}
+
 /* ─── Toggle Button: Gold Ornate Tab ─── */
 
 .card-panel__toggle {
@@ -69,17 +98,25 @@
   filter: drop-shadow(0 0 3px rgba(240, 216, 117, 0.5));
 }
 
-/* ─── Tray: Semi-opaque Dark with Gold Border ─── */
+/* ─── Tray: Enchanted Dark Chamber ─── */
 
 .card-panel__tray {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  min-height: 140px;
-  padding: 20px 30px;
-  overflow-x: auto;
-  background: rgba(15, 10, 2, 0.7);
+  flex-direction: column;
+  gap: 0;
+  min-height: 160px;
+  max-height: 50vh;
+  padding: 16px 24px 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(42, 26, 0, 0.5) 0%,
+      rgba(15, 10, 2, 0.85) 60%,
+      rgba(5, 3, 0, 0.95) 100%
+    );
   border-top: 2px solid;
   border-image: linear-gradient(
     90deg,
@@ -91,13 +128,70 @@
     #a67c00 85%,
     transparent 100%
   ) 1;
-  backdrop-filter: blur(12px);
-  transition: background 0.2s ease, border-color 0.2s ease;
+  backdrop-filter: blur(16px);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Ambient golden mist overlay */
+.card-panel__tray::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse at 30% 50%,
+      rgba(201, 168, 76, 0.04) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse at 70% 50%,
+      rgba(240, 216, 117, 0.03) 0%,
+      transparent 50%
+    );
+  pointer-events: none;
+  animation: tray-mist 8s ease-in-out infinite alternate;
+}
+
+/* Slow drifting shimmer along the top edge */
+.card-panel__tray::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(240, 216, 117, 0.1) 20%,
+    rgba(255, 232, 160, 0.3) 50%,
+    rgba(240, 216, 117, 0.1) 80%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: tray-edge-shimmer 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes tray-mist {
+  0% {
+    opacity: 0.6;
+    transform: translateX(-2%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(2%);
+  }
+}
+
+@keyframes tray-edge-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
 }
 
 /* Gold-themed scrollbar for card tray */
 .card-panel__tray::-webkit-scrollbar {
-  height: 4px;
+  width: 4px;
 }
 
 .card-panel__tray::-webkit-scrollbar-track {
@@ -109,14 +203,17 @@
   border-radius: 2px;
 }
 
-.card-panel__tray {
-  scrollbar-width: thin;
-  scrollbar-color: #a67c00 rgba(15, 10, 2, 0.5);
-}
-
 .card-panel__tray--dragover {
-  background: rgba(30, 25, 5, 0.8);
-  box-shadow: inset 0 0 30px rgba(240, 216, 117, 0.1);
+  background:
+    radial-gradient(
+      ellipse at 50% 50%,
+      rgba(58, 40, 0, 0.6) 0%,
+      rgba(30, 20, 2, 0.85) 50%,
+      rgba(15, 10, 2, 0.95) 100%
+    );
+  box-shadow:
+    inset 0 0 40px rgba(240, 216, 117, 0.12),
+    inset 0 0 80px rgba(201, 168, 76, 0.06);
 }
 
 .card-panel__empty {
@@ -125,9 +222,10 @@
   font-style: italic;
   user-select: none;
   letter-spacing: 0.5px;
+  text-shadow: 0 0 8px rgba(138, 115, 64, 0.3);
 }
 
-/* ─── Card Slots: Gold Bordered Thumbnails ─── */
+/* ─── Card Slots: Enchanted Gold Thumbnails ─── */
 
 .card-panel__card {
   position: relative;
@@ -139,17 +237,31 @@
   flex-shrink: 0;
   border: 2px solid #a67c00;
   box-shadow:
-    0 0 8px rgba(201, 168, 76, 0.3),
+    0 0 10px rgba(201, 168, 76, 0.25),
+    0 4px 12px rgba(0, 0, 0, 0.5),
     inset 0 0 8px rgba(0, 0, 0, 0.4);
-  transition: all 0.3s ease;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: card-slot-appear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes card-slot-appear {
+  0% {
+    opacity: 0;
+    transform: scale(0.6) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .card-panel__card:hover {
   border-color: #f0d875;
-  transform: scale(1.08);
+  transform: scale(1.12) translateY(-4px);
   box-shadow:
-    0 0 15px rgba(240, 216, 117, 0.5),
-    0 0 30px rgba(201, 168, 76, 0.2),
+    0 0 20px rgba(240, 216, 117, 0.5),
+    0 0 40px rgba(201, 168, 76, 0.2),
+    0 8px 20px rgba(0, 0, 0, 0.5),
     inset 0 0 8px rgba(0, 0, 0, 0.4);
 }
 
@@ -157,6 +269,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  filter: brightness(0.95) contrast(1.05);
 }
 
 .card-panel__remove {
@@ -187,6 +300,24 @@
   border-color: #f0d875;
   color: #ffe8a0;
   box-shadow: 0 0 8px rgba(240, 216, 117, 0.4);
+}
+
+/* ─── Dreamscape card glow ─── */
+
+.card-panel__card--dreamscape {
+  border-color: #7c3aed;
+  box-shadow:
+    0 0 10px rgba(124, 58, 237, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.5),
+    inset 0 0 8px rgba(0, 0, 0, 0.4);
+}
+
+.card-panel__card--dreamscape:hover {
+  border-color: #a78bfa;
+  box-shadow:
+    0 0 20px rgba(167, 139, 250, 0.5),
+    0 0 40px rgba(124, 58, 237, 0.2),
+    0 8px 20px rgba(0, 0, 0, 0.5);
 }
 
 /* ─── View Spread: Enchanted Button ─── */
@@ -288,4 +419,768 @@
     opacity: 1;
     border-color: rgba(240, 216, 117, 0.5);
   }
+}
+
+/* ─── Card Sections ─── */
+
+.card-panel__section {
+  position: relative;
+  padding: 12px 0 16px;
+}
+
+.card-panel__section + .card-panel__section {
+  border-top: 1px solid transparent;
+  padding-top: 16px;
+}
+
+/* Section header */
+
+.card-panel__section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+
+.card-panel__section-icon {
+  font-size: 14px;
+  filter: drop-shadow(0 0 4px rgba(240, 216, 117, 0.6));
+}
+
+.card-panel__section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-family: sans-serif;
+}
+
+.card-panel__section-count {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: 10px;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* Card grid within section */
+
+.card-panel__section-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+}
+
+/* ─── Art Cards Section: Gold theme ─── */
+
+.card-panel__section--art .card-panel__section-icon {
+  color: #f0d875;
+}
+
+.card-panel__section--art .card-panel__section-title {
+  color: #c9a84c;
+  text-shadow: 0 0 6px rgba(201, 168, 76, 0.3);
+}
+
+.card-panel__section--art .card-panel__section-count {
+  color: #c9a84c;
+  background: rgba(201, 168, 76, 0.1);
+  border: 1px solid rgba(166, 124, 0, 0.3);
+}
+
+.card-panel__section--art + .card-panel__section--dreamscape {
+  border-image: linear-gradient(
+    90deg,
+    transparent 10%,
+    rgba(124, 58, 237, 0.3) 30%,
+    rgba(167, 139, 250, 0.5) 50%,
+    rgba(124, 58, 237, 0.3) 70%,
+    transparent 90%
+  ) 1;
+}
+
+/* ─── Dreamscape Section: Purple mystic theme ─── */
+
+.card-panel__section--dreamscape {
+  position: relative;
+}
+
+.card-panel__section--dreamscape::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse at 50% 30%,
+      rgba(124, 58, 237, 0.06) 0%,
+      transparent 60%
+    );
+  pointer-events: none;
+  animation: dreamscape-mist 6s ease-in-out infinite alternate;
+}
+
+@keyframes dreamscape-mist {
+  0% { opacity: 0.5; transform: translateX(-1%); }
+  100% { opacity: 1; transform: translateX(1%); }
+}
+
+.card-panel__section--dreamscape .card-panel__section-icon {
+  color: #a78bfa;
+  animation: dreamscape-sparkle 2s ease-in-out infinite;
+}
+
+@keyframes dreamscape-sparkle {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(167, 139, 250, 0.5)); transform: scale(1); }
+  50% { filter: drop-shadow(0 0 10px rgba(167, 139, 250, 0.9)); transform: scale(1.15); }
+}
+
+.card-panel__section--dreamscape .card-panel__section-title {
+  color: #c4b5fd;
+  text-shadow: 0 0 8px rgba(167, 139, 250, 0.4);
+}
+
+.card-panel__section--dreamscape .card-panel__section-count {
+  color: #c4b5fd;
+  background: rgba(124, 58, 237, 0.15);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+}
+
+/* Dreamscape card name overlay */
+
+.card-panel__card-name {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 4px 4px;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-align: center;
+  color: #e9d5ff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Actions Row ─── */
+
+.card-panel__actions {
+  display: flex;
+  justify-content: center;
+  padding-top: 14px;
+  border-top: 1px solid transparent;
+  border-image: linear-gradient(
+    90deg,
+    transparent 15%,
+    rgba(166, 124, 0, 0.3) 35%,
+    rgba(240, 216, 117, 0.4) 50%,
+    rgba(166, 124, 0, 0.3) 65%,
+    transparent 85%
+  ) 1;
+}
+
+.card-panel__empty {
+  text-align: center;
+  padding: 20px 0;
+}
+
+/* ═══════════════════════════════════════════════════════
+   My Decks — Enchanted deck section in dock
+   ═══════════════════════════════════════════════════════ */
+
+.card-panel__section--decks {
+  border-top: 1px solid transparent;
+  border-image: linear-gradient(
+    90deg,
+    transparent 5%,
+    rgba(166, 124, 0, 0.25) 25%,
+    rgba(240, 216, 117, 0.4) 50%,
+    rgba(166, 124, 0, 0.25) 75%,
+    transparent 95%
+  ) 1;
+  margin-top: 4px;
+}
+
+.card-panel__section-header--toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.card-panel__section-header--toggle:hover .card-panel__section-title {
+  color: #f0d875;
+  text-shadow: 0 0 8px rgba(240, 216, 117, 0.4);
+}
+
+.card-panel__section--decks .card-panel__section-icon {
+  color: #f0d875;
+  font-size: 16px;
+  filter: drop-shadow(0 0 5px rgba(240, 216, 117, 0.5));
+  animation: deck-icon-glow 3s ease-in-out infinite;
+}
+
+@keyframes deck-icon-glow {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(240, 216, 117, 0.4)); }
+  50% { filter: drop-shadow(0 0 10px rgba(240, 216, 117, 0.8)); }
+}
+
+.card-panel__section--decks .card-panel__section-title {
+  color: #c9a84c;
+  text-shadow: 0 0 4px rgba(201, 168, 76, 0.2);
+}
+
+.card-panel__section--decks .card-panel__section-count {
+  color: #f0d875;
+  background: rgba(201, 168, 76, 0.12);
+  border: 1px solid rgba(201, 168, 76, 0.3);
+}
+
+.card-panel__section-chevron {
+  margin-left: auto;
+  font-size: 10px;
+  color: #a67c00;
+  transition: color 0.3s ease;
+}
+
+.card-panel__section-header--toggle:hover .card-panel__section-chevron {
+  color: #f0d875;
+}
+
+/* Decks body */
+
+.card-panel__decks-body {
+  padding: 8px 0 4px;
+}
+
+.card-panel__decks-signin {
+  color: #8a7340;
+  font-size: 12px;
+  font-style: italic;
+  text-align: center;
+  padding: 12px 0;
+  letter-spacing: 0.5px;
+}
+
+/* Save current hand */
+
+.card-panel__decks-save {
+  margin-bottom: 12px;
+}
+
+.card-panel__decks-save-btn {
+  width: 100%;
+  padding: 9px 14px;
+  background:
+    linear-gradient(160deg, rgba(42, 26, 0, 0.85) 0%, rgba(26, 15, 0, 0.9) 50%, rgba(42, 26, 0, 0.85) 100%);
+  color: #c9a84c;
+  border: 1px solid rgba(166, 124, 0, 0.4);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-panel__decks-save-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(240, 216, 117, 0.06) 45%, rgba(255, 232, 160, 0.12) 50%, rgba(240, 216, 117, 0.06) 55%, transparent 100%);
+  background-size: 200% 100%;
+  animation: spread-btn-shimmer 3.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.card-panel__decks-save-btn:hover:not(:disabled) {
+  color: #ffe8a0;
+  border-color: #f0d875;
+  box-shadow: 0 0 12px rgba(240, 216, 117, 0.35), inset 0 0 10px rgba(240, 216, 117, 0.05);
+  text-shadow: 0 0 6px rgba(240, 216, 117, 0.4);
+}
+
+.card-panel__decks-save-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.card-panel__decks-save-form {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.card-panel__decks-input {
+  flex: 1;
+  padding: 7px 10px;
+  background: rgba(26, 15, 0, 0.9);
+  color: #f0d875;
+  border: 1px solid #a67c00;
+  border-radius: 3px;
+  font-size: 12px;
+  outline: none;
+  font-family: inherit;
+  transition: all 0.3s ease;
+}
+
+.card-panel__decks-input::placeholder {
+  color: #8a7340;
+  font-style: italic;
+}
+
+.card-panel__decks-input:focus {
+  border-color: #f0d875;
+  box-shadow: 0 0 10px rgba(240, 216, 117, 0.3), inset 0 0 6px rgba(201, 168, 76, 0.08);
+}
+
+.card-panel__decks-confirm {
+  padding: 7px 12px;
+  background: linear-gradient(160deg, rgba(42, 26, 0, 0.9) 0%, rgba(26, 15, 0, 0.95) 100%);
+  color: #c9a84c;
+  border: 1px solid #a67c00;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+}
+
+.card-panel__decks-confirm:hover:not(:disabled) {
+  color: #ffe8a0;
+  border-color: #f0d875;
+  box-shadow: 0 0 8px rgba(240, 216, 117, 0.3);
+}
+
+.card-panel__decks-confirm:disabled { opacity: 0.35; cursor: default; }
+
+.card-panel__decks-cancel {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: rgba(42, 26, 0, 0.85);
+  color: #c9a84c;
+  border: 1px solid #a67c00;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 22px;
+  text-align: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.card-panel__decks-cancel:hover {
+  background: rgba(160, 50, 30, 0.9);
+  border-color: #f0d875;
+  color: #ffe8a0;
+}
+
+/* Deck list */
+
+.card-panel__decks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.card-panel__decks-list::-webkit-scrollbar { width: 4px; }
+.card-panel__decks-list::-webkit-scrollbar-track { background: rgba(15, 10, 2, 0.5); }
+.card-panel__decks-list::-webkit-scrollbar-thumb { background: #a67c00; border-radius: 2px; }
+
+.card-panel__decks-empty {
+  color: #8a7340;
+  font-size: 11px;
+  font-style: italic;
+  text-align: center;
+  padding: 10px 0;
+}
+
+/* ─── Deck Item: Card stack with preview ─── */
+
+.card-panel__deck-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background:
+    linear-gradient(135deg, rgba(26, 15, 0, 0.65) 0%, rgba(35, 22, 0, 0.55) 50%, rgba(26, 15, 0, 0.65) 100%);
+  border: 1px solid rgba(166, 124, 0, 0.2);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-panel__deck-item::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(240, 216, 117, 0.04) 40%, rgba(255, 232, 160, 0.08) 50%, rgba(240, 216, 117, 0.04) 60%, transparent 100%);
+  background-size: 300% 100%;
+  background-position: 300% center;
+  transition: background-position 0.6s ease;
+  pointer-events: none;
+}
+
+.card-panel__deck-item:hover::before {
+  background-position: -300% center;
+}
+
+.card-panel__deck-item:hover {
+  background: linear-gradient(135deg, rgba(42, 26, 0, 0.8) 0%, rgba(50, 32, 0, 0.75) 100%);
+  border-color: rgba(240, 216, 117, 0.4);
+  box-shadow:
+    0 0 12px rgba(201, 168, 76, 0.2),
+    0 0 24px rgba(201, 168, 76, 0.08),
+    inset 0 0 10px rgba(240, 216, 117, 0.03);
+}
+
+/* Drop target glow */
+.card-panel__deck-item--drop {
+  border-color: #f0d875 !important;
+  box-shadow:
+    0 0 20px rgba(240, 216, 117, 0.5),
+    0 0 40px rgba(201, 168, 76, 0.2),
+    inset 0 0 15px rgba(240, 216, 117, 0.08) !important;
+}
+
+/* Mini card stack thumbnails */
+
+.card-panel__deck-thumbs {
+  display: flex;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  position: relative;
+}
+
+.card-panel__deck-thumb {
+  position: absolute;
+  width: 32px;
+  height: 44px;
+  border-radius: 3px;
+  border: 1px solid rgba(166, 124, 0, 0.4);
+  overflow: hidden;
+  background: rgba(15, 10, 2, 0.8);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.card-panel__deck-thumb:nth-child(1) { left: 0; top: 2px; transform: rotate(-6deg); }
+.card-panel__deck-thumb:nth-child(2) { left: 6px; top: 0; transform: rotate(-2deg); }
+.card-panel__deck-thumb:nth-child(3) { left: 12px; top: 1px; transform: rotate(2deg); }
+.card-panel__deck-thumb:nth-child(4) { left: 18px; top: 3px; transform: rotate(5deg); }
+
+.card-panel__deck-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.9) contrast(1.05);
+}
+
+.card-panel__deck-thumb--empty {
+  left: 6px;
+  top: 2px;
+  border-style: dashed;
+  border-color: rgba(166, 124, 0, 0.25);
+}
+
+/* Deck info */
+
+.card-panel__deck-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.card-panel__deck-name {
+  color: #f0d875;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: text-shadow 0.3s ease;
+}
+
+.card-panel__deck-item:hover .card-panel__deck-name {
+  text-shadow: 0 0 6px rgba(240, 216, 117, 0.4);
+}
+
+.card-panel__deck-meta {
+  color: #8a7340;
+  font-size: 10px;
+  letter-spacing: 0.2px;
+}
+
+.card-panel__deck-delete {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  background: rgba(42, 26, 0, 0.85);
+  color: #c9a84c;
+  border: 1px solid #a67c00;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+  opacity: 0;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.card-panel__deck-item:hover .card-panel__deck-delete {
+  opacity: 1;
+}
+
+.card-panel__deck-delete:hover {
+  background: rgba(160, 50, 30, 0.9);
+  border-color: #f0d875;
+  color: #ffe8a0;
+  box-shadow: 0 0 8px rgba(240, 216, 117, 0.3);
+}
+
+/* ─── Publish to Game Crafter ─── */
+
+.card-panel__deck-publish {
+  padding: 3px 10px;
+  background:
+    linear-gradient(160deg, rgba(42, 26, 0, 0.9) 0%, rgba(26, 15, 0, 0.95) 100%);
+  color: #c9a84c;
+  border: 1px solid rgba(166, 124, 0, 0.45);
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: all 0.25s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.card-panel__deck-item:hover .card-panel__deck-publish {
+  opacity: 1;
+}
+
+.card-panel__deck-publish:hover:not(:disabled) {
+  color: #ffe8a0;
+  border-color: #f0d875;
+  box-shadow:
+    0 0 10px rgba(240, 216, 117, 0.4),
+    0 0 20px rgba(201, 168, 76, 0.15);
+  text-shadow: 0 0 6px rgba(240, 216, 117, 0.5);
+}
+
+.card-panel__deck-publish:disabled {
+  cursor: default;
+}
+
+.card-panel__deck-publish--loading {
+  opacity: 1 !important;
+  color: #f0d875;
+  border-color: #f0d875;
+  animation: publish-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes publish-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 6px rgba(240, 216, 117, 0.3),
+      inset 0 0 4px rgba(240, 216, 117, 0.05);
+    opacity: 0.7;
+  }
+  50% {
+    box-shadow:
+      0 0 14px rgba(240, 216, 117, 0.6),
+      inset 0 0 8px rgba(240, 216, 117, 0.1);
+    opacity: 1;
+  }
+}
+
+.card-panel__deck-buy {
+  padding: 3px 10px;
+  color: #f0d875;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  border: 1px solid rgba(240, 216, 117, 0.45);
+  border-radius: 3px;
+  background:
+    linear-gradient(160deg, rgba(58, 40, 0, 0.85) 0%, rgba(42, 26, 0, 0.9) 100%);
+  box-shadow:
+    0 0 8px rgba(240, 216, 117, 0.25),
+    0 0 16px rgba(201, 168, 76, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.card-panel__deck-buy:hover {
+  color: #ffe8a0;
+  border-color: #f0d875;
+  box-shadow:
+    0 0 14px rgba(240, 216, 117, 0.5),
+    0 0 28px rgba(201, 168, 76, 0.2);
+  text-shadow: 0 0 8px rgba(240, 216, 117, 0.6);
+}
+
+.card-panel__deck-publish-error {
+  color: #e74c3c;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-shadow: 0 0 6px rgba(231, 76, 60, 0.4);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  animation: publish-error-fade 3s ease-out forwards;
+}
+
+@keyframes publish-error-fade {
+  0% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ─── Dreamscape Collection in Decks ─── */
+
+.card-panel__decks-dreamscape {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid transparent;
+  border-image: linear-gradient(
+    90deg,
+    transparent 10%,
+    rgba(124, 58, 237, 0.25) 30%,
+    rgba(167, 139, 250, 0.45) 50%,
+    rgba(124, 58, 237, 0.25) 70%,
+    transparent 90%
+  ) 1;
+  position: relative;
+}
+
+.card-panel__decks-dreamscape::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 20%, rgba(124, 58, 237, 0.05) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.card-panel__decks-dreamscape-header {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #c4b5fd;
+  text-shadow: 0 0 8px rgba(167, 139, 250, 0.4);
+  margin-bottom: 10px;
+  font-family: sans-serif;
+  position: relative;
+}
+
+.card-panel__decks-dreamscape-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  position: relative;
+}
+
+.card-panel__deck-dream-card {
+  width: 70px;
+  height: 70px;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1.5px solid #7c3aed;
+  cursor: grab;
+  position: relative;
+  flex-shrink: 0;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow:
+    0 0 8px rgba(124, 58, 237, 0.25),
+    0 3px 8px rgba(0, 0, 0, 0.4),
+    inset 0 0 6px rgba(0, 0, 0, 0.3);
+  animation: dream-card-appear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes dream-card-appear {
+  0% { opacity: 0; transform: scale(0.7) translateY(6px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.card-panel__deck-dream-card:hover {
+  border-color: #a78bfa;
+  transform: scale(1.12) translateY(-3px);
+  box-shadow:
+    0 0 16px rgba(167, 139, 250, 0.5),
+    0 0 32px rgba(124, 58, 237, 0.2),
+    0 6px 14px rgba(0, 0, 0, 0.5);
+}
+
+.card-panel__deck-dream-card:active {
+  cursor: grabbing;
+}
+
+.card-panel__deck-dream-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.95) contrast(1.05);
+  pointer-events: none;
+}
+
+.card-panel__deck-dream-name {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px 3px 3px;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-align: center;
+  color: #e9d5ff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

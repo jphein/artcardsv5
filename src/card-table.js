@@ -96,13 +96,13 @@ const MODES = [
 const CardTable = forwardRef((props, ref) => {
   const [images, setImages] = useState(null);
   const [positions, setPositions] = useState([]);
-  const [dealing, setDealing] = useState(true);
+  const [dealt, setDealt] = useState(false);
+  const [dealing, setDealing] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(null);
   const [flash, setFlash] = useState(false);
   const [mode, setMode] = useState("chaos");
   const [draggingIndex, setDraggingIndex] = useState(null);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [dragStart, setDragStart] = useState(null);
+  const dragRef = useRef({ active: false, index: null, offsetX: 0, offsetY: 0, fixedX: 0, fixedY: 0, el: null });
   const [collectedIds, setCollectedIds] = useState(new Set());
   const [flippedIds, setFlippedIds] = useState(new Set());
   const [zMap, setZMap] = useState({});
@@ -188,10 +188,19 @@ const CardTable = forwardRef((props, ref) => {
     return () => window.removeEventListener("resize", recomputePositions);
   }, [recomputePositions]);
 
-  // Dealing animation
+  // Start dealing when user taps the deck
+  const startDealing = useCallback(() => {
+    if (!images || dealt) return;
+    setDealt(true);
+    setDealing(true);
+    setFlash(true);
+    setTimeout(() => setFlash(false), 400);
+  }, [images, dealt]);
+
+  // Dealing animation timer
   useEffect(() => {
     if (images && images.length > 0 && dealing) {
-      const totalDelay = 80 * images.length + 800;
+      const totalDelay = 30 * images.length + 500;
       dealTimerRef.current = setTimeout(() => {
         setDealing(false);
       }, totalDelay);
@@ -199,86 +208,142 @@ const CardTable = forwardRef((props, ref) => {
     }
   }, [images, dealing]);
 
+  // Shuffle: gather cards to center, re-shuffle images, then re-scatter
+  const [shuffling, setShuffling] = useState(false);
+  const handleShuffle = useCallback(() => {
+    if (!images || shuffling) return;
+    setShuffling(true);
+    setPositions(images.map(() => ({ x: 50, y: 50, rotation: 0, scale: 0.6 })));
+    setScaleMap({});
+    setTimeout(() => {
+      setImages(shuffle([...images]));
+      setDealing(true);
+      setShuffling(false);
+    }, 800);
+  }, [images, shuffling]);
+
   // Keep refs in sync for use in pointer event handlers
   draggingIndexRef.current = draggingIndex;
   imagesRef.current = images;
 
-  // Free-drag cards on the table (pointer events only — no HTML5 drag)
+  // Free-drag cards on the table — uses refs + direct DOM for zero-lag movement
   const handlePointerDown = useCallback((e, index, publicId) => {
     if (e.button !== 0) return;
     e.preventDefault();
     bringToFront(publicId);
-    setDragStart({ index, startX: e.clientX, startY: e.clientY });
-  }, [bringToFront]);
+    const el = e.currentTarget;
+    const cardRect = el.getBoundingClientRect();
+    // Store cursor offset from card's top-left corner
+    dragRef.current = {
+      active: false,
+      index,
+      startX: e.clientX,
+      startY: e.clientY,
+      offsetX: e.clientX - cardRect.left,
+      offsetY: e.clientY - cardRect.top,
+      fixedX: cardRect.left,
+      fixedY: cardRect.top,
+      el,
+    };
 
-  const handlePointerMove = useCallback((e) => {
-    if (!dragStart || !tableRef.current) return;
+    const onMove = (ev) => {
+      const d = dragRef.current;
+      if (!d.el) return;
 
-    // Haven't committed to table-drag yet — check movement threshold
-    if (draggingIndex === null) {
-      const dx = e.clientX - dragStart.startX;
-      const dy = e.clientY - dragStart.startY;
-      if (Math.sqrt(dx * dx + dy * dy) < 10) return;
-      // Commit to table-drag
-      const rect = tableRef.current.getBoundingClientRect();
-      const mx = ((e.clientX - rect.left) / rect.width) * 100;
-      const my = ((e.clientY - rect.top) / rect.height) * 100;
-      setDragOffset({ x: mx - positions[dragStart.index].x, y: my - positions[dragStart.index].y });
-      setDraggingIndex(dragStart.index);
-      return;
-    }
+      if (!d.active) {
+        const dx = ev.clientX - d.startX;
+        const dy = ev.clientY - d.startY;
+        if (dx * dx + dy * dy < 64) return; // 8px threshold
+        d.active = true;
+        d.el.style.position = "fixed";
+        d.el.style.zIndex = "1200";
+        d.el.style.transition = "none";
+        d.el.style.pointerEvents = "none";
+        // Keep rotation/scale but drop the translate(-50%,-50%) since fixed uses direct pixel coords
+        const currentTransform = d.el.style.transform.replace(/translate\([^)]*\)\s*/g, "");
+        d.el.dataset.dragTransform = currentTransform;
+        draggingIndexRef.current = index;
+        setDraggingIndex(index);
+      }
 
-    // Already dragging — update position
-    const rect = tableRef.current.getBoundingClientRect();
-    const mx = ((e.clientX - rect.left) / rect.width) * 100;
-    const my = ((e.clientY - rect.top) / rect.height) * 100;
-    setPositions(prev => {
-      const next = [...prev];
-      next[draggingIndex] = {
-        ...next[draggingIndex],
-        x: mx - dragOffset.x,
-        y: my - dragOffset.y,
-      };
-      return next;
-    });
-  }, [dragStart, draggingIndex, dragOffset, positions]);
+      d.fixedX = ev.clientX - d.offsetX;
+      d.fixedY = ev.clientY - d.offsetY;
+      d.el.style.left = `${d.fixedX}px`;
+      d.el.style.top = `${d.fixedY}px`;
+      d.el.style.transform = d.el.dataset.dragTransform || "";
 
-  const handlePointerUp = useCallback((e) => {
-    const idx = draggingIndexRef.current;
-    const imgs = imagesRef.current;
-    // If we were actively dragging a card, check if released over dock area
-    if (idx !== null && imgs && props.onCardToDock) {
-      const dockEl = document.querySelector(".card-panel__tray");
+      // Peek the dock open when cursor is near the bottom
+      const dockEl = document.querySelector(".card-panel");
       if (dockEl) {
-        const dockRect = dockEl.getBoundingClientRect();
-        if (
-          e.clientX >= dockRect.left && e.clientX <= dockRect.right &&
-          e.clientY >= dockRect.top && e.clientY <= dockRect.bottom
-        ) {
-          const img = imgs[idx];
-          if (img) {
-            const cardData = img.source === "dreamscape"
-              ? { public_id: img.public_id, imageUrl: img.imageUrl, cardName: img.cardName, cardDescription: img.cardDescription, source: "dreamscape", slideIndex: idx }
-              : { public_id: img.public_id, cloud_name: CLOUD_NAME, slideIndex: idx };
-            props.onCardToDock(cardData);
+        const nearBottom = ev.clientY > window.innerHeight - 150;
+        dockEl.classList.toggle("card-panel--peek", nearBottom);
+      }
+    };
+
+    const onUp = (ev) => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      // Remove dock peek
+      const dockEl = document.querySelector(".card-panel");
+      if (dockEl) dockEl.classList.remove("card-panel--peek");
+      const d = dragRef.current;
+
+      if (d.active && d.el && tableRef.current) {
+        // Convert final fixed position back to percentage for state
+        const rect = tableRef.current.getBoundingClientRect();
+        const cardW = d.el.offsetWidth;
+        const cardH = d.el.offsetHeight;
+        const centerX = d.fixedX + cardW / 2;
+        const centerY = d.fixedY + cardH / 2;
+        const pctX = ((centerX - rect.left) / rect.width) * 100;
+        const pctY = ((centerY - rect.top) / rect.height) * 100;
+
+        // Reset inline styles so React takes over again
+        d.el.style.position = "";
+        d.el.style.zIndex = "";
+        d.el.style.transition = "";
+        d.el.style.left = "";
+        d.el.style.top = "";
+        d.el.style.transform = "";
+        d.el.style.pointerEvents = "";
+        delete d.el.dataset.dragTransform;
+
+        setPositions(prev => {
+          const next = [...prev];
+          next[index] = { ...next[index], x: pctX, y: pctY };
+          return next;
+        });
+
+        // Check dock drop
+        const imgs = imagesRef.current;
+        if (imgs && props.onCardToDock) {
+          const dockEl = document.querySelector(".card-panel__tray");
+          if (dockEl) {
+            const dockRect = dockEl.getBoundingClientRect();
+            if (
+              ev.clientX >= dockRect.left && ev.clientX <= dockRect.right &&
+              ev.clientY >= dockRect.top && ev.clientY <= dockRect.bottom
+            ) {
+              const img = imgs[index];
+              if (img) {
+                const cardData = img.source === "dreamscape"
+                  ? { public_id: img.public_id, imageUrl: img.imageUrl, cardName: img.cardName, cardDescription: img.cardDescription, source: "dreamscape", slideIndex: index }
+                  : { public_id: img.public_id, cloud_name: CLOUD_NAME, slideIndex: index };
+                props.onCardToDock(cardData);
+              }
+            }
           }
         }
       }
-    }
-    setDraggingIndex(null);
-    setDragStart(null);
-  }, [props.onCardToDock]);
 
-  useEffect(() => {
-    if (dragStart !== null) {
-      window.addEventListener("pointermove", handlePointerMove);
-      window.addEventListener("pointerup", handlePointerUp);
-      return () => {
-        window.removeEventListener("pointermove", handlePointerMove);
-        window.removeEventListener("pointerup", handlePointerUp);
-      };
-    }
-  }, [dragStart, handlePointerMove, handlePointerUp]);
+      dragRef.current = { active: false, index: null, offsetX: 0, offsetY: 0, fixedX: 0, fixedY: 0, el: null };
+      draggingIndexRef.current = null;
+      setDraggingIndex(null);
+    };
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  }, [bringToFront, props.onCardToDock]);
 
   // Drop-from-dock: only enable table as drop target when a dock drag is active
   // The `dockDragging` prop is set by the parent when a card is being dragged from the dock
@@ -349,13 +414,12 @@ const CardTable = forwardRef((props, ref) => {
     },
   }));
 
-  // Non-passive wheel listener for card scaling (React 16 registers wheel as passive)
+  // Non-passive wheel listener: scroll = scale, Shift+scroll = rotate
   useEffect(() => {
     const table = tableRef.current;
     if (!table) return;
 
     const onWheel = (e) => {
-      // Walk up from e.target to find a .card-table__card element
       let cardEl = e.target.closest(".card-table__card");
       if (!cardEl) return;
 
@@ -364,18 +428,81 @@ const CardTable = forwardRef((props, ref) => {
       const publicId = cardEl.dataset.publicId;
       if (!publicId) return;
 
-      const delta = e.deltaY < 0 ? 0.05 : -0.05;
-      setScaleMap((prev) => {
-        const current = prev[publicId] || 1;
-        const next = Math.min(2.0, Math.max(0.5, current + delta));
-        return { ...prev, [publicId]: next };
-      });
+      if (e.shiftKey) {
+        // Shift+scroll = rotate
+        const rotDelta = e.deltaY < 0 ? -5 : 5;
+        const imgs = imagesRef.current;
+        if (!imgs) return;
+        const idx = imgs.findIndex(img => img.public_id === publicId);
+        if (idx === -1) return;
+        setPositions((prev) => {
+          const next = [...prev];
+          if (next[idx]) {
+            next[idx] = { ...next[idx], rotation: (next[idx].rotation || 0) + rotDelta };
+          }
+          return next;
+        });
+      } else {
+        // Normal scroll = scale
+        const delta = e.deltaY < 0 ? 0.05 : -0.05;
+        setScaleMap((prev) => {
+          const current = prev[publicId] || 1;
+          const next = Math.min(2.0, Math.max(0.5, current + delta));
+          return { ...prev, [publicId]: next };
+        });
+      }
       bringToFront(publicId);
     };
 
     table.addEventListener("wheel", onWheel, { passive: false });
     return () => table.removeEventListener("wheel", onWheel);
   }, [bringToFront]);
+
+  // 3D tilt effect — sets CSS custom properties on hover for GPU-accelerated transforms
+  useEffect(() => {
+    const table = tableRef.current;
+    if (!table) return;
+    let activeCard = null;
+
+    const onMove = (e) => {
+      const cardEl = e.target.closest(".card-table__card");
+      if (cardEl !== activeCard) {
+        if (activeCard) {
+          activeCard.style.removeProperty("--tilt-x");
+          activeCard.style.removeProperty("--tilt-y");
+          activeCard.style.removeProperty("--light-x");
+          activeCard.style.removeProperty("--light-y");
+        }
+        activeCard = cardEl;
+      }
+      if (!cardEl) return;
+      const rect = cardEl.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+      cardEl.style.setProperty("--tilt-x", `${(0.5 - y) * 15}deg`);
+      cardEl.style.setProperty("--tilt-y", `${(x - 0.5) * 15}deg`);
+      cardEl.style.setProperty("--light-x", `${x * 100}%`);
+      cardEl.style.setProperty("--light-y", `${y * 100}%`);
+    };
+
+    const onLeave = (e) => {
+      const cardEl = e.target.closest(".card-table__card");
+      if (cardEl) {
+        cardEl.style.removeProperty("--tilt-x");
+        cardEl.style.removeProperty("--tilt-y");
+        cardEl.style.removeProperty("--light-x");
+        cardEl.style.removeProperty("--light-y");
+      }
+      if (activeCard === cardEl) activeCard = null;
+    };
+
+    table.addEventListener("mousemove", onMove);
+    table.addEventListener("mouseleave", onLeave, true);
+    return () => {
+      table.removeEventListener("mousemove", onMove);
+      table.removeEventListener("mouseleave", onLeave, true);
+    };
+  }, []);
 
   // Cleanup timers on unmount
   useEffect(() => {
@@ -385,7 +512,41 @@ const CardTable = forwardRef((props, ref) => {
     };
   }, []);
 
-  if (!images || positions.length === 0) return null;
+  if (!images) return null;
+
+  // Before dealing: show deck pile
+  if (!dealt) {
+    return (
+      <div className="card-table" ref={tableRef}>
+        <div className={`card-table__flash${flash ? " card-table__flash--active" : ""}`} />
+        <div className="card-table__deck-pile" onClick={startDealing}>
+          <div className="card-table__deck-stack">
+            {[...Array(Math.min(6, images.length))].map((_, i) => (
+              <div
+                key={i}
+                className="card-table__deck-card"
+                style={{
+                  transform: `translate(-50%, -50%) rotate(${(i - 2.5) * 2.5}deg)`,
+                  top: `${50 - i * 1.5}%`,
+                  left: "50%",
+                  zIndex: i,
+                }}
+              >
+                <CardBack width={160} />
+              </div>
+            ))}
+          </div>
+          <div className="card-table__deck-label">
+            <span className="card-table__deck-label-icon">{"\u2726"}</span>
+            <span className="card-table__deck-label-text">Tap to Deal</span>
+            <span className="card-table__deck-label-count">{images.length} cards</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (positions.length === 0) return null;
 
   return (
     <div
@@ -417,6 +578,25 @@ const CardTable = forwardRef((props, ref) => {
             <span className="card-table__mode-label">{m.label}</span>
           </button>
         ))}
+        <div className="card-table__mode-divider" />
+        <button
+          className={`card-table__mode-btn card-table__shuffle-btn${shuffling ? " card-table__shuffle-btn--active" : ""}`}
+          onClick={handleShuffle}
+          title="Shuffle"
+          disabled={shuffling}
+        >
+          <span className="card-table__mode-icon">&#x2672;</span>
+          <span className="card-table__mode-label">Shuffle</span>
+        </button>
+        <div className="card-table__mode-divider" />
+        <button
+          className="card-table__mode-btn"
+          onClick={() => props.onSwitchToCarousel && props.onSwitchToCarousel()}
+          title="Carousel"
+        >
+          <span className="card-table__mode-icon">&#x25C9;</span>
+          <span className="card-table__mode-label">Carousel</span>
+        </button>
       </div>
       {images.map((img, index) => {
         const pos = positions[index];
@@ -456,19 +636,20 @@ const CardTable = forwardRef((props, ref) => {
           bringToFront(img.public_id);
         };
 
+        const cardStyle = {
+          position: "absolute",
+          left: `${pos.x}%`,
+          top: `${pos.y}%`,
+          transform: `translate(-50%, -50%) rotate(${pos.rotation}deg) scale(${combinedScale})`,
+          zIndex,
+        };
+
         return (
           <div
             key={img.public_id}
             className={cardClasses}
             data-public-id={img.public_id}
-            style={{
-              position: "absolute",
-              left: `${pos.x}%`,
-              top: `${pos.y}%`,
-              transform: `rotate(${pos.rotation}deg) scale(${combinedScale})`,
-              zIndex,
-              transition: isDragging ? "none" : undefined,
-            }}
+            style={cardStyle}
             onPointerDown={(e) => handlePointerDown(e, index, img.public_id)}
             onDoubleClick={handleDoubleClick}
             onDragStart={(e) => e.preventDefault()}
@@ -477,7 +658,7 @@ const CardTable = forwardRef((props, ref) => {
               <span
                 className="card-table__card-front"
                 style={{
-                  animationDelay: dealing ? `${index * 80}ms` : undefined,
+                  animationDelay: dealing ? `${index * 30}ms` : undefined,
                 }}
               >
                 {isDreamscape ? (
