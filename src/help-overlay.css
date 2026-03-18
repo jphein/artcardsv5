@@ -6,9 +6,7 @@
 /* ─── Help Button ─── */
 
 .help-btn {
-  position: fixed;
-  top: 16px;
-  right: 70px;
+  position: relative;
   z-index: 1100;
   width: 32px;
   height: 32px;

@@ -80,9 +80,13 @@ export default function HelpOverlay() {
             <div className="help-section">
               <div className="help-section__header">
                 <span className="help-section__icon">{"\u2726"}</span>
-                <span className="help-section__title">Table Mode</span>
+                <span className="help-section__title">Table</span>
               </div>
               <ul className="help-items">
+                <li className="help-item">
+                  <span className="help-item__action">Tap deck</span>
+                  <span className="help-item__desc">Deal all cards onto the table</span>
+                </li>
                 <li className="help-item">
                   <span className="help-item__action">Drag</span>
                   <span className="help-item__desc">Move cards freely</span>
@@ -101,31 +105,35 @@ export default function HelpOverlay() {
                 </li>
                 <li className="help-item">
                   <span className="help-item__action">Drag to dock</span>
-                  <span className="help-item__desc">Collect card</span>
+                  <span className="help-item__desc">Collect card into your hand</span>
                 </li>
               </ul>
             </div>
 
             <div className="help-divider" />
 
-            {/* Carousel Mode */}
+            {/* Layouts */}
             <div className="help-section">
               <div className="help-section__header">
-                <span className="help-section__icon">{"\u25C9"}</span>
-                <span className="help-section__title">Carousel Mode</span>
+                <span className="help-section__icon">{"\u25CE"}</span>
+                <span className="help-section__title">Layouts</span>
               </div>
               <ul className="help-items">
                 <li className="help-item">
-                  <span className="help-item__action">Arrow keys / Swipe</span>
-                  <span className="help-item__desc">Navigate cards</span>
+                  <span className="help-item__action">Chaos</span>
+                  <span className="help-item__desc">Random scatter</span>
                 </li>
                 <li className="help-item">
-                  <span className="help-item__action">Drag card</span>
-                  <span className="help-item__desc">Collect to dock</span>
+                  <span className="help-item__action">Vortex</span>
+                  <span className="help-item__desc">Golden spiral</span>
                 </li>
                 <li className="help-item">
-                  <span className="help-item__action">Table button</span>
-                  <span className="help-item__desc">Switch to table view</span>
+                  <span className="help-item__action">Oracle</span>
+                  <span className="help-item__desc">Arc spread</span>
+                </li>
+                <li className="help-item">
+                  <span className="help-item__action">Shuffle</span>
+                  <span className="help-item__desc">Gather and re-deal cards</span>
                 </li>
               </ul>
             </div>
@@ -140,16 +148,44 @@ export default function HelpOverlay() {
               </div>
               <ul className="help-items">
                 <li className="help-item">
+                  <span className="help-item__action">Hand tab</span>
+                  <span className="help-item__desc">Your collected cards</span>
+                </li>
+                <li className="help-item">
+                  <span className="help-item__action">Decks tab</span>
+                  <span className="help-item__desc">Save, load, and publish decks</span>
+                </li>
+                <li className="help-item">
+                  <span className="help-item__action">Spread tab</span>
+                  <span className="help-item__desc">Lay out cards in a reading spread</span>
+                </li>
+                <li className="help-item">
                   <span className="help-item__action">Click card</span>
                   <span className="help-item__desc">Find it on the table</span>
                 </li>
                 <li className="help-item">
-                  <span className="help-item__action">Drag card</span>
+                  <span className="help-item__action">Drag card out</span>
                   <span className="help-item__desc">Return to table</span>
                 </li>
+              </ul>
+            </div>
+
+            <div className="help-divider" />
+
+            {/* Carousel Mode */}
+            <div className="help-section">
+              <div className="help-section__header">
+                <span className="help-section__icon">{"\u25C9"}</span>
+                <span className="help-section__title">Carousel</span>
+              </div>
+              <ul className="help-items">
                 <li className="help-item">
-                  <span className="help-item__action">Save deck</span>
-                  <span className="help-item__desc">Keep collection for later</span>
+                  <span className="help-item__action">{"\u2190"} {"\u2192"} / Swipe</span>
+                  <span className="help-item__desc">Navigate cards</span>
+                </li>
+                <li className="help-item">
+                  <span className="help-item__action">Drag card</span>
+                  <span className="help-item__desc">Collect to dock</span>
                 </li>
               </ul>
             </div>

@@ -73,7 +73,6 @@ const FullScreenButton = ({ autoFullscreen }) => {
         />
         <PhysicalCardsSeal />
 
-        <HelpOverlay />
         <div
           className="top-bar"
           style={{
@@ -106,7 +105,10 @@ const FullScreenButton = ({ autoFullscreen }) => {
           >
             Fullscreen
           </button>
-          <AuthButton />
+          <div style={{ display: "flex", alignItems: "center", gap: 10, pointerEvents: "auto" }}>
+            <HelpOverlay />
+            <AuthButton />
+          </div>
         </div>
       </div>
     </div>
