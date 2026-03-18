@@ -680,3 +680,66 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.spread-view__collection-card:active {
+  cursor: grabbing;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Empty Position Slots (drop targets)
+   ═══════════════════════════════════════════════════════════════ */
+
+.spread-view__empty-slot {
+  width: 140px;
+  height: 196px;
+  border: 2px dashed rgba(201, 168, 76, 0.25);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.spread-view__cards--positioned .spread-view__empty-slot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+}
+
+.spread-view__empty-slot-label {
+  color: rgba(201, 168, 76, 0.5);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.spread-view__empty-slot-hint {
+  color: rgba(201, 168, 76, 0.3);
+  font-size: 9px;
+  letter-spacing: 0.3px;
+}
+
+.spread-view__empty-slot--active {
+  border-color: rgba(201, 168, 76, 0.7);
+  background: rgba(201, 168, 76, 0.08);
+  box-shadow: 0 0 20px rgba(201, 168, 76, 0.15), inset 0 0 20px rgba(201, 168, 76, 0.05);
+}
+
+.spread-view__empty-slot--active .spread-view__empty-slot-label {
+  color: rgba(201, 168, 76, 0.9);
+}
+
+.spread-view__empty-slot--active .spread-view__empty-slot-hint {
+  color: rgba(201, 168, 76, 0.6);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Drag Cursor States
+   ═══════════════════════════════════════════════════════════════ */
+
+.spread-view__cards--positioned:has(.spread-view__empty-slot) {
+  min-height: 300px;
+}

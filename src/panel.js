@@ -512,9 +512,17 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
           onLoadDeck={handleLoadDeck}
           userId={userId}
           collectionCards={resolvedDreamCards}
-          onAddCard={(cardData) => {
+          onAddCard={(cardData, atIndex) => {
             if (cards.some((c) => c.public_id === cardData.public_id)) return;
-            setCards((prev) => [...prev, cardData]);
+            if (typeof atIndex === "number" && atIndex >= 0) {
+              setCards((prev) => {
+                const next = [...prev];
+                next.splice(atIndex, 0, cardData);
+                return next;
+              });
+            } else {
+              setCards((prev) => [...prev, cardData]);
+            }
           }}
         />
       )}

@@ -33,6 +33,7 @@ const SpreadView = ({
   const [positionOverrides, setPositionOverrides] = useState({});
   const [rotationMap, setRotationMap] = useState({});
   const [draggingId, setDraggingId] = useState(null);
+  const [dropTarget, setDropTarget] = useState(null); // index of position being hovered during drag
   const dragRef = useRef({ active: false, publicId: null, offsetX: 0, offsetY: 0, el: null });
 
   const prevSpreadType = useRef(spreadType);
@@ -392,18 +393,56 @@ const SpreadView = ({
             isFreeform ? "spread-view__cards--freeform" : "spread-view__cards--positioned"
           }`}
           onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }}
+          onDragLeave={() => setDropTarget(null)}
           onDrop={(e) => {
             e.preventDefault();
+            setDropTarget(null);
             try {
               const data = JSON.parse(e.dataTransfer.getData("application/json"));
               if (data.fromCollection && onAddCard) {
-                onAddCard(data);
+                onAddCard(data, dropTarget);
               }
             } catch {}
           }}
         >
           {activeCards.map((card, i) => renderCard(card, i, true))}
-          {activeCards.length === 0 && (
+          {/* Empty position slots for drops when spread has room */}
+          {!isFreeform && layout && activeCards.length < maxActive && (
+            Array.from({ length: maxActive - activeCards.length }, (_, i) => {
+              const slotIndex = activeCards.length + i;
+              const pos = layout.positions[slotIndex];
+              if (!pos) return null;
+              return (
+                <div
+                  key={`empty-${slotIndex}`}
+                  className={`spread-view__empty-slot${dropTarget === slotIndex ? " spread-view__empty-slot--active" : ""}`}
+                  style={{
+                    transform: `translate(calc(-50% + ${pos.offsetX}%), calc(-50% + ${pos.offsetY}%)) rotate(${pos.rotation}deg) scale(${pos.scale})`,
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setDropTarget(slotIndex);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setDropTarget(null);
+                    try {
+                      const data = JSON.parse(e.dataTransfer.getData("application/json"));
+                      if (data.fromCollection && onAddCard) {
+                        onAddCard(data, slotIndex);
+                      }
+                    } catch {}
+                  }}
+                >
+                  <span className="spread-view__empty-slot-label">{pos.label}</span>
+                  <span className="spread-view__empty-slot-hint">drop card</span>
+                </div>
+              );
+            })
+          )}
+          {activeCards.length === 0 && !layout && (
             <div className="spread-view__empty">
               No cards in this spread yet.
             </div>
@@ -451,7 +490,8 @@ const SpreadView = ({
                       e.dataTransfer.setData("application/json", JSON.stringify({ ...card, fromCollection: true }));
                       e.dataTransfer.effectAllowed = "copy";
                     }}
-                    title={card.cardName || "Dreamscape card"}
+                    onClick={() => onAddCard && onAddCard(card)}
+                    title={(card.cardName || "Dreamscape card") + " — click or drag to add"}
                   >
                     <img src={card.imageUrl} alt={card.cardName || ""} />
                     {card.cardName && <span className="spread-view__collection-name">{card.cardName}</span>}
