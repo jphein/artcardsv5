@@ -99,6 +99,8 @@ const CardTable = forwardRef((props, ref) => {
   const [positions, setPositions] = useState([]);
   const [dealt, setDealt] = useState(false);
   const [dealing, setDealing] = useState(false);
+  const [deckHovered, setDeckHovered] = useState(false);
+  const [deckDealing, setDeckDealing] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(null);
   const [flash, setFlash] = useState(false);
   const [mode, setMode] = useState("chaos");
@@ -579,22 +581,42 @@ const CardTable = forwardRef((props, ref) => {
     return (
       <div className="card-table" ref={tableRef}>
         <div className={`card-table__flash${flash ? " card-table__flash--active" : ""}`} />
-        <div className="card-table__deck-pile" onClick={startDealing}>
-          <div className="card-table__deck-stack">
-            {[...Array(Math.min(6, images.length))].map((_, i) => (
-              <div
-                key={i}
-                className="card-table__deck-card"
-                style={{
-                  transform: `translate(-50%, -50%) rotate(${(i - 2.5) * 2.5}deg)`,
-                  top: `${50 - i * 1.5}%`,
-                  left: "50%",
-                  zIndex: i,
-                }}
-              >
-                <CardBack width={160} />
-              </div>
-            ))}
+        <div
+          className={`card-table__deck-pile${deckHovered ? " card-table__deck-pile--hovered" : ""}${deckDealing ? " card-table__deck-pile--dealing" : ""}`}
+          onClick={startDealing}
+          onMouseEnter={() => setDeckHovered(true)}
+          onMouseLeave={() => setDeckHovered(false)}
+        >
+          <div className="card-table__deck-glow" style={{ height: Math.min(images.length * 0.4 + 20, 50) }} />
+          <div className="card-table__deck-stack" style={{ height: 210 + images.length * 1.0 }}>
+            {(() => {
+              const total = images.length;
+              // Show enough cards to represent the full deck thickness
+              // Each card offsets ~1px up, so 90 cards = ~90px of visible stack height
+              const visible = Math.min(total, 70);
+              const spacing = 1.0;
+              return [...Array(visible)].map((_, i) => {
+                const isTop = i === visible - 1;
+                // Tiny random jitter for natural look
+                const jitterX = ((i * 7 + 3) % 5 - 2) * 0.4;
+                const jitterRot = ((i * 13 + 7) % 7 - 3) * 0.15;
+                return (
+                  <div
+                    key={i}
+                    className={`card-table__deck-card${isTop ? " card-table__deck-card--top" : ""}`}
+                    style={{
+                      position: "absolute",
+                      bottom: `${i * spacing}px`,
+                      left: `${15 + jitterX}px`,
+                      transform: `rotate(${jitterRot}deg)`,
+                      zIndex: i,
+                    }}
+                  >
+                    <CardBack width={210} />
+                  </div>
+                );
+              });
+            })()}
           </div>
           <div className="card-table__deck-label">
             <span className="card-table__deck-label-icon">{"\u2726"}</span>
