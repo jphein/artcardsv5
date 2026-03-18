@@ -23,7 +23,7 @@ function shuffle(arr) {
   return a;
 }
 
-function computePositions(count) {
+function computeScatter(count) {
   const positions = [];
   for (let i = 0; i < count; i++) {
     // Cluster toward center using a gaussian-ish distribution
@@ -47,18 +47,76 @@ function computePositions(count) {
   return positions;
 }
 
+function computeSpiral(count) {
+  const positions = [];
+  const goldenAngle = 137.508 * (Math.PI / 180); // golden angle in radians
+  const centerX = 50;
+  const centerY = 48; // slightly above center for logo room
+  // Scale factor so the spiral fits in the viewport
+  const maxRadius = 38; // percentage units
+  const sqrtTotal = Math.sqrt(count);
+
+  for (let i = 0; i < count; i++) {
+    const angle = i * goldenAngle;
+    const radius = (Math.sqrt(i) / sqrtTotal) * maxRadius;
+    const x = centerX + radius * Math.cos(angle);
+    const y = centerY + radius * Math.sin(angle);
+    // Rotation follows the tangent of the spiral
+    const rotation = (angle * 180 / Math.PI) % 360 - 180;
+    // Scale: center cards bigger, outer smaller
+    const scale = 1.05 - (i / count) * 0.35;
+    positions.push({ x: Math.max(5, Math.min(95, x)), y: Math.max(5, Math.min(95, y)), rotation: rotation * 0.15, scale });
+  }
+  return positions;
+}
+
+function computeArc(count) {
+  const positions = [];
+  const arcDegrees = 140; // total arc sweep
+  const startAngle = -(arcDegrees / 2);
+  const centerX = 50;
+  const centerY = 110; // pivot point below viewport
+  const radius = 65; // percentage units - large arc
+
+  for (let i = 0; i < count; i++) {
+    const t = count === 1 ? 0.5 : i / (count - 1);
+    const angleDeg = startAngle + t * arcDegrees;
+    const angleRad = angleDeg * (Math.PI / 180);
+    const x = centerX + radius * Math.sin(angleRad);
+    const y = centerY - radius * Math.cos(angleRad);
+    const rotation = angleDeg * 0.4; // cards tilt along the arc
+    // Center cards slightly bigger
+    const distFromCenter = Math.abs(t - 0.5) * 2; // 0 at center, 1 at edges
+    const scale = 1.0 - distFromCenter * 0.15;
+    positions.push({ x: Math.max(2, Math.min(98, x)), y: Math.max(5, Math.min(85, y)), rotation, scale });
+  }
+  return positions;
+}
+
+const MODES = [
+  { key: "chaos", label: "Chaos", icon: "\u2726", compute: computeScatter },
+  { key: "vortex", label: "Vortex", icon: "\u25CE", compute: computeSpiral },
+  { key: "oracle", label: "Oracle", icon: "\u2312", compute: computeArc },
+];
+
 const CardTable = forwardRef((props, ref) => {
   const [images, setImages] = useState(null);
   const [positions, setPositions] = useState([]);
   const [dealing, setDealing] = useState(true);
   const [focusedIndex, setFocusedIndex] = useState(null);
   const [flash, setFlash] = useState(false);
+  const [mode, setMode] = useState("chaos");
   const focusTimerRef = useRef(null);
   const dealTimerRef = useRef(null);
 
-  // Fetch Dreamscape cards from InstantDB
-  const { data: instantData } = db.useQuery({ cards: {} });
+  // Fetch Dreamscape cards + file URLs from InstantDB (live subscription)
+  const { data: instantData } = db.useQuery({ cards: {}, $files: {} });
   const dreamscapeCards = instantData?.cards || [];
+  const instantFiles = instantData?.$files || [];
+
+  // Build path → signed URL map from $files
+  const fileUrlMap = {};
+  instantFiles.forEach((f) => { fileUrlMap[f.path] = f.url; });
 
   // Fetch Cloudinary images on mount, merge with Dreamscape cards
   useEffect(() => {
@@ -68,20 +126,21 @@ const CardTable = forwardRef((props, ref) => {
         `https://res.cloudinary.com/${CLOUD_NAME}/image/list/${TAG}.json`
       );
       const data = await response.json();
-      // Cloudinary images get their standard shape
       const cloudinary = data.resources.map((img) => ({
         ...img,
         source: "cloudinary",
       }));
-      // Dreamscape cards get mapped to a compatible shape
-      const dreamscape = dreamscapeCards.map((card) => ({
-        public_id: card.id,
-        source: "dreamscape",
-        imageUrl: card.imageUrl,
-        cardName: card.name,
-        cardDescription: card.description,
-        cardKeywords: card.keywords,
-      }));
+      // Dreamscape cards: look up fresh signed URL via imagePath
+      const dreamscape = dreamscapeCards
+        .filter((card) => card.imagePath && fileUrlMap[card.imagePath])
+        .map((card) => ({
+          public_id: card.id,
+          source: "dreamscape",
+          imageUrl: fileUrlMap[card.imagePath],
+          cardName: card.name,
+          cardDescription: card.description,
+          cardKeywords: card.keywords,
+        }));
       const merged = shuffle([...cloudinary, ...dreamscape]);
       if (!cancelled) {
         setImages(merged);
@@ -91,14 +150,15 @@ const CardTable = forwardRef((props, ref) => {
     return () => {
       cancelled = true;
     };
-  }, [dreamscapeCards.length]);
+  }, [dreamscapeCards.length, instantFiles.length]);
 
-  // Compute positions when images load or window resizes
+  // Compute positions when images load, mode changes, or window resizes
   const recomputePositions = useCallback(() => {
     if (images) {
-      setPositions(computePositions(images.length));
+      const modeConfig = MODES.find(m => m.key === mode) || MODES[0];
+      setPositions(modeConfig.compute(images.length));
     }
-  }, [images]);
+  }, [images, mode]);
 
   useEffect(() => {
     recomputePositions();
@@ -157,6 +217,20 @@ const CardTable = forwardRef((props, ref) => {
           flash ? " card-table__flash--active" : ""
         }`}
       />
+      {/* Mode Switcher */}
+      <div className="card-table__mode-switcher">
+        {MODES.map((m) => (
+          <button
+            key={m.key}
+            className={`card-table__mode-btn ${mode === m.key ? "card-table__mode-btn--active" : ""}`}
+            onClick={() => setMode(m.key)}
+            title={m.label}
+          >
+            <span className="card-table__mode-icon">{m.icon}</span>
+            <span className="card-table__mode-label">{m.label}</span>
+          </button>
+        ))}
+      </div>
       {images.map((img, index) => {
         const pos = positions[index];
         if (!pos) return null;

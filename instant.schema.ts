@@ -15,7 +15,7 @@ const schema = i.schema({
       keywords: i.json(),
       sourceType: i.string(),
       sourceName: i.string(),
-      imageUrl: i.string(),
+      imagePath: i.string(),
       createdAt: i.number(),
     }),
   },
