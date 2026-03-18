@@ -27,7 +27,7 @@ jobs:
           node-version: 18
           cache: npm
 
-      - run: npm install
+      - run: npm install --legacy-peer-deps
       - run: npm run build
         env:
           REACT_APP_INSTANTDB_ID: ${{ secrets.INSTANTDB_APP_ID }}
