@@ -18,6 +18,10 @@ const schema = i.schema({
       imagePath: i.string(),
       createdAt: i.number(),
     }),
+    $files: i.entity({
+      path: i.string().unique().indexed(),
+      url: i.string(),
+    }),
   },
 });
 

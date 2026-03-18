@@ -8,6 +8,16 @@ const rules = {
       delete: "isOwner",
     },
   },
+  cards: {
+    allow: {
+      view: "true",
+    },
+  },
+  $files: {
+    allow: {
+      view: "true",
+    },
+  },
 };
 
 export default rules;

@@ -1,0 +1,171 @@
+/* ─── Physical Cards Promo: Floating Seal ─── */
+
+.physical-seal {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 10px;
+  background: linear-gradient(160deg, rgba(42, 26, 0, 0.9) 0%, rgba(26, 15, 0, 0.95) 100%);
+  border: 1px solid #a67c00;
+  border-radius: 50%;
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 0 12px rgba(201, 168, 76, 0.3),
+    0 0 25px rgba(201, 168, 76, 0.1),
+    inset 0 0 8px rgba(201, 168, 76, 0.05);
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.physical-seal--expanded {
+  border-radius: 8px;
+  gap: 10px;
+  padding: 10px 16px;
+}
+
+/* ─── Rune Symbol ─── */
+
+.physical-seal__rune {
+  font-size: 18px;
+  color: #f0d875;
+  filter: drop-shadow(0 0 6px rgba(240, 216, 117, 0.6));
+  animation: seal-pulse 3s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes seal-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px rgba(240, 216, 117, 0.4));
+    opacity: 0.8;
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(240, 216, 117, 0.8));
+    opacity: 1;
+  }
+}
+
+/* ─── Expanded Content ─── */
+
+.physical-seal__content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: seal-reveal 0.3s ease-out;
+}
+
+@keyframes seal-reveal {
+  0% {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ─── Ornate Divider ─── */
+
+.physical-seal__divider {
+  width: 1px;
+  height: 24px;
+  background: linear-gradient(180deg, transparent, #a67c00, transparent);
+  flex-shrink: 0;
+}
+
+/* ─── Text ─── */
+
+.physical-seal__text {
+  color: #c9a84c;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  font-family: sans-serif;
+  margin: 0;
+  font-style: italic;
+}
+
+/* ─── Shop Link ─── */
+
+.physical-seal__link {
+  color: #f0d875;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  font-family: sans-serif;
+  text-decoration: none;
+  padding: 4px 10px;
+  border: 1px solid #a67c00;
+  border-radius: 3px;
+  background: rgba(42, 26, 0, 0.6);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.physical-seal__link:hover {
+  color: #ffe8a0;
+  border-color: #f0d875;
+  background: rgba(58, 40, 0, 0.8);
+  box-shadow: 0 0 10px rgba(240, 216, 117, 0.3);
+}
+
+.physical-seal__arrow {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.physical-seal__link:hover .physical-seal__arrow {
+  transform: translateX(3px);
+}
+
+/* ─── Inline Panel Hint ─── */
+
+.physical-hint {
+  display: block;
+  text-align: center;
+  padding: 8px 12px;
+  margin-top: 8px;
+  color: #8a7340;
+  font-size: 11px;
+  font-style: italic;
+  letter-spacing: 0.3px;
+  font-family: sans-serif;
+  text-decoration: none;
+  transition: color 0.3s ease;
+  border-top: 1px solid rgba(166, 124, 0, 0.15);
+}
+
+.physical-hint:hover {
+  color: #f0d875;
+}
+
+.physical-hint__star {
+  color: #c9a84c;
+  margin-right: 4px;
+  filter: drop-shadow(0 0 3px rgba(201, 168, 76, 0.4));
+}
+
+/* ─── Responsive ─── */
+
+@media (max-width: 480px) {
+  .physical-seal {
+    bottom: 60px;
+    left: 8px;
+    padding: 8px;
+  }
+
+  .physical-seal__rune {
+    font-size: 14px;
+  }
+
+  .physical-seal__text {
+    font-size: 10px;
+  }
+}

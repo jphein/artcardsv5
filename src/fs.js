@@ -1,13 +1,14 @@
 import React, { useRef, useEffect } from "react";
-import { config } from "react-spring";
 import FireApp from "./logo";
 import Example from "./example";
+import CardTable from "./card-table";
 import CardPanel from "./panel";
 import AuthButton from "./auth-button";
+import PhysicalCardsSeal from "./physical-cards";
 
 const FullScreenButton = ({ autoFullscreen }) => {
   const appContainerRef = useRef(null);
-  const carouselRef = useRef(null);
+  const cardTableRef = useRef(null);
 
   const requestFullscreen = () => {
     if (appContainerRef.current.requestFullscreen) {
@@ -31,28 +32,18 @@ const FullScreenButton = ({ autoFullscreen }) => {
     <div>
       <div ref={appContainerRef} className="app-container">
         <FireApp />
-        <Example ref={carouselRef} />
+        <CardTable ref={cardTableRef} />
         <CardPanel
           onNavigate={(slideIndex) => {
-            if (carouselRef.current) {
-              // Flash on, fast config, jump to slide
-              carouselRef.current.setState({
-                goToSlide: slideIndex,
-                config: { tension: 1000, friction: 35 },
-                flash: true
-              });
-              // Flash off + restore slow config
-              setTimeout(() => {
-                if (carouselRef.current) {
-                  carouselRef.current.setState({ flash: false, config: config.slow });
-                }
-              }, 500);
+            if (cardTableRef.current) {
+              cardTableRef.current.focusCard(slideIndex);
             }
           }}
           onToggle={() => {}}
         />
+        <AuthButton />
+        <PhysicalCardsSeal />
       </div>
-      <AuthButton />
       <div
         style={{
           position: "fixed",

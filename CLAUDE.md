@@ -52,6 +52,10 @@ Ornate dark/gold filigree aesthetic throughout:
 
 GitHub Actions workflow (`.github/workflows/deploy.yml`) auto-deploys to GitHub Pages on every push to `main`. Manual deploy available via `npm run deploy` (gh-pages package).
 
+### Workflow Preferences
+
+- When walking the user through steps that involve copying text (URLs, IDs, config values, commands, etc.), always copy the value to the clipboard using `xclip` or `xsel` so the user can just paste it.
+
 ### File Layout
 
 All source files are flat in `src/` with no subdirectories. CSS is split by component: `styles.css` (global/body), `logo.css`, `nav.css`, `panel.css`. Static assets: `bg.jpg` (starry background), `logo.png`. `src/src.js` is unused.

@@ -5,6 +5,7 @@ import SpreadView from "./spread-view";
 import Lightbox from "./lightbox";
 import SPREAD_LAYOUTS from "./spread-layouts";
 import { useCurrentUser } from "./auth-button";
+import { PhysicalCardsHint } from "./physical-cards";
 import "./panel.css";
 
 const CardPanel = ({ onNavigate, onToggle }) => {
@@ -136,6 +137,7 @@ const CardPanel = ({ onNavigate, onToggle }) => {
               View Spread
             </button>
           )}
+          <PhysicalCardsHint cardCount={cards.length} />
         </div>
       </div>
 
