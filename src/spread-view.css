@@ -628,3 +628,55 @@
     0 0 25px rgba(240, 216, 117, 0.6),
     0 8px 30px rgba(0, 0, 0, 0.5);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Dreamscape Collection Strip
+   ═══════════════════════════════════════════════════════════════ */
+
+.spread-view__collection {
+  display: flex;
+  gap: 8px;
+  padding: 12px 20px;
+  overflow-x: auto;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.spread-view__collection-card {
+  flex-shrink: 0;
+  width: 70px;
+  height: 70px;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: grab;
+  border: 1px solid rgba(201, 168, 76, 0.2);
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  position: relative;
+}
+
+.spread-view__collection-card:hover {
+  transform: scale(1.1);
+  border-color: rgba(201, 168, 76, 0.5);
+  box-shadow: 0 0 12px rgba(201, 168, 76, 0.2);
+}
+
+.spread-view__collection-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.spread-view__collection-name {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 2px 4px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #c9a84c;
+  font-size: 8px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

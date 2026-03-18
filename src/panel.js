@@ -472,9 +472,13 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
                               onDragStart={(e) => {
                                 e.dataTransfer.setData(
                                   "application/json",
-                                  JSON.stringify(card)
+                                  JSON.stringify({ ...card, fromCollection: true })
                                 );
                                 e.dataTransfer.effectAllowed = "copy";
+                                onDockDragStart && onDockDragStart();
+                              }}
+                              onDragEnd={() => {
+                                onDockDragEnd && onDockDragEnd();
                               }}
                               title={card.cardName || "Dreamscape card"}
                             >
@@ -507,6 +511,11 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
           onSpreadChange={setSpreadType}
           onLoadDeck={handleLoadDeck}
           userId={userId}
+          collectionCards={resolvedDreamCards}
+          onAddCard={(cardData) => {
+            if (cards.some((c) => c.public_id === cardData.public_id)) return;
+            setCards((prev) => [...prev, cardData]);
+          }}
         />
       )}
 

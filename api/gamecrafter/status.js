@@ -1,9 +1,5 @@
 const TGC_BASE = "https://www.thegamecrafter.com/api";
 
-// ---------------------------------------------------------------------------
-// CORS helpers
-// ---------------------------------------------------------------------------
-
 const ALLOWED_ORIGINS = [
   "https://jphein.github.io",
   "http://localhost:3000",
@@ -13,31 +9,24 @@ function corsHeaders(origin) {
   const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
   return {
     "Access-Control-Allow-Origin": allowed,
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };
 }
-
-// ---------------------------------------------------------------------------
-// Main handler
-// ---------------------------------------------------------------------------
 
 module.exports = async (req, res) => {
   const origin = req.headers.origin || "";
   const cors = corsHeaders(origin);
 
-  // Preflight
   if (req.method === "OPTIONS") {
     res.writeHead(204, cors);
     return res.end();
   }
 
-  // Only GET allowed
-  if (req.method !== "GET") {
+  if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // Set CORS on every response
   for (const [k, v] of Object.entries(cors)) {
     res.setHeader(k, v);
   }
@@ -47,13 +36,19 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: "Server misconfigured: missing TGC credentials" });
   }
 
-  const { gameId } = req.query || {};
+  let body;
+  try {
+    body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+  } catch {
+    return res.status(400).json({ error: "Invalid JSON body" });
+  }
+
+  const { gameId } = body || {};
   if (!gameId) {
-    return res.status(400).json({ error: "Missing required query parameter: gameId" });
+    return res.status(400).json({ error: "Missing required field: gameId" });
   }
 
   try {
-    // Create a session to authenticate the request
     const sessionRes = await fetch(`${TGC_BASE}/session`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -65,19 +60,16 @@ module.exports = async (req, res) => {
     });
     const sessionData = await sessionRes.json();
     if (!sessionRes.ok || sessionData.error) {
-      const msg = sessionData.error?.message || sessionData.error || "Session creation failed";
-      throw new Error(msg);
+      throw new Error(sessionData.error?.message || "Session creation failed");
     }
     const sessionId = sessionData.result.id;
 
-    // Fetch the game details
     const gameRes = await fetch(
       `${TGC_BASE}/game/${gameId}?session_id=${encodeURIComponent(sessionId)}`
     );
     const gameData = await gameRes.json();
     if (!gameRes.ok || gameData.error) {
-      const msg = gameData.error?.message || gameData.error || "Failed to fetch game";
-      throw new Error(msg);
+      throw new Error(gameData.error?.message || "Failed to fetch game");
     }
 
     const game = gameData.result;

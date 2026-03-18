@@ -68,7 +68,6 @@ async function downloadImage(url) {
 // ---------------------------------------------------------------------------
 
 async function uploadFileToTGC(sessionId, fileName, buffer) {
-  // Build multipart body manually to avoid needing a third-party library.
   const boundary = `----FormBoundary${Date.now().toString(36)}`;
   const CRLF = "\r\n";
 
@@ -120,18 +119,15 @@ module.exports = async (req, res) => {
   const origin = req.headers.origin || "";
   const cors = corsHeaders(origin);
 
-  // Preflight
   if (req.method === "OPTIONS") {
     res.writeHead(204, cors);
     return res.end();
   }
 
-  // Only POST allowed
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // Set CORS on every response
   for (const [k, v] of Object.entries(cors)) {
     res.setHeader(k, v);
   }
@@ -152,51 +148,36 @@ module.exports = async (req, res) => {
 
   if (!name || !Array.isArray(cards) || cards.length === 0) {
     return res.status(400).json({
-      error: "Request body must include name (string), cards (non-empty array of {url, name})",
+      error: "Request body must include name (string), cards (non-empty array)",
     });
   }
 
   try {
-    // -----------------------------------------------------------------------
     // 1. Create a TGC session
-    // -----------------------------------------------------------------------
-    console.log("Creating TGC session...");
     const session = await tgcPost("/session", {
       api_key_id: TGC_API_KEY,
       username: TGC_USERNAME,
       password: TGC_PASSWORD,
     });
     const sessionId = session.id;
-    console.log("Session created:", sessionId);
 
-    // -----------------------------------------------------------------------
     // 2. Create a game
-    // -----------------------------------------------------------------------
-    console.log("Creating game:", name);
     const game = await tgcPost("/game", {
       session_id: sessionId,
       name,
       designer_id: session.user_id,
     });
     const gameId = game.id;
-    console.log("Game created:", gameId);
 
-    // -----------------------------------------------------------------------
-    // 3. Upload the shared card-back image
-    // -----------------------------------------------------------------------
+    // 3. Upload the shared card-back image (optional)
     let backFileId;
     if (backImageUrl) {
-      console.log("Uploading shared card back image...");
       const backBuffer = await downloadImage(backImageUrl);
       const backFile = await uploadFileToTGC(sessionId, "card-back.png", backBuffer);
       backFileId = backFile.id;
-      console.log("Card back uploaded:", backFileId);
     }
 
-    // -----------------------------------------------------------------------
     // 4. Create a square deck component in the game
-    // -----------------------------------------------------------------------
-    console.log("Creating square deck...");
     const deckPayload = {
       session_id: sessionId,
       name: deckType || "Main Deck",
@@ -207,29 +188,27 @@ module.exports = async (req, res) => {
     }
     const deck = await tgcPost("/squaredeck", deckPayload);
     const deckId = deck.id;
-    console.log("Deck created:", deckId);
 
-    // -----------------------------------------------------------------------
     // 5. For each card: download image, upload to TGC, create card entry
-    // -----------------------------------------------------------------------
+    // Accept both {cardName, imageUrl} (from client) and {name, url} formats
     const createdCards = [];
     for (let i = 0; i < cards.length; i++) {
       const card = cards[i];
-      const cardName = card.name || `Card ${i + 1}`;
-      console.log(`Processing card ${i + 1}/${cards.length}: ${cardName}`);
+      const cardName = card.cardName || card.name || `Card ${i + 1}`;
+      const cardUrl = card.imageUrl || card.url;
 
-      // Download
-      const imageBuffer = await downloadImage(card.url);
+      if (!cardUrl) {
+        throw new Error(`Card "${cardName}" has no image URL`);
+      }
 
-      // Upload
+      const imageBuffer = await downloadImage(cardUrl);
+
       const file = await uploadFileToTGC(
         sessionId,
         `${cardName.replace(/[^a-zA-Z0-9_-]/g, "_")}.png`,
         imageBuffer
       );
-      console.log(`  Uploaded file: ${file.id}`);
 
-      // Create card in deck
       const squareCard = await tgcPost("/squarecard", {
         session_id: sessionId,
         name: cardName,
@@ -238,23 +217,16 @@ module.exports = async (req, res) => {
         ...(backFileId ? { back_id: backFileId } : {}),
       });
       createdCards.push({ name: cardName, cardId: squareCard.id, fileId: file.id });
-      console.log(`  Card created: ${squareCard.id}`);
     }
 
-    // -----------------------------------------------------------------------
     // 6. Publish the game
-    // -----------------------------------------------------------------------
-    console.log("Publishing game...");
     const published = await tgcPut(`/game/${gameId}`, {
       session_id: sessionId,
       shop_status: "Published",
     });
     const slug = published.slug || published.name_slug || gameId;
-    console.log("Game published. Slug:", slug);
 
-    // -----------------------------------------------------------------------
     // 7. Return result
-    // -----------------------------------------------------------------------
     return res.status(200).json({
       gameId,
       slug,

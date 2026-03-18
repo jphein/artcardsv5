@@ -21,6 +21,8 @@ const SpreadView = ({
   onSpreadChange,
   onLoadDeck,
   userId,
+  collectionCards,
+  onAddCard,
 }) => {
   const [dealingCards, setDealingCards] = useState(new Set());
   const [dealtCards, setDealtCards] = useState(new Set());
@@ -389,6 +391,16 @@ const SpreadView = ({
           className={`spread-view__cards ${
             isFreeform ? "spread-view__cards--freeform" : "spread-view__cards--positioned"
           }`}
+          onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }}
+          onDrop={(e) => {
+            e.preventDefault();
+            try {
+              const data = JSON.parse(e.dataTransfer.getData("application/json"));
+              if (data.fromCollection && onAddCard) {
+                onAddCard(data);
+              }
+            } catch {}
+          }}
         >
           {activeCards.map((card, i) => renderCard(card, i, true))}
           {activeCards.length === 0 && (
@@ -419,6 +431,35 @@ const SpreadView = ({
           onLoadDeck={onLoadDeck}
           userId={userId}
         />
+
+        {collectionCards && collectionCards.length > 0 && (
+          <>
+            <div className="spread-view__separator">
+              <span className="spread-view__separator-label">
+                Dreamscape Collection
+              </span>
+            </div>
+            <div className="spread-view__collection">
+              {collectionCards
+                .filter(cc => !cards.some(c => c.public_id === cc.public_id))
+                .map((card) => (
+                  <div
+                    key={card.public_id}
+                    className="spread-view__collection-card"
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData("application/json", JSON.stringify({ ...card, fromCollection: true }));
+                      e.dataTransfer.effectAllowed = "copy";
+                    }}
+                    title={card.cardName || "Dreamscape card"}
+                  >
+                    <img src={card.imageUrl} alt={card.cardName || ""} />
+                    {card.cardName && <span className="spread-view__collection-name">{card.cardName}</span>}
+                  </div>
+                ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -356,30 +356,44 @@ const CardTable = forwardRef((props, ref) => {
     if (!tableRef.current) return;
     try {
       const data = JSON.parse(e.dataTransfer.getData("application/json"));
-      if (!data.fromDock) return;
 
       const rect = tableRef.current.getBoundingClientRect();
       const x = ((e.clientX - rect.left) / rect.width) * 100;
       const y = ((e.clientY - rect.top) / rect.height) * 100;
 
       const idx = images.findIndex(img => img.public_id === data.public_id);
-      if (idx === -1) return;
 
-      setPositions(prev => {
-        const next = [...prev];
-        if (next[idx]) {
-          next[idx] = { ...next[idx], x, y };
-        }
-        return next;
-      });
-
-      setCollectedIds(prev => {
-        const next = new Set(prev);
-        next.delete(data.public_id);
-        return next;
-      });
-
-      bringToFront(data.public_id);
+      if (data.fromDock) {
+        // Returning card from dock to table
+        if (idx === -1) return;
+        setPositions(prev => {
+          const next = [...prev];
+          if (next[idx]) {
+            next[idx] = { ...next[idx], x, y };
+          }
+          return next;
+        });
+        setCollectedIds(prev => {
+          const next = new Set(prev);
+          next.delete(data.public_id);
+          return next;
+        });
+        bringToFront(data.public_id);
+      } else if (data.fromCollection) {
+        // Dragging from Dreamscape collection — card is already on table, just reposition + highlight
+        if (idx === -1) return;
+        setPositions(prev => {
+          const next = [...prev];
+          if (next[idx]) {
+            next[idx] = { ...next[idx], x, y };
+          }
+          return next;
+        });
+        bringToFront(data.public_id);
+        // Brief focus highlight
+        setFocusedIndex(idx);
+        setTimeout(() => setFocusedIndex(null), 1500);
+      }
     } catch {
       // ignore
     }
