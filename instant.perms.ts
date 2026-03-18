@@ -1,9 +1,6 @@
-import type { InstantRules } from "@instantdb/react";
-import type schema from "./src/db";
-
-const rules: InstantRules<typeof schema> = {
+const rules = {
   decks: {
-    bind: ["isOwner", "auth.id != null && auth.id == data.owner.id"],
+    bind: ["isOwner", "auth.id != null && auth.id == data.userId"],
     allow: {
       view: "isOwner",
       create: "auth.id != null",

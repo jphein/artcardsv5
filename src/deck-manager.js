@@ -8,12 +8,7 @@ const DeckManager = ({ cards, spreadType, onLoadDeck, userId }) => {
   const [deckName, setDeckName] = useState("");
 
   const query = userId
-    ? {
-        decks: {
-          $: { where: { "owner.id": userId } },
-          owner: {},
-        },
-      }
+    ? { decks: { $: { where: { userId } } } }
     : null;
 
   const { isLoading, error, data } = db.useQuery(query);
@@ -23,16 +18,15 @@ const DeckManager = ({ cards, spreadType, onLoadDeck, userId }) => {
   const handleSave = async () => {
     if (!deckName.trim() || !userId) return;
 
-    await db.transact([
-      db.tx.decks[id()]
-        .update({
-          name: deckName.trim(),
-          spreadType,
-          cards,
-          createdAt: Date.now(),
-        })
-        .link({ owner: userId }),
-    ]);
+    await db.transact(
+      db.tx.decks[id()].update({
+        name: deckName.trim(),
+        spreadType,
+        cards,
+        userId,
+        createdAt: Date.now(),
+      })
+    );
 
     setDeckName("");
     setSaving(false);

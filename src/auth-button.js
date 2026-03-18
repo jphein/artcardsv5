@@ -50,10 +50,27 @@ function AuthButton() {
     );
   }
 
-  // Magic code: step 1 — enter email
+  const handleGoogleSignIn = () => {
+    const url = db.auth.createAuthorizationURL({
+      clientName: "google-web",
+      redirectURL: window.location.href,
+    });
+    window.location.href = url;
+  };
+
+  // Magic code: step 1 — enter email (+ Google option)
   if (!sentEmail) {
     return (
       <div className="auth-btn auth-btn--form">
+        <button
+          className="auth-btn__google"
+          onClick={handleGoogleSignIn}
+        >
+          Sign in with Google
+        </button>
+        <div className="auth-btn__divider">
+          <span>or</span>
+        </div>
         <input
           className="auth-btn__input"
           type="email"

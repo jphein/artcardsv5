@@ -6,14 +6,9 @@ const schema = i.schema({
       name: i.string(),
       spreadType: i.string(),
       cards: i.json(),
+      userId: i.string(),
       createdAt: i.number(),
     }),
-  },
-  links: {
-    deckOwner: {
-      forward: { on: "decks", has: "one", label: "owner" },
-      reverse: { on: "$users", has: "many", label: "decks" },
-    },
   },
 });
 
