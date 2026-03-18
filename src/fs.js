@@ -3,6 +3,7 @@ import { config } from "react-spring";
 import FireApp from "./logo";
 import Example from "./example";
 import CardPanel from "./panel";
+import AuthButton from "./auth-button";
 
 const FullScreenButton = ({ autoFullscreen }) => {
   const appContainerRef = useRef(null);
@@ -51,6 +52,7 @@ const FullScreenButton = ({ autoFullscreen }) => {
           onToggle={() => {}}
         />
       </div>
+      <AuthButton />
       <div
         style={{
           position: "fixed",

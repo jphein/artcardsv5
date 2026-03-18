@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, useRef } from "react";
 import { CloudinaryImage } from "@cloudinary/url-gen";
 import { AdvancedImage } from "@cloudinary/react";
 import SPREAD_LAYOUTS from "./spread-layouts";
+import DeckManager from "./deck-manager";
 import "./spread-view.css";
 
 const SPREAD_TYPES = Object.entries(SPREAD_LAYOUTS).map(([key, val]) => ({
@@ -17,6 +18,8 @@ const SpreadView = ({
   onCardClick,
   onReorder,
   onSpreadChange,
+  onLoadDeck,
+  userId,
 }) => {
   const [dragIndex, setDragIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
@@ -225,6 +228,14 @@ const SpreadView = ({
             </div>
           </>
         )}
+
+        {/* Deck Save/Load */}
+        <DeckManager
+          cards={cards}
+          spreadType={spreadType}
+          onLoadDeck={onLoadDeck}
+          userId={userId}
+        />
       </div>
     </div>
   );

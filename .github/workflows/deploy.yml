@@ -29,6 +29,8 @@ jobs:
 
       - run: npm install
       - run: npm run build
+        env:
+          REACT_APP_INSTANTDB_ID: ${{ secrets.INSTANTDB_APP_ID }}
 
       - uses: actions/configure-pages@v4
       - uses: actions/upload-pages-artifact@v3

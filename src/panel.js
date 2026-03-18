@@ -4,9 +4,11 @@ import { AdvancedImage } from "@cloudinary/react";
 import SpreadView from "./spread-view";
 import Lightbox from "./lightbox";
 import SPREAD_LAYOUTS from "./spread-layouts";
+import { useCurrentUser } from "./auth-button";
 import "./panel.css";
 
 const CardPanel = ({ onNavigate, onToggle }) => {
+  const { user } = useCurrentUser();
   const [open, setOpen] = useState(false);
   const [cards, setCards] = useState([]);
   const [dragOver, setDragOver] = useState(false);
@@ -46,6 +48,11 @@ const CardPanel = ({ onNavigate, onToggle }) => {
 
   const removeCard = (public_id) => {
     setCards((prev) => prev.filter((c) => c.public_id !== public_id));
+  };
+
+  const handleLoadDeck = (deckCards, deckSpreadType) => {
+    setCards(deckCards);
+    setSpreadType(deckSpreadType);
   };
 
   const handleCardClick = (card) => {
@@ -135,6 +142,8 @@ const CardPanel = ({ onNavigate, onToggle }) => {
           onCardClick={handleCardClick}
           onReorder={setCards}
           onSpreadChange={setSpreadType}
+          onLoadDeck={handleLoadDeck}
+          userId={user ? user.id : null}
         />
       )}
 
