@@ -1,14 +1,20 @@
 import React, { useState } from "react";
 import { CloudinaryImage } from "@cloudinary/url-gen";
 import { AdvancedImage } from "@cloudinary/react";
+import SpreadView from "./spread-view";
+import Lightbox from "./lightbox";
+import SPREAD_LAYOUTS from "./spread-layouts";
 import "./panel.css";
-
-const MAX_CARDS = Infinity;
 
 const CardPanel = ({ onNavigate, onToggle }) => {
   const [open, setOpen] = useState(false);
   const [cards, setCards] = useState([]);
   const [dragOver, setDragOver] = useState(false);
+  const [showSpread, setShowSpread] = useState(false);
+  const [spreadType, setSpreadType] = useState("three");
+  const [lightboxCard, setLightboxCard] = useState(null);
+  const [lightboxLabel, setLightboxLabel] = useState(null);
+  const [lightboxSublabel, setLightboxSublabel] = useState(null);
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -24,18 +30,14 @@ const CardPanel = ({ onNavigate, onToggle }) => {
     e.preventDefault();
     setDragOver(false);
 
-    if (cards.length >= MAX_CARDS) return;
-
     try {
       const data = JSON.parse(e.dataTransfer.getData("application/json"));
-      // Avoid duplicates
       if (cards.some((c) => c.public_id === data.public_id)) return;
       setCards((prev) => [...prev, data]);
     } catch {
-      // ignore invalid drops
+      return;
     }
 
-    // Auto-open the panel when a card is dropped
     if (!open) {
       setOpen(true);
       onToggle && onToggle(true);
@@ -46,66 +48,103 @@ const CardPanel = ({ onNavigate, onToggle }) => {
     setCards((prev) => prev.filter((c) => c.public_id !== public_id));
   };
 
-  return (
-    <div className={`card-panel ${open ? "card-panel--open" : ""}`}>
-      <button
-        className="card-panel__toggle"
-        onClick={() => {
-          const next = !open;
-          setOpen(next);
-          onToggle && onToggle(next);
-        }}
-        onDragOver={(e) => {
-          e.preventDefault();
-          if (!open) {
-            setOpen(true);
-            onToggle && onToggle(true);
-          }
-        }}
-      >
-        <span className="card-panel__toggle-arrow">
-          {open ? "\u25BC" : "\u25B2"}
-        </span>
-        {" "}My Cards ({cards.length})
-      </button>
+  const handleCardClick = (card) => {
+    const layout = SPREAD_LAYOUTS[spreadType];
+    const index = cards.indexOf(card);
+    const position = layout && layout.positions[index];
+    setLightboxCard(card);
+    setLightboxLabel(position ? position.label : null);
+    setLightboxSublabel(position ? position.sublabel : null);
+  };
 
-      <div
-        className={`card-panel__tray ${dragOver ? "card-panel__tray--dragover" : ""}`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        {cards.length === 0 && (
-          <div className="card-panel__empty">
-            Drag cards here (up to {MAX_CARDS})
-          </div>
-        )}
-        {cards.map((card) => {
-          const cldImg = new CloudinaryImage(card.public_id, {
-            cloudName: card.cloud_name
-          });
-          return (
-            <div
-              key={card.public_id}
-              className="card-panel__card"
-              onClick={() => onNavigate && onNavigate(card.slideIndex)}
-              title="Click to spin carousel to this card"
-            >
-              <AdvancedImage cldImg={cldImg} alt={card.public_id} />
-              <button
-                className="card-panel__remove"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removeCard(card.public_id);
-                }}
-              >
-                &times;
-              </button>
+  return (
+    <>
+      <div className={`card-panel ${open ? "card-panel--open" : ""}`}>
+        <button
+          className="card-panel__toggle"
+          onClick={() => {
+            const next = !open;
+            setOpen(next);
+            onToggle && onToggle(next);
+          }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            if (!open) {
+              setOpen(true);
+              onToggle && onToggle(true);
+            }
+          }}
+        >
+          <span className="card-panel__toggle-arrow">
+            {open ? "\u25BC" : "\u25B2"}
+          </span>
+          {" "}My Cards ({cards.length})
+        </button>
+
+        <div
+          className={`card-panel__tray ${dragOver ? "card-panel__tray--dragover" : ""}`}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          {cards.length === 0 && (
+            <div className="card-panel__empty">
+              Drag cards here to collect them
             </div>
-          );
-        })}
+          )}
+          {cards.map((card) => {
+            const cldImg = new CloudinaryImage(card.public_id, {
+              cloudName: card.cloud_name
+            });
+            return (
+              <div
+                key={card.public_id}
+                className="card-panel__card"
+                onClick={() => onNavigate && onNavigate(card.slideIndex)}
+                title="Click to spin carousel to this card"
+              >
+                <AdvancedImage cldImg={cldImg} alt={card.public_id} />
+                <button
+                  className="card-panel__remove"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeCard(card.public_id);
+                  }}
+                >
+                  &times;
+                </button>
+              </div>
+            );
+          })}
+          {cards.length > 0 && (
+            <button
+              className="card-panel__spread-btn"
+              onClick={() => setShowSpread(true)}
+            >
+              View Spread
+            </button>
+          )}
+        </div>
       </div>
-    </div>
+
+      {showSpread && (
+        <SpreadView
+          cards={cards}
+          spreadType={spreadType}
+          onClose={() => setShowSpread(false)}
+          onCardClick={handleCardClick}
+          onReorder={setCards}
+          onSpreadChange={setSpreadType}
+        />
+      )}
+
+      <Lightbox
+        card={lightboxCard}
+        label={lightboxLabel}
+        sublabel={lightboxSublabel}
+        onClose={() => setLightboxCard(null)}
+      />
+    </>
   );
 };
 
