@@ -293,7 +293,7 @@
   right: 16px;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 1050;
+  z-index: 900;
   display: flex;
   flex-direction: column;
   gap: 4px;

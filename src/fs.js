@@ -7,7 +7,6 @@ import AuthButton from "./auth-button";
 import PhysicalCardsSeal from "./physical-cards";
 import HelpOverlay from "./help-overlay";
 import SettingsMenu from "./settings-menu";
-import Welcome from "./welcome";
 import usePreferences from "./use-preferences";
 
 const FullScreenButton = ({ autoFullscreen }) => {
@@ -38,7 +37,6 @@ const FullScreenButton = ({ autoFullscreen }) => {
 
   return (
     <div ref={appContainerRef} className="app-container">
-      <Welcome />
       <FireApp />
       {viewMode === "table" ? (
         <CardTable
