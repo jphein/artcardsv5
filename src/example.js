@@ -1,6 +1,6 @@
 import React, { Component, useEffect } from "react";
 import Carousel from "react-spring-3d-carousel";
-import uuidv4 from "uuid";
+
 import { config } from "react-spring";
 import RandomImage from "./random";
 import { useHints } from "./hints";
@@ -138,7 +138,20 @@ export default class Example extends Component {
 
   render() {
     const slides = this.getSlides();
-    if (slides.length === 0) return null;
+    if (slides.length === 0) {
+      return (
+        <div className="carousel-wrapper">
+          <div className="carousel-loading">
+            <div className="carousel-loading__cards">
+              <div className="carousel-loading__card" />
+              <div className="carousel-loading__card" />
+              <div className="carousel-loading__card" />
+            </div>
+            <div className="carousel-loading__text">Shuffling the deck...</div>
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div

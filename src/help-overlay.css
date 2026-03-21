@@ -215,7 +215,7 @@
   margin: 0 0 20px;
   color: #f0d875;
   text-shadow: 0 0 8px rgba(240, 216, 117, 0.4);
-  font-family: sans-serif;
+  font-family: 'Cinzel', serif;
 }
 
 /* ─── Section ─── */
@@ -266,7 +266,7 @@
   align-items: baseline;
   gap: 8px;
   font-size: 11px;
-  font-family: sans-serif;
+  font-family: 'Inter', sans-serif;
   line-height: 1.5;
 }
 

@@ -2,7 +2,7 @@
 
 .auth-btn {
   pointer-events: auto;
-  font-family: sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.5px;
@@ -229,7 +229,7 @@
   border: 1px solid #6b5520;
   border-radius: 0;
   font-size: 12px;
-  font-family: sans-serif;
+  font-family: 'Inter', sans-serif;
   outline: none;
   transition: all 0.3s ease;
 }

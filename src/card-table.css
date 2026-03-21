@@ -334,7 +334,7 @@
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: #8a7340;
-  font-family: sans-serif;
+  font-family: 'Cinzel', serif;
   transition: color 0.3s ease;
 }
 
@@ -702,7 +702,7 @@
   text-transform: uppercase;
   color: #c9a84c;
   text-shadow: 0 0 10px rgba(201, 168, 76, 0.4);
-  font-family: "Georgia", "Times New Roman", serif;
+  font-family: 'Cinzel', serif;
   display: flex;
   align-items: center;
   gap: 0;
@@ -766,4 +766,55 @@
     font-size: 11px;
     letter-spacing: 2px;
   }
+}
+
+/* ─── Loading State ─── */
+
+.card-table__loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.card-table__loading-shimmer {
+  width: 120px;
+  height: 168px;
+  border-radius: 8px;
+  border: 2px solid rgba(166, 124, 0, 0.3);
+  background: linear-gradient(160deg, rgba(42, 26, 0, 0.6) 0%, rgba(15, 10, 2, 0.8) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.card-table__loading-shimmer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(240, 216, 117, 0.08) 45%, rgba(255, 232, 160, 0.15) 50%, rgba(240, 216, 117, 0.08) 55%, transparent 100%);
+  background-size: 200% 100%;
+  animation: table-loading-shimmer 2s ease-in-out infinite;
+}
+
+@keyframes table-loading-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.card-table__loading-text {
+  color: #a67c00;
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  animation: table-loading-text-fade 2s ease-in-out infinite;
+}
+
+@keyframes table-loading-text-fade {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.7; }
 }

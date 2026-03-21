@@ -78,9 +78,9 @@
 /* ─── Floating Panel ─── */
 
 .settings-menu__panel {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
+  position: fixed;
+  top: 58px;
+  right: 14px;
   width: 260px;
   z-index: 1200;
   background:
@@ -172,7 +172,7 @@
   letter-spacing: 2px;
   text-transform: uppercase;
   color: #c9a84c;
-  font-family: sans-serif;
+  font-family: 'Cinzel', serif;
 }
 
 /* ─── Setting Row ─── */
@@ -193,7 +193,7 @@
   text-transform: uppercase;
   color: #8a7340;
   margin-bottom: 8px;
-  font-family: sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 /* ─── Toggle Button Group (Animation Speed) ─── */
@@ -251,7 +251,7 @@
   letter-spacing: 1.2px;
   text-transform: uppercase;
   color: #8a7340;
-  font-family: sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 .settings-menu__switch {

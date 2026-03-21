@@ -1,18 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}
+
+#root {
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+
 body {
   background-color: black;
-  /* Set the background image */
   background-image: url(./bg.jpg);
-  /* Set the background size */
-  background-size: cover; /* or contain, or a specific width and height */
-
-  /* Set the background repeat */
-  background-repeat: no-repeat; /* or repeat-x, repeat-y, or repeat */
-
-  /* Set the background position */
-  background-position: center; /* or a specific position like top left, bottom right */
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 .App {
-  font-family: sans-serif;
+  font-family: 'Inter', sans-serif;
   text-align: center;
   position: relative;
   min-height: 100vh;
@@ -82,6 +101,36 @@ body {
   80% { opacity: 0; }
 }
 
+.app-container {
+  animation: page-enter 0.8s ease-out both;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* ─── Edge Vignette ─── */
+.app-container::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 55%,
+    rgba(0, 0, 0, 0.4) 85%,
+    rgba(0, 0, 0, 0.7) 100%
+  );
+}
+
+@keyframes page-enter {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
 .app-container:fullscreen,
 .app-container:-webkit-full-screen {
   background-color: black;
@@ -89,4 +138,77 @@ body {
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
+}
+
+/* ─── Top Bar ─── */
+
+.top-bar {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  z-index: 1100;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  pointer-events: none;
+}
+
+.top-bar > * {
+  pointer-events: auto;
+}
+
+.top-bar__fullscreen {
+  color: #c9a84c;
+  background: linear-gradient(160deg, rgba(42, 26, 0, 0.85) 0%, rgba(26, 15, 0, 0.9) 50%, rgba(42, 26, 0, 0.85) 100%);
+  border: 1px solid #a67c00;
+  padding: 8px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  box-shadow: 0 0 12px rgba(201, 168, 76, 0.25), inset 0 0 10px rgba(201, 168, 76, 0.05);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.top-bar__fullscreen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(240, 216, 117, 0.06) 45%, rgba(255, 232, 160, 0.12) 50%, rgba(240, 216, 117, 0.06) 55%, transparent 100%);
+  background-size: 200% 100%;
+  animation: topbar-shimmer 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.top-bar__fullscreen:hover {
+  color: #f0d875;
+  border-color: #f0d875;
+  box-shadow: 0 0 18px rgba(240, 216, 117, 0.4), 0 0 36px rgba(201, 168, 76, 0.15), inset 0 0 15px rgba(240, 216, 117, 0.08);
+}
+
+.top-bar__fullscreen:active {
+  transform: scale(0.96);
+}
+
+@keyframes topbar-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.top-bar__right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ─── Typography Utility ─── */
+.font-title {
+  font-family: 'Cinzel', serif;
 }

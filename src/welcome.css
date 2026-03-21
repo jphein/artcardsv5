@@ -142,7 +142,7 @@
   letter-spacing: 0.5px;
   cursor: pointer;
   transition: color 0.2s ease;
-  font-family: sans-serif;
+  font-family: 'Inter', sans-serif;
   padding: 4px 8px;
 }
 
@@ -202,7 +202,7 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
   filter: drop-shadow(0 0 8px rgba(240, 216, 117, 0.5));
-  font-family: sans-serif;
+  font-family: 'Cinzel', serif;
 }
 
 .welcome-subtitle {
@@ -211,7 +211,7 @@
   font-style: italic;
   letter-spacing: 1px;
   margin: 0;
-  font-family: sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 /* Step 2: Features */
@@ -244,7 +244,7 @@
   font-weight: 500;
   letter-spacing: 0.3px;
   line-height: 1.4;
-  font-family: sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 /* Step 3: Begin button */
@@ -267,7 +267,7 @@
   font-weight: 700;
   letter-spacing: 3px;
   text-transform: uppercase;
-  font-family: sans-serif;
+  font-family: 'Cinzel', serif;
   box-shadow:
     0 0 15px rgba(201, 168, 76, 0.4),
     0 0 30px rgba(201, 168, 76, 0.15),

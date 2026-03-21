@@ -574,7 +574,16 @@ const CardTable = forwardRef((props, ref) => {
     };
   }, []);
 
-  if (!images) return null;
+  if (!images) {
+    return (
+      <div className="card-table">
+        <div className="card-table__loading">
+          <div className="card-table__loading-shimmer" />
+          <div className="card-table__loading-text">Gathering the cards...</div>
+        </div>
+      </div>
+    );
+  }
 
   // Before dealing: show deck pile
   if (!dealt) {

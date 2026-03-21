@@ -130,6 +130,7 @@
   background-clip: text;
   filter: drop-shadow(0 0 6px rgba(240, 216, 117, 0.5));
   text-align: center;
+  font-family: 'Cinzel', serif;
 }
 
 /* ─── Sublabel: Dimmer Gold ─── */
