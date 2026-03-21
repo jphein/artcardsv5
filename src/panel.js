@@ -157,10 +157,14 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
     setPublishError(null);
     try {
       const result = await publishDeck(deck);
+      if (result.error) {
+        throw new Error(result.error);
+      }
       await db.transact(db.tx.decks[deck.id].update({ tgcGameId: result.gameId, tgcShopUrl: result.shopUrl }));
     } catch (err) {
+      console.error("Publish deck failed:", err);
       setPublishError(deck.id);
-      setTimeout(() => setPublishError(null), 3000);
+      setTimeout(() => setPublishError(null), 5000);
     } finally {
       setPublishingDeckId(null);
     }
