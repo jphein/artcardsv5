@@ -630,7 +630,6 @@ const CardTable = forwardRef((props, ref) => {
           <div className="card-table__deck-label">
             <span className="card-table__deck-label-icon">{"\u2726"}</span>
             <span className="card-table__deck-label-text">Tap to Deal</span>
-            <span className="card-table__deck-label-count">{images.length} cards</span>
           </div>
         </div>
       </div>
