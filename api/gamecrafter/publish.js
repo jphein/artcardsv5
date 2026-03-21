@@ -22,6 +22,16 @@ function corsHeaders(origin) {
 // TGC API helpers
 // ---------------------------------------------------------------------------
 
+async function tgcGet(path) {
+  const res = await fetch(`${TGC_BASE}${path}`);
+  const data = await res.json();
+  if (!res.ok || data.error) {
+    const msg = data.error?.message || data.error || JSON.stringify(data);
+    throw new Error(`TGC GET ${path} failed: ${msg}`);
+  }
+  return data.result;
+}
+
 async function tgcPost(path, body) {
   const res = await fetch(`${TGC_BASE}${path}`, {
     method: "POST",
@@ -54,6 +64,16 @@ async function tgcPut(path, body) {
 // Download an image URL into a Buffer
 // ---------------------------------------------------------------------------
 
+const TGC_SQUARE_SIZE = 1125;
+
+function resizeForTGC(url) {
+  const match = url.match(/^(https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/)(.*)/);
+  if (match) {
+    return `${match[1]}c_pad,w_${TGC_SQUARE_SIZE},h_${TGC_SQUARE_SIZE},b_black/${match[2]}`;
+  }
+  return url;
+}
+
 async function downloadImage(url) {
   const res = await fetch(url);
   if (!res.ok) {
@@ -67,12 +87,13 @@ async function downloadImage(url) {
 // Upload a file buffer to TGC as multipart/form-data
 // ---------------------------------------------------------------------------
 
-async function uploadFileToTGC(sessionId, fileName, buffer) {
+async function uploadFileToTGC(sessionId, folderId, fileName, buffer) {
   const boundary = `----FormBoundary${Date.now().toString(36)}`;
   const CRLF = "\r\n";
 
   const fieldParts = [
     ["session_id", sessionId],
+    ["folder_id", folderId],
   ];
 
   let prefix = "";
@@ -161,23 +182,28 @@ module.exports = async (req, res) => {
     });
     const sessionId = session.id;
 
-    // 2. Create a game
+    // 2. Look up the user's default designer ID
+    const user = await tgcGet(`/user/${session.user_id}?session_id=${encodeURIComponent(sessionId)}`);
+    const designerId = user.default_designer_id;
+    const folderId = user.root_folder_id;
+
+    // 3. Create a game
     const game = await tgcPost("/game", {
       session_id: sessionId,
       name,
-      designer_id: session.user_id,
+      designer_id: designerId,
     });
     const gameId = game.id;
 
-    // 3. Upload the shared card-back image (optional)
+    // 4. Upload the shared card-back image (optional)
     let backFileId;
     if (backImageUrl) {
       const backBuffer = await downloadImage(backImageUrl);
-      const backFile = await uploadFileToTGC(sessionId, "card-back.png", backBuffer);
+      const backFile = await uploadFileToTGC(sessionId, folderId, "card-back.png", backBuffer);
       backFileId = backFile.id;
     }
 
-    // 4. Create a square deck component in the game
+    // 5. Create a square deck component in the game
     const deckPayload = {
       session_id: sessionId,
       name: deckType || "Main Deck",
@@ -189,7 +215,7 @@ module.exports = async (req, res) => {
     const deck = await tgcPost("/squaredeck", deckPayload);
     const deckId = deck.id;
 
-    // 5. For each card: download image, upload to TGC, create card entry
+    // 6. For each card: download image, upload to TGC, create card entry
     // Accept both {cardName, imageUrl} (from client) and {name, url} formats
     const createdCards = [];
     for (let i = 0; i < cards.length; i++) {
@@ -201,10 +227,11 @@ module.exports = async (req, res) => {
         throw new Error(`Card "${cardName}" has no image URL`);
       }
 
-      const imageBuffer = await downloadImage(cardUrl);
+      const imageBuffer = await downloadImage(resizeForTGC(cardUrl));
 
       const file = await uploadFileToTGC(
         sessionId,
+        folderId,
         `${cardName.replace(/[^a-zA-Z0-9_-]/g, "_")}.png`,
         imageBuffer
       );
@@ -219,14 +246,14 @@ module.exports = async (req, res) => {
       createdCards.push({ name: cardName, cardId: squareCard.id, fileId: file.id });
     }
 
-    // 6. Publish the game
+    // 7. Publish the game
     const published = await tgcPut(`/game/${gameId}`, {
       session_id: sessionId,
       shop_status: "Published",
     });
     const slug = published.slug || published.name_slug || gameId;
 
-    // 7. Return result
+    // 8. Return result
     return res.status(200).json({
       gameId,
       slug,
