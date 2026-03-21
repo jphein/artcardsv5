@@ -2,6 +2,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useMemo,
   useRef,
   useImperativeHandle,
   forwardRef,
@@ -15,6 +16,15 @@ import "./card-table.css";
 
 const CLOUD_NAME = "dqm00mcjs";
 const TAG = "carousel";
+
+// CloudinaryImage cache — prevents re-creating instances on every render
+const cldImageCache = new Map();
+function getCldImage(publicId) {
+  if (!cldImageCache.has(publicId)) {
+    cldImageCache.set(publicId, new CloudinaryImage(publicId, { cloudName: CLOUD_NAME }));
+  }
+  return cldImageCache.get(publicId);
+}
 
 function shuffle(arr) {
   const a = [...arr];
@@ -127,8 +137,11 @@ const CardTable = forwardRef((props, ref) => {
   const instantFiles = instantData?.$files || [];
 
   // Build path → signed URL map from $files
-  const fileUrlMap = {};
-  instantFiles.forEach((f) => { fileUrlMap[f.path] = f.url; });
+  const fileUrlMap = useMemo(() => {
+    const map = {};
+    instantFiles.forEach((f) => { map[f.path] = f.url; });
+    return map;
+  }, [instantFiles]);
 
   // Fetch Cloudinary images on mount, merge with Dreamscape cards
   useEffect(() => {
@@ -494,6 +507,7 @@ const CardTable = forwardRef((props, ref) => {
     if (!table) return;
     let activeCard = null;
 
+    let tiltRaf = null;
     const onMove = (e) => {
       const cardEl = e.target.closest(".card-table__card");
       if (cardEl !== activeCard) {
@@ -529,13 +543,20 @@ const CardTable = forwardRef((props, ref) => {
         }
       }
       if (!cardEl) return;
-      const rect = cardEl.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = (e.clientY - rect.top) / rect.height;
-      cardEl.style.setProperty("--tilt-x", `${(0.5 - y) * 15}deg`);
-      cardEl.style.setProperty("--tilt-y", `${(x - 0.5) * 15}deg`);
-      cardEl.style.setProperty("--light-x", `${x * 100}%`);
-      cardEl.style.setProperty("--light-y", `${y * 100}%`);
+      // Throttle tilt computation to one per animation frame
+      if (tiltRaf) return;
+      const cx = e.clientX, cy = e.clientY;
+      tiltRaf = requestAnimationFrame(() => {
+        tiltRaf = null;
+        if (!activeCard) return;
+        const rect = activeCard.getBoundingClientRect();
+        const x = (cx - rect.left) / rect.width;
+        const y = (cy - rect.top) / rect.height;
+        activeCard.style.setProperty("--tilt-x", `${(0.5 - y) * 15}deg`);
+        activeCard.style.setProperty("--tilt-y", `${(x - 0.5) * 15}deg`);
+        activeCard.style.setProperty("--light-x", `${x * 100}%`);
+        activeCard.style.setProperty("--light-y", `${y * 100}%`);
+      });
     };
 
     const onLeave = (e) => {
@@ -563,6 +584,7 @@ const CardTable = forwardRef((props, ref) => {
       if (flipHintTimerRef.current) {
         clearTimeout(flipHintTimerRef.current);
       }
+      if (tiltRaf) cancelAnimationFrame(tiltRaf);
     };
   }, [showHint]);
 
@@ -760,11 +782,7 @@ const CardTable = forwardRef((props, ref) => {
                   />
                 ) : (
                   <AdvancedImage
-                    cldImg={
-                      new CloudinaryImage(img.public_id, {
-                        cloudName: CLOUD_NAME,
-                      })
-                    }
+                    cldImg={getCldImage(img.public_id)}
                     alt={img.public_id}
                   />
                 )}

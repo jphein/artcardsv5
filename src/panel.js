@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useImperativeHandle, useCallback } from "react";
+import React, { useState, useMemo, forwardRef, useImperativeHandle, useCallback } from "react";
 import { CloudinaryImage } from "@cloudinary/url-gen";
 import { AdvancedImage } from "@cloudinary/react";
 import SpreadView from "./spread-view";
@@ -11,6 +11,15 @@ import { publishDeck } from "./gamecrafter";
 import "./panel.css";
 
 const CLOUD_NAME = "dqm00mcjs";
+
+const cldImageCache = new Map();
+function getCldImage(publicId, cloudName) {
+  const key = `${cloudName || CLOUD_NAME}/${publicId}`;
+  if (!cldImageCache.has(key)) {
+    cldImageCache.set(key, new CloudinaryImage(publicId, { cloudName: cloudName || CLOUD_NAME }));
+  }
+  return cldImageCache.get(key);
+}
 
 const TABS = [
   { key: "hand", icon: "\u2726", label: "Hand" },
@@ -45,19 +54,25 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
   const { data: instantData } = db.useQuery({ cards: {}, $files: {} });
   const dreamscapeCards = instantData?.cards || [];
   const instantFiles = instantData?.$files || [];
-  const fileUrlMap = {};
-  instantFiles.forEach((f) => { fileUrlMap[f.path] = f.url; });
+  const fileUrlMap = useMemo(() => {
+    const map = {};
+    instantFiles.forEach((f) => { map[f.path] = f.url; });
+    return map;
+  }, [instantFiles]);
 
   // Build dreamscape card objects with resolved image URLs
-  const resolvedDreamCards = dreamscapeCards
-    .filter((card) => card.imagePath && fileUrlMap[card.imagePath])
-    .map((card) => ({
-      public_id: card.id,
-      source: "dreamscape",
-      imageUrl: fileUrlMap[card.imagePath],
-      cardName: card.name,
-      cardDescription: card.description,
-    }));
+  const resolvedDreamCards = useMemo(() =>
+    dreamscapeCards
+      .filter((card) => card.imagePath && fileUrlMap[card.imagePath])
+      .map((card) => ({
+        public_id: card.id,
+        source: "dreamscape",
+        imageUrl: fileUrlMap[card.imagePath],
+        cardName: card.name,
+        cardDescription: card.description,
+      })),
+    [dreamscapeCards, fileUrlMap]
+  );
 
   useImperativeHandle(ref, () => ({
     addCard(cardData) {
@@ -217,7 +232,7 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
           <img src={card.imageUrl} alt={card.cardName || "Dreamscape card"} />
         ) : (
           <AdvancedImage
-            cldImg={new CloudinaryImage(card.public_id, { cloudName: card.cloud_name || CLOUD_NAME })}
+            cldImg={getCldImage(card.public_id, card.cloud_name)}
             alt={card.public_id}
           />
         )}
@@ -251,7 +266,7 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
               <img src={card.imageUrl} alt="" />
             ) : (
               <AdvancedImage
-                cldImg={new CloudinaryImage(card.public_id, { cloudName: card.cloud_name || CLOUD_NAME })}
+                cldImg={getCldImage(card.public_id, card.cloud_name)}
                 alt=""
               />
             )}
@@ -264,7 +279,10 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
     );
   };
 
-  const sortedDecks = [...decks].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  const sortedDecks = useMemo(() =>
+    [...decks].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)),
+    [decks]
+  );
   const currentLayout = SPREAD_LAYOUTS[spreadType];
 
   // ─── Tab Content Renderers ───
