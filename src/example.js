@@ -182,12 +182,6 @@ export default class Example extends Component {
           <span className="nav-btn__corner nav-btn__corner--br" />
           <span className="nav-btn__icon">{"\u276F"}</span>
         </button>
-        {this.props.onSwitchToTable && (
-          <button className="nav-btn nav-btn--table" onClick={this.props.onSwitchToTable} title="Back to Table">
-            <span className="nav-btn__icon">{"\u2726"}</span>
-            <span className="nav-btn--table-label">Table</span>
-          </button>
-        )}
       </div>
     );
   }

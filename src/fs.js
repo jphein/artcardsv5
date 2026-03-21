@@ -82,6 +82,11 @@ const FullScreenButton = ({ autoFullscreen }) => {
           Fullscreen
         </button>
         <div className="top-bar__right">
+          {viewMode === "carousel" && (
+            <button className="top-bar__fullscreen" onClick={() => setViewMode("table")}>
+              {"\u2726"} Table
+            </button>
+          )}
           <SettingsMenu prefs={prefs} setPref={setPref} />
           <HelpOverlay />
           <AuthButton />
