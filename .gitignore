@@ -6,3 +6,8 @@ node_modules
 .claude/
 build/
 .playwright-mcp/
+
+# Screenshots and dev images
+*.jpeg
+*.png
+!public/*.png
