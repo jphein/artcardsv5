@@ -1,3 +1,25 @@
+# Dependencies
 node_modules/
+
+# Build output
 build/
+
+# Lock files (17K+ lines)
+package-lock.json
+
+# Tooling
 .playwright-mcp/
+.superpowers/
+.claude/
+
+# Secrets
+.env
+.env.local
+
+# Images / screenshots (binary)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.ico
+*.svg
