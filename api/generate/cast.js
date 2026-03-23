@@ -163,22 +163,29 @@ module.exports = async (req, res) => {
   const resolvedSize = resolveSize(size, model);
   const fullPrompt = buildPrompt(prompt.trim(), dreamType, essences);
 
-  const azureBody = {
-    model: azureModel,
-    prompt: fullPrompt,
-    n: 1,
-    size: resolvedSize,
-    response_format: "b64_json",
-  };
+  const isFlux = azureModel === "FLUX-1.1-pro";
 
-  // gpt-image-1.5 supports native transparency
-  if ((model === "gpt-image-1.5") && background === "transparent") {
-    azureBody.background = "transparent";
+  // FLUX uses width/height integers; GPT-Image uses size string + response_format
+  let azureBody;
+  if (isFlux) {
+    const [w, h] = resolvedSize.split("x").map(Number);
+    azureBody = { prompt: fullPrompt, width: w, height: h };
+  } else {
+    azureBody = {
+      model: azureModel,
+      prompt: fullPrompt,
+      n: 1,
+      size: resolvedSize,
+      response_format: "b64_json",
+    };
+    if (background === "transparent") {
+      azureBody.background = "transparent";
+    }
   }
 
   try {
-    const endpoint = AZURE_OPENAI_ENDPOINT.replace(/\/$/, "");
-    const apiRes = await fetch(`${endpoint}/images/generations?api-version=2025-04-01-preview`, {
+    const endpoint = AZURE_OPENAI_ENDPOINT.replace(/\/$/, "").replace(/\/openai\/v1$/, "");
+    const apiRes = await fetch(`${endpoint}/openai/deployments/${encodeURIComponent(azureModel)}/images/generations?api-version=2024-10-21`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
