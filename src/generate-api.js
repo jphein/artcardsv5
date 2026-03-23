@@ -35,13 +35,13 @@ async function request(path, body) {
  * @param {string} options.model - "flux-1.1-pro" or "gpt-image-1.5"
  * @param {string} options.size - e.g. "1024x1024", "1536x1024", "1024x1536"
  * @param {string} [options.background] - "transparent" or "opaque"
- * @param {string} [options.style] - Comma-separated essence names
- * @param {string} [options.type] - "background", "element", "freeform", "custom"
+ * @param {string[]} [options.essences] - Essence keys (e.g. ["fairy-tale", "watercolor"])
+ * @param {string} [options.dreamType] - "background", "element", "freeform", "custom"
  * @returns {Promise<{image: string, model: string, size: string}>} image is base64
  */
-export async function castDream({ prompt, model, size, background, style, type }) {
+export async function castDream({ prompt, model, size, background, essences, dreamType }) {
   try {
-    return await request('/generate/cast', { prompt, model, size, background, style, type });
+    return await request('/generate/cast', { prompt, model, size, background, essences, dreamType });
   } catch (err) {
     throw new Error(err.message || 'The dream faded... generation failed. Try again.');
   }

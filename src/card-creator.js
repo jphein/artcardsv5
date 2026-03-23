@@ -133,29 +133,6 @@ function CardCreator({ onSwitchToTable, onCollectCard }) {
     });
   }, []);
 
-  // Build the full prompt
-  const buildFullPrompt = useCallback(() => {
-    const typeConfig = DREAM_TYPES.find((t) => t.key === dreamType);
-    let prefix = typeConfig?.prefix || "";
-    if (dreamType === "custom") {
-      prefix = customPrefix ? customPrefix + " " : "";
-    }
-
-    const essenceSuffix = [...selectedEssences]
-      .map((key) => {
-        const e = ESSENCES.find((es) => es.key === key);
-        return e ? e.suffix : "";
-      })
-      .filter(Boolean)
-      .join(", ");
-
-    let fullPrompt = prefix + prompt;
-    if (essenceSuffix) {
-      fullPrompt += ", " + essenceSuffix;
-    }
-    return fullPrompt;
-  }, [prompt, dreamType, customPrefix, selectedEssences]);
-
   // ─── Casting Flow ───
   const handleDream = useCallback(async () => {
     if (!prompt.trim() || isDreaming || !user) return;
@@ -165,20 +142,19 @@ function CardCreator({ onSwitchToTable, onCollectCard }) {
     setDreamResult(null);
 
     try {
-      // 1. Build prompt and size
-      const fullPrompt = buildFullPrompt();
       const ratioConfig = ASPECT_RATIOS.find((r) => r.key === aspectRatio);
       const size = ratioConfig?.size || "1024x1024";
 
-      // 2. Cast dream — generate image
+      // Send raw prompt + type/essences — server builds full prompt with prefixes/suffixes
       const castResult = await castDream({
-        prompt: fullPrompt,
+        prompt: dreamType === "custom" && customPrefix
+          ? customPrefix + " " + prompt.trim()
+          : prompt.trim(),
         model,
         size,
         background: effectiveTransparency ? "transparent" : "opaque",
-        style: [...selectedEssences].join(","),
-        type: dreamType,
-        quality,
+        essences: [...selectedEssences],
+        dreamType,
       });
 
       if (!castResult || !castResult.image) {
@@ -198,7 +174,7 @@ function CardCreator({ onSwitchToTable, onCollectCard }) {
     } finally {
       setIsDreaming(false);
     }
-  }, [prompt, isDreaming, user, buildFullPrompt, model, aspectRatio, effectiveTransparency, selectedEssences, dreamType, quality]);
+  }, [prompt, isDreaming, user, model, aspectRatio, effectiveTransparency, selectedEssences, dreamType, customPrefix]);
 
   // Save dream to journal
   const [isSaving, setIsSaving] = useState(false);
