@@ -1563,34 +1563,64 @@
   display: block;
 }
 
-/* ─── Card Metadata ─── */
+/* ─── Card Metadata Inputs ─── */
 
-.dreambook__result-name {
+.dreambook__result-name-input {
   font-family: 'Cinzel', serif;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
   letter-spacing: 2px;
   color: var(--dream-gold-bright);
-  text-shadow: 0 0 10px rgba(212, 165, 116, 0.4);
   text-align: center;
-  margin: 0;
+  background: rgba(30, 27, 75, 0.5);
+  border: 1px solid rgba(212, 165, 116, 0.3);
+  border-radius: 8px;
+  padding: 8px 12px;
+  width: 100%;
+  max-width: 360px;
+  outline: none;
+  transition: border-color 0.3s ease;
 }
 
-.dreambook__result-desc {
+.dreambook__result-name-input::placeholder {
+  color: rgba(212, 165, 116, 0.4);
+  font-weight: 400;
+}
+
+.dreambook__result-name-input:focus {
+  border-color: var(--dream-gold);
+  box-shadow: 0 0 12px rgba(212, 165, 116, 0.2);
+}
+
+.dreambook__result-desc-input {
   font-family: 'Inter', sans-serif;
   font-size: 14px;
   line-height: 1.6;
   color: var(--dream-gold);
   text-align: center;
+  background: rgba(30, 27, 75, 0.5);
+  border: 1px solid rgba(212, 165, 116, 0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  width: 100%;
   max-width: 360px;
-  opacity: 0.8;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.3s ease;
 }
 
-.dreambook__result-keywords {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: center;
+.dreambook__result-desc-input::placeholder {
+  color: rgba(212, 165, 116, 0.3);
+}
+
+.dreambook__result-desc-input:focus {
+  border-color: var(--dream-gold);
+  box-shadow: 0 0 12px rgba(212, 165, 116, 0.2);
+}
+
+.dreambook__result-btn--save {
+  background: linear-gradient(135deg, rgba(212, 165, 116, 0.25), rgba(180, 130, 80, 0.25));
+  border-color: var(--dream-gold);
 }
 
 .dreambook__result-keyword {
@@ -1981,12 +2011,26 @@
     max-width: 260px;
   }
 
-  .dreambook__result-name {
+  .dreambook__result-name-input {
     font-size: 18px;
+    background: rgba(232, 228, 248, 0.5);
+    color: #4a3a6a;
+    border-color: rgba(138, 106, 24, 0.3);
   }
 
-  .dreambook__result-desc {
+  .dreambook__result-name-input::placeholder {
+    color: rgba(138, 106, 24, 0.4);
+  }
+
+  .dreambook__result-desc-input {
     font-size: 13px;
+    background: rgba(232, 228, 248, 0.5);
+    color: #4a3a6a;
+    border-color: rgba(138, 106, 24, 0.2);
+  }
+
+  .dreambook__result-desc-input::placeholder {
+    color: rgba(138, 106, 24, 0.3);
   }
 
   .dreambook__lightbox-content {

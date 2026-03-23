@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { castDream, divineName } from "./generate-api";
+import { castDream } from "./generate-api";
 import { db, id } from "./db";
 import { useCurrentUser } from "./auth-button";
 import { v4 as uuidv4 } from "uuid";
@@ -185,60 +185,13 @@ function CardCreator({ onSwitchToTable, onCollectCard }) {
         throw new Error("The dream faded... no image was received.");
       }
 
-      // 3. Show image immediately
-      setDreamResult({ image: castResult.image, name: null, description: null, keywords: null });
-
-      // 4. Divine name — get metadata from Claude
-      let metadata = { name: "Unnamed Dream", description: "", keywords: [] };
-      try {
-        const divineResult = await divineName(castResult.image);
-        if (divineResult) {
-          metadata = {
-            name: divineResult.name || "Unnamed Dream",
-            description: divineResult.description || "",
-            keywords: divineResult.keywords || [],
-          };
-        }
-      } catch (divineErr) {
-        console.warn("Card divination failed, using defaults:", divineErr);
-      }
-
-      // 5. Update result with metadata
+      // 3. Show image with editable fields (save is a separate step)
       setDreamResult({
         image: castResult.image,
-        name: metadata.name,
-        description: metadata.description,
-        keywords: metadata.keywords,
+        name: "",
+        description: "",
+        keywords: [],
       });
-
-      // 6. Upload image to InstantDB $files
-      const fileId = uuidv4();
-      const filePath = `dreambook/cards/${fileId}.png`;
-      const blob = base64ToBlob(castResult.image, "image/png");
-      const file = new File([blob], `${fileId}.png`, { type: "image/png" });
-
-      await db.storage.upload(filePath, file);
-
-      // 7. Write creations record
-      await db.transact(
-        db.tx.creations[id()].update({
-          imagePath: filePath,
-          type: dreamType,
-          prompt: prompt,
-          userId: user.id,
-          createdAt: Date.now(),
-          model,
-          style: [...selectedEssences].join(","),
-          cardName: metadata.name,
-          cardDescription: metadata.description,
-          cardKeywords: metadata.keywords,
-          aspectRatio,
-        })
-      );
-
-      // 8. Cooldown
-      setCooldown(true);
-      setTimeout(() => setCooldown(false), 10000);
     } catch (err) {
       console.error("Dream casting failed:", err);
       setError(err.message || "The dream faded... something went wrong.");
@@ -246,6 +199,45 @@ function CardCreator({ onSwitchToTable, onCollectCard }) {
       setIsDreaming(false);
     }
   }, [prompt, isDreaming, user, buildFullPrompt, model, aspectRatio, effectiveTransparency, selectedEssences, dreamType, quality]);
+
+  // Save dream to journal
+  const [isSaving, setIsSaving] = useState(false);
+  const handleSave = useCallback(async () => {
+    if (!dreamResult || !user || isSaving) return;
+    setIsSaving(true);
+    try {
+      const fileId = uuidv4();
+      const filePath = `dreambook/cards/${fileId}.png`;
+      const blob = base64ToBlob(dreamResult.image, "image/png");
+      const file = new File([blob], `${fileId}.png`, { type: "image/png" });
+
+      await db.storage.upload(filePath, file);
+
+      await db.transact(
+        db.tx.creations[id()].update({
+          imagePath: filePath,
+          type: dreamType,
+          prompt,
+          userId: user.id,
+          createdAt: Date.now(),
+          model,
+          style: [...selectedEssences].join(","),
+          cardName: dreamResult.name || "Unnamed Dream",
+          cardDescription: dreamResult.description || "",
+          cardKeywords: dreamResult.keywords || [],
+          aspectRatio,
+        })
+      );
+
+      setDreamResult(null);
+      setActivePage("journal");
+    } catch (err) {
+      console.error("Save failed:", err);
+      setError(err.message || "Failed to save dream to journal.");
+    } finally {
+      setIsSaving(false);
+    }
+  }, [dreamResult, user, isSaving, dreamType, prompt, model, selectedEssences, aspectRatio]);
 
   // Collect dreamed card to hand
   const handleCollect = useCallback(() => {
@@ -615,21 +607,30 @@ function CardCreator({ onSwitchToTable, onCollectCard }) {
               alt={dreamResult.name || "Dream card"}
               className="dreambook__result-img"
             />
-            {dreamResult.name && (
-              <div className="dreambook__result-name">{dreamResult.name}</div>
-            )}
-            {dreamResult.description && (
-              <div className="dreambook__result-desc">{dreamResult.description}</div>
-            )}
-            {dreamResult.keywords && dreamResult.keywords.length > 0 && (
-              <div className="dreambook__result-keywords">
-                {dreamResult.keywords.map((kw, i) => (
-                  <span key={i} className="dreambook__result-keyword">{kw}</span>
-                ))}
-              </div>
-            )}
+            <input
+              type="text"
+              className="dreambook__result-name-input"
+              placeholder="Name your dream..."
+              value={dreamResult.name}
+              onChange={(e) => setDreamResult((prev) => ({ ...prev, name: e.target.value }))}
+              autoFocus
+            />
+            <textarea
+              className="dreambook__result-desc-input"
+              placeholder="Describe its meaning... (optional)"
+              value={dreamResult.description}
+              onChange={(e) => setDreamResult((prev) => ({ ...prev, description: e.target.value }))}
+              rows={2}
+            />
           </div>
           <div className="dreambook__result-actions">
+            <button
+              className="dreambook__result-btn dreambook__result-btn--save"
+              onClick={handleSave}
+              disabled={isSaving}
+            >
+              {isSaving ? "Saving..." : "\u2726 Save to Journal"}
+            </button>
             {onCollectCard && (
               <button className="dreambook__result-btn" onClick={handleCollect}>
                 {"\u2726"} Collect
@@ -639,7 +640,7 @@ function CardCreator({ onSwitchToTable, onCollectCard }) {
               className="dreambook__result-btn dreambook__result-btn--again"
               onClick={() => setDreamResult(null)}
             >
-              Dream Again
+              Discard
             </button>
           </div>
         </div>
