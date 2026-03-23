@@ -1,7 +1,10 @@
 // ---------------------------------------------------------------------------
-// Dream Divine — Anthropic Claude proxy for card metadata generation
-// Given a generated image, Claude divines a poetic name, description, keywords
+// Dream Divine — AWS Bedrock Claude proxy for card metadata generation
+// Given a generated image, Claude Opus 4.6 divines a poetic name, description, keywords
 // ---------------------------------------------------------------------------
+
+const { SignatureV4 } = require("@smithy/signature-v4");
+const { Sha256 } = require("@aws-crypto/sha256-js");
 
 const ALLOWED_ORIGINS = [
   "https://jphein.github.io",
@@ -31,6 +34,34 @@ Return JSON only, no markdown fences:
 }`;
 
 // ---------------------------------------------------------------------------
+// AWS Signature V4 signing for Bedrock
+// ---------------------------------------------------------------------------
+
+async function signRequest(url, body, region, credentials) {
+  const parsedUrl = new URL(url);
+  const signer = new SignatureV4({
+    service: "bedrock",
+    region,
+    credentials,
+    sha256: Sha256,
+  });
+
+  const request = {
+    method: "POST",
+    protocol: parsedUrl.protocol,
+    hostname: parsedUrl.hostname,
+    path: parsedUrl.pathname,
+    headers: {
+      "Content-Type": "application/json",
+      host: parsedUrl.hostname,
+    },
+    body,
+  };
+
+  return signer.sign(request);
+}
+
+// ---------------------------------------------------------------------------
 // Main handler
 // ---------------------------------------------------------------------------
 
@@ -51,9 +82,14 @@ module.exports = async (req, res) => {
     res.setHeader(k, v);
   }
 
-  const { ANTHROPIC_API_KEY } = process.env;
-  if (!ANTHROPIC_API_KEY) {
-    return res.status(500).json({ error: "Server misconfigured: missing Anthropic API key" });
+  const {
+    AWS_ACCESS_KEY_ID,
+    AWS_SECRET_ACCESS_KEY,
+    AWS_REGION = "us-west-2",
+  } = process.env;
+
+  if (!AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY) {
+    return res.status(500).json({ error: "Server misconfigured: missing AWS credentials" });
   }
 
   let body;
@@ -63,49 +99,55 @@ module.exports = async (req, res) => {
     return res.status(400).json({ error: "Invalid JSON body" });
   }
 
-  const { imageBase64 } = body || {};
+  const { image } = body || {};
 
-  if (!imageBase64 || typeof imageBase64 !== "string") {
-    return res.status(400).json({ error: "Missing required field: imageBase64" });
+  if (!image || typeof image !== "string") {
+    return res.status(400).json({ error: "Missing required field: image" });
   }
 
-  try {
-    const apiRes = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-5-20250514",
-        max_tokens: 300,
-        messages: [
+  const modelId = "us.anthropic.claude-opus-4-6-v1";
+  const bedrockUrl = `https://bedrock-runtime.${AWS_REGION}.amazonaws.com/model/${encodeURIComponent(modelId)}/invoke`;
+
+  const bedrockBody = JSON.stringify({
+    anthropic_version: "bedrock-2023-05-31",
+    max_tokens: 300,
+    messages: [
+      {
+        role: "user",
+        content: [
           {
-            role: "user",
-            content: [
-              {
-                type: "image",
-                source: {
-                  type: "base64",
-                  media_type: "image/png",
-                  data: imageBase64,
-                },
-              },
-              {
-                type: "text",
-                text: ORACLE_PROMPT,
-              },
-            ],
+            type: "image",
+            source: {
+              type: "base64",
+              media_type: "image/png",
+              data: image,
+            },
+          },
+          {
+            type: "text",
+            text: ORACLE_PROMPT,
           },
         ],
-      }),
+      },
+    ],
+  });
+
+  try {
+    const signed = await signRequest(bedrockUrl, bedrockBody, AWS_REGION, {
+      accessKeyId: AWS_ACCESS_KEY_ID,
+      secretAccessKey: AWS_SECRET_ACCESS_KEY,
+    });
+
+    const apiRes = await fetch(bedrockUrl, {
+      method: "POST",
+      headers: signed.headers,
+      body: bedrockBody,
     });
 
     if (!apiRes.ok) {
       const errData = await apiRes.json().catch(() => ({}));
-      const errMsg = errData.error?.message || errData.error || `Anthropic API returned ${apiRes.status}`;
-      console.error("divine.js Anthropic error:", errMsg);
+      const errMsg = errData.message || errData.error || `Bedrock returned ${apiRes.status}`;
+      console.error("divine.js Bedrock error:", errMsg);
       return res.status(502).json({ error: `Card divination failed: ${errMsg}` });
     }
 
