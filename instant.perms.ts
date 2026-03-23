@@ -23,6 +23,7 @@ const rules = {
   $files: {
     allow: {
       view: "true",
+      create: "auth.id != null",
     },
   },
 };
