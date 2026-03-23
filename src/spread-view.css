@@ -743,3 +743,42 @@
 .spread-view__cards--positioned:has(.spread-view__empty-slot) {
   min-height: 300px;
 }
+
+/* ─── @dnd-kit Drag Overlay ─── */
+
+.spread-view__card-wrapper--overlay {
+  cursor: grabbing;
+  pointer-events: none;
+}
+
+.spread-view__card-wrapper--overlay .spread-view__card {
+  transform: scale(1.05);
+}
+
+.spread-view__card-wrapper--overlay .spread-view__card-face--front {
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.7),
+    0 0 30px rgba(240, 216, 117, 0.4),
+    0 0 60px rgba(201, 168, 76, 0.2);
+  border-color: #f0d875;
+}
+
+.spread-view__card--overlay {
+  opacity: 1 !important;
+}
+
+/* ─── @dnd-kit Droppable Slot Hover ─── */
+
+.spread-view__slot--over {
+  outline: 2px dashed rgba(201, 168, 76, 0.6);
+  outline-offset: 4px;
+  border-radius: 10px;
+}
+
+.spread-view__card-draggable {
+  cursor: grab;
+}
+
+.spread-view__card-draggable:active {
+  cursor: grabbing;
+}

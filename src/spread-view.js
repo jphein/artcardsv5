@@ -1,16 +1,110 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { CloudinaryImage } from "@cloudinary/url-gen";
 import { AdvancedImage } from "@cloudinary/react";
+import {
+  DndContext,
+  PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  useDraggable,
+  useDroppable,
+  closestCenter,
+} from "@dnd-kit/core";
+
 import SPREAD_LAYOUTS from "./spread-layouts";
 import DeckManager from "./deck-manager";
 import CardBack from "./card-back";
 import "./spread-view.css";
+
+// Approximate card wrapper dimensions for layout-based collision math
+const CARD_EL_W = 200;
+const CARD_EL_H = 310;
+
+// Compute slot center offsets (px from container center) from layout positions
+function slotCenter(pos) {
+  return {
+    x: pos.offsetX * CARD_EL_W / 100,
+    y: pos.offsetY * CARD_EL_H / 100,
+  };
+}
+
+// Find closest slot to a drop position, excluding the source slot
+function findClosestSlot(layout, activeCards, draggedIndex, delta) {
+  const dragPos = layout.positions[draggedIndex];
+  const src = slotCenter(dragPos);
+  const dropX = src.x + delta.x;
+  const dropY = src.y + delta.y;
+
+  let closestIndex = -1;
+  let closestDist = Infinity;
+
+  layout.positions.forEach((pos, i) => {
+    if (i === draggedIndex || i >= activeCards.length) return;
+    const c = slotCenter(pos);
+    const dist = Math.hypot(dropX - c.x, dropY - c.y);
+    if (dist < closestDist) {
+      closestDist = dist;
+      closestIndex = i;
+    }
+  });
+
+  // Only match if within reasonable range (half the card width)
+  return closestDist < CARD_EL_W ? closestIndex : -1;
+}
 
 const SPREAD_TYPES = Object.entries(SPREAD_LAYOUTS).map(([key, val]) => ({
   key,
   label: val.name,
   count: val.count,
 }));
+
+// ─── Draggable card wrapper ───
+const DraggableCard = ({ id, children, style: externalStyle, className, onPointerDownCapture, ...rest }) => {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id });
+
+  // Compose @dnd-kit drag transform with any existing CSS transform
+  const dragTranslate = transform ? `translate(${transform.x}px, ${transform.y}px) ` : "";
+  const baseTransform = externalStyle?.transform || "";
+
+  const style = {
+    ...externalStyle,
+    transform: dragTranslate + baseTransform || undefined,
+    zIndex: isDragging ? 9999 : externalStyle?.zIndex,
+    cursor: isDragging ? "grabbing" : "grab",
+    transition: isDragging ? "none" : externalStyle?.transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={className}
+      {...attributes}
+      {...listeners}
+      {...rest}
+    >
+      {children}
+    </div>
+  );
+};
+
+// ─── Droppable position slot ───
+const DroppableSlot = ({ id, children, style, className, highlighted }) => {
+  const { setNodeRef, isOver } = useDroppable({ id });
+  const showHighlight = highlighted || isOver;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`${className || ""}${showHighlight ? " spread-view__slot--over" : ""}`}
+    >
+      {children}
+    </div>
+  );
+};
 
 const SpreadView = ({
   cards,
@@ -32,21 +126,31 @@ const SpreadView = ({
   const [zMap, setZMap] = useState({});
   const [positionOverrides, setPositionOverrides] = useState({});
   const [rotationMap, setRotationMap] = useState({});
-  const [draggingId, setDraggingId] = useState(null);
-  const [dropTarget, setDropTarget] = useState(null); // index of position being hovered during drag
-  const dragRef = useRef({ active: false, publicId: null, offsetX: 0, offsetY: 0, el: null });
+  const [activeDragId, setActiveDragId] = useState(null);
+  const [suppressTransition, setSuppressTransition] = useState(false);
+  const [hoverSlotIndex, setHoverSlotIndex] = useState(-1);
 
   const prevSpreadType = useRef(spreadType);
   const cardsContainerRef = useRef(null);
   const zCounterRef = useRef(100);
-  const draggingIdRef = useRef(null);
-
-  draggingIdRef.current = draggingId;
 
   const spreadConfig = SPREAD_TYPES.find((s) => s.key === spreadType) || SPREAD_TYPES[0];
   const maxActive = spreadConfig.count;
   const activeCards = cards.slice(0, maxActive);
   const remainingCards = maxActive < Infinity ? cards.slice(maxActive) : [];
+
+  const layout = SPREAD_LAYOUTS[spreadType];
+  const isFreeform = spreadType === "freeform";
+
+  // ─── @dnd-kit sensors ───
+  const pointerSensor = useSensor(PointerSensor, {
+    activationConstraint: { distance: 8 },
+  });
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: { delay: 200, tolerance: 5 },
+  });
+  const keyboardSensor = useSensor(KeyboardSensor);
+  const sensors = useSensors(pointerSensor, touchSensor, keyboardSensor);
 
   const bringToFront = useCallback((publicId) => {
     const nextZ = zCounterRef.current + 1;
@@ -54,88 +158,76 @@ const SpreadView = ({
     setZMap((prev) => ({ ...prev, [publicId]: nextZ }));
   }, []);
 
-  // Free-drag via pointer events — DOM-direct for zero-lag movement
-  const handlePointerDown = useCallback((e, publicId) => {
-    if (e.button !== 0) return;
-    e.preventDefault();
-    bringToFront(publicId);
-    const el = e.currentTarget;
-    const cardRect = el.getBoundingClientRect();
-    dragRef.current = {
-      active: false,
-      publicId,
-      startX: e.clientX,
-      startY: e.clientY,
-      offsetX: e.clientX - cardRect.left,
-      offsetY: e.clientY - cardRect.top,
-      el,
-    };
-
-    const onMove = (ev) => {
-      const d = dragRef.current;
-      if (!d.el) return;
-
-      if (!d.active) {
-        const dx = ev.clientX - d.startX;
-        const dy = ev.clientY - d.startY;
-        if (dx * dx + dy * dy < 64) return;
-        d.active = true;
-        d.el.style.position = "fixed";
-        d.el.style.zIndex = "9999";
-        d.el.style.transition = "none";
-        d.el.style.pointerEvents = "none";
-        const currentTransform = d.el.style.transform.replace(/translate\([^)]*\)\s*/g, "");
-        d.el.dataset.dragTransform = currentTransform;
-        draggingIdRef.current = publicId;
-        setDraggingId(publicId);
-      }
-
-      const fx = ev.clientX - d.offsetX;
-      const fy = ev.clientY - d.offsetY;
-      d.el.style.left = `${fx}px`;
-      d.el.style.top = `${fy}px`;
-      d.el.style.transform = d.el.dataset.dragTransform || "";
-    };
-
-    const onUp = () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      const d = dragRef.current;
-
-      if (d.active && d.el && cardsContainerRef.current) {
-        const rect = cardsContainerRef.current.getBoundingClientRect();
-        const cardW = d.el.offsetWidth;
-        const cardH = d.el.offsetHeight;
-        const elLeft = parseFloat(d.el.style.left);
-        const elTop = parseFloat(d.el.style.top);
-        const cx = elLeft + cardW / 2 - rect.left;
-        const cy = elTop + cardH / 2 - rect.top;
-
-        d.el.style.position = "";
-        d.el.style.zIndex = "";
-        d.el.style.transition = "";
-        d.el.style.left = "";
-        d.el.style.top = "";
-        d.el.style.transform = "";
-        d.el.style.pointerEvents = "";
-        delete d.el.dataset.dragTransform;
-
-        setPositionOverrides((prev) => ({
-          ...prev,
-          [publicId]: { x: cx, y: cy },
-        }));
-      }
-
-      dragRef.current = { active: false, publicId: null, offsetX: 0, offsetY: 0, el: null };
-      draggingIdRef.current = null;
-      setDraggingId(null);
-    };
-
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
+  // ─── @dnd-kit handlers ───
+  const handleDragStart = useCallback((event) => {
+    setActiveDragId(event.active.id);
+    setHoverSlotIndex(-1);
+    bringToFront(event.active.id);
   }, [bringToFront]);
 
-  // Double-click to flip
+  const handleDragMove = useCallback((event) => {
+    if (isFreeform || !layout) { setHoverSlotIndex(-1); return; }
+    const { active, delta } = event;
+    const draggedIndex = activeCards.findIndex((c) => c.public_id === active.id);
+    if (draggedIndex < 0) { setHoverSlotIndex(-1); return; }
+    setHoverSlotIndex(findClosestSlot(layout, activeCards, draggedIndex, delta));
+  }, [isFreeform, layout, activeCards]);
+
+  const handleDragEnd = useCallback((event) => {
+    const { active, delta } = event;
+    setActiveDragId(null);
+    setHoverSlotIndex(-1);
+
+    if (!active) return;
+
+    const draggedId = active.id;
+
+    // Freeform: update position from drag delta
+    if (isFreeform) {
+      setPositionOverrides((prev) => {
+        const existing = prev[draggedId] || { x: 0, y: 0 };
+        return {
+          ...prev,
+          [draggedId]: {
+            x: existing.x + delta.x,
+            y: existing.y + delta.y,
+          },
+        };
+      });
+      return;
+    }
+
+    // Positioned spread: compute swap target from delta + layout positions
+    // (bypasses @dnd-kit collision detection which gets confused by nested
+    //  draggable-inside-droppable with CSS transforms)
+    if (!layout || !onReorder) return;
+
+    const draggedIndex = activeCards.findIndex((c) => c.public_id === draggedId);
+    if (draggedIndex < 0) return;
+
+    const targetIndex = findClosestSlot(layout, activeCards, draggedIndex, delta);
+
+    if (targetIndex >= 0) {
+      setSuppressTransition(true);
+      const newCards = [...cards];
+      const temp = newCards[draggedIndex];
+      newCards[draggedIndex] = newCards[targetIndex];
+      newCards[targetIndex] = temp;
+      onReorder(newCards);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setSuppressTransition(false);
+        });
+      });
+    }
+  }, [isFreeform, activeCards, cards, layout, onReorder]);
+
+  const handleDragCancel = useCallback(() => {
+    setActiveDragId(null);
+    setHoverSlotIndex(-1);
+  }, []);
+
+  // ─── Double-click to flip ───
   const handleDoubleClick = useCallback((e, publicId) => {
     e.stopPropagation();
     setFlippedIds((prev) => {
@@ -147,7 +239,7 @@ const SpreadView = ({
     bringToFront(publicId);
   }, [bringToFront]);
 
-  // Non-passive wheel for scaling
+  // ─── Non-passive wheel for scaling/rotation ───
   useEffect(() => {
     const container = cardsContainerRef.current;
     if (!container) return;
@@ -180,7 +272,7 @@ const SpreadView = ({
     return () => container.removeEventListener("wheel", onWheel);
   }, [bringToFront]);
 
-  // 3D tilt effect on hover
+  // ─── 3D tilt effect on hover ───
   useEffect(() => {
     const container = cardsContainerRef.current;
     if (!container) return;
@@ -226,7 +318,7 @@ const SpreadView = ({
     };
   }, []);
 
-  // Reset overrides when spread type changes
+  // ─── Reset overrides when spread type changes ───
   useEffect(() => {
     setPositionOverrides({});
     setScaleMap({});
@@ -234,7 +326,7 @@ const SpreadView = ({
     setFlippedIds(new Set());
   }, [spreadType]);
 
-  // Dealing animation
+  // ─── Dealing animation ───
   useEffect(() => {
     const indices = new Set(activeCards.map((_, i) => i));
     setDealingCards(indices);
@@ -265,32 +357,65 @@ const SpreadView = ({
     };
   }, [spreadType, activeCards.length]);
 
-  const layout = SPREAD_LAYOUTS[spreadType];
-  const isFreeform = spreadType === "freeform";
-
-  const renderCard = (card, index, isActive) => {
+  // ─── Render card content ───
+  const renderCardContent = (card, index, isActive) => {
     const isDreamscape = card.source === "dreamscape";
-    const isDragging = draggingId === card.public_id;
     const isDealing = isActive && dealingCards.has(index);
     const isDealt = isActive && dealtCards.has(index);
     const isFlipped = flippedIds.has(card.public_id);
     const position = isActive && !isFreeform && layout ? layout.positions[index] : null;
+
+    const cardClasses = [
+      "spread-view__card",
+      isActive ? "spread-view__card--active" : "spread-view__card--remaining",
+      isDealing ? "spread-view__card--dealing" : "",
+      isDealt ? "spread-view__card--dealt" : "",
+      isFlipped ? "spread-view__card--flipped" : "",
+    ].filter(Boolean).join(" ");
+
+    return (
+      <div className={cardClasses}>
+        <div className="spread-view__card-inner">
+          <div className="spread-view__card-face spread-view__card-face--front">
+            {isDreamscape ? (
+              <img src={card.imageUrl} alt={card.cardName || "Dreamscape card"} />
+            ) : (
+              <AdvancedImage
+                cldImg={new CloudinaryImage(card.public_id, { cloudName: card.cloud_name })}
+                alt={card.public_id}
+              />
+            )}
+            {isActive && (
+              <span className="spread-view__card-number">{index + 1}</span>
+            )}
+          </div>
+          <div className="spread-view__card-face spread-view__card-face--back">
+            <CardBack width={isActive ? 200 : 80} />
+          </div>
+        </div>
+        {position && !isFlipped && (
+          <div className="spread-view__card-label">{position.label}</div>
+        )}
+      </div>
+    );
+  };
+
+  const renderActiveCard = (card, index) => {
+    const isDragging = activeDragId === card.public_id;
+    const isDealing = dealingCards.has(index);
+    const position = !isFreeform && layout ? layout.positions[index] : null;
     const isPositioned = !!position;
     const userScale = scaleMap[card.public_id] || 1;
     const userRotation = rotationMap[card.public_id] || 0;
     const zIndex = zMap[card.public_id] || (index + 1);
     const posOverride = positionOverrides[card.public_id];
 
-    // Build wrapper style
     let wrapperStyle;
     if (posOverride) {
+      // Freeform drag offset — translate from flow position, not absolute
       wrapperStyle = {
-        position: "absolute",
-        left: `${posOverride.x}px`,
-        top: `${posOverride.y}px`,
-        transform: `rotate(${userRotation}deg) scale(${userScale})`,
+        transform: `translate(${posOverride.x}px, ${posOverride.y}px) rotate(${userRotation}deg) scale(${userScale})`,
         zIndex,
-        transition: isDragging ? "none" : "transform 0.3s ease",
       };
     } else if (isPositioned) {
       const totalRotation = position.rotation + userRotation;
@@ -299,6 +424,7 @@ const SpreadView = ({
         transitionDelay: `${index * 150}ms`,
         animationDelay: isDealing ? `${index * 150}ms` : undefined,
         zIndex,
+        ...(suppressTransition && { transition: "none" }),
       };
     } else {
       wrapperStyle = {
@@ -312,48 +438,51 @@ const SpreadView = ({
       isPositioned && !posOverride ? "spread-view__card-wrapper--positioned" : "",
     ].filter(Boolean).join(" ");
 
-    const cardClasses = [
-      "spread-view__card",
-      isActive ? "spread-view__card--active" : "spread-view__card--remaining",
-      isDragging ? "spread-view__card--dragging" : "",
-      isDealing ? "spread-view__card--dealing" : "",
-      isDealt ? "spread-view__card--dealt" : "",
-      isFlipped ? "spread-view__card--flipped" : "",
-    ].filter(Boolean).join(" ");
+    // For positioned spreads, wrap in a droppable slot for reorder
+    if (isPositioned && !posOverride) {
+      return (
+        <DroppableSlot
+          key={card.public_id}
+          id={`slot-${index}`}
+          style={wrapperStyle}
+          className={wrapperClasses}
+          highlighted={hoverSlotIndex === index}
+        >
+          <DraggableCard
+            id={card.public_id}
+            className="spread-view__card-draggable"
+            data-public-id={card.public_id}
+            onDoubleClick={(e) => handleDoubleClick(e, card.public_id)}
+          >
+            {renderCardContent(card, index, true)}
+          </DraggableCard>
+        </DroppableSlot>
+      );
+    }
 
+    return (
+      <DraggableCard
+        key={card.public_id}
+        id={card.public_id}
+        style={wrapperStyle}
+        className={wrapperClasses}
+        data-public-id={card.public_id}
+        onDoubleClick={(e) => handleDoubleClick(e, card.public_id)}
+      >
+        {renderCardContent(card, index, true)}
+      </DraggableCard>
+    );
+  };
+
+  const renderRemainingCard = (card, index) => {
+    const globalIndex = activeCards.length + index;
     return (
       <div
         key={card.public_id}
-        className={wrapperClasses}
+        className="spread-view__card-wrapper"
         data-public-id={card.public_id}
-        style={wrapperStyle}
-        onPointerDown={(e) => handlePointerDown(e, card.public_id)}
-        onDoubleClick={(e) => handleDoubleClick(e, card.public_id)}
-        onDragStart={(e) => e.preventDefault()}
       >
-        <div className={cardClasses}>
-          <div className="spread-view__card-inner">
-            <div className="spread-view__card-face spread-view__card-face--front">
-              {isDreamscape ? (
-                <img src={card.imageUrl} alt={card.cardName || "Dreamscape card"} />
-              ) : (
-                <AdvancedImage
-                  cldImg={new CloudinaryImage(card.public_id, { cloudName: card.cloud_name })}
-                  alt={card.public_id}
-                />
-              )}
-              {isActive && (
-                <span className="spread-view__card-number">{index + 1}</span>
-              )}
-            </div>
-            <div className="spread-view__card-face spread-view__card-face--back">
-              <CardBack width={isActive ? 200 : 80} />
-            </div>
-          </div>
-        </div>
-        {position && !isFlipped && (
-          <div className="spread-view__card-label">{position.label}</div>
-        )}
+        {renderCardContent(card, globalIndex, false)}
       </div>
     );
   };
@@ -387,67 +516,60 @@ const SpreadView = ({
           </div>
         )}
 
-        <div
-          ref={cardsContainerRef}
-          className={`spread-view__cards ${
-            isFreeform ? "spread-view__cards--freeform" : "spread-view__cards--positioned"
-          }`}
-          onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }}
-          onDragLeave={() => setDropTarget(null)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setDropTarget(null);
-            try {
-              const data = JSON.parse(e.dataTransfer.getData("application/json"));
-              if (data.fromCollection && onAddCard) {
-                onAddCard(data, dropTarget);
-              }
-            } catch {}
-          }}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragMove={handleDragMove}
+          onDragEnd={handleDragEnd}
+          onDragCancel={handleDragCancel}
         >
-          {activeCards.map((card, i) => renderCard(card, i, true))}
-          {/* Empty position slots for drops when spread has room */}
-          {!isFreeform && layout && activeCards.length < maxActive && (
-            Array.from({ length: maxActive - activeCards.length }, (_, i) => {
-              const slotIndex = activeCards.length + i;
-              const pos = layout.positions[slotIndex];
-              if (!pos) return null;
-              return (
-                <div
-                  key={`empty-${slotIndex}`}
-                  className={`spread-view__empty-slot${dropTarget === slotIndex ? " spread-view__empty-slot--active" : ""}`}
-                  style={{
-                    transform: `translate(calc(-50% + ${pos.offsetX}%), calc(-50% + ${pos.offsetY}%)) rotate(${pos.rotation}deg) scale(${pos.scale})`,
-                  }}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setDropTarget(slotIndex);
-                  }}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setDropTarget(null);
-                    try {
-                      const data = JSON.parse(e.dataTransfer.getData("application/json"));
-                      if (data.fromCollection && onAddCard) {
-                        onAddCard(data, slotIndex);
-                      }
-                    } catch {}
-                  }}
-                >
-                  <span className="spread-view__empty-slot-label">{pos.label}</span>
-                  <span className="spread-view__empty-slot-hint">drop card</span>
-                </div>
-              );
-            })
-          )}
-          {activeCards.length === 0 && !layout && (
-            <div className="spread-view__empty">
-              No cards in this spread yet.
-            </div>
-          )}
-        </div>
+          <div
+            ref={cardsContainerRef}
+            className={`spread-view__cards ${
+              isFreeform ? "spread-view__cards--freeform" : "spread-view__cards--positioned"
+            }`}
+            onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }}
+            onDrop={(e) => {
+              e.preventDefault();
+              try {
+                const data = JSON.parse(e.dataTransfer.getData("application/json"));
+                if (data.fromCollection && onAddCard) {
+                  onAddCard(data);
+                }
+              } catch {}
+            }}
+          >
+            {activeCards.map((card, i) => renderActiveCard(card, i))}
+            {/* Empty position slots for drops when spread has room */}
+            {!isFreeform && layout && activeCards.length < maxActive && (
+              Array.from({ length: maxActive - activeCards.length }, (_, i) => {
+                const slotIndex = activeCards.length + i;
+                const pos = layout.positions[slotIndex];
+                if (!pos) return null;
+                return (
+                  <DroppableSlot
+                    key={`empty-${slotIndex}`}
+                    id={`slot-${slotIndex}`}
+                    className="spread-view__empty-slot"
+                    style={{
+                      transform: `translate(calc(-50% + ${pos.offsetX}%), calc(-50% + ${pos.offsetY}%)) rotate(${pos.rotation}deg) scale(${pos.scale})`,
+                    }}
+                  >
+                    <span className="spread-view__empty-slot-label">{pos.label}</span>
+                    <span className="spread-view__empty-slot-hint">drop card</span>
+                  </DroppableSlot>
+                );
+              })
+            )}
+            {activeCards.length === 0 && !layout && (
+              <div className="spread-view__empty">
+                No cards in this spread yet.
+              </div>
+            )}
+          </div>
+
+        </DndContext>
 
         {remainingCards.length > 0 && (
           <>
@@ -457,9 +579,7 @@ const SpreadView = ({
               </span>
             </div>
             <div className="spread-view__remaining">
-              {remainingCards.map((card, i) =>
-                renderCard(card, activeCards.length + i, false)
-              )}
+              {remainingCards.map((card, i) => renderRemainingCard(card, i))}
             </div>
           </>
         )}
