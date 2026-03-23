@@ -21,7 +21,7 @@ async function request(path, body) {
     }
     return await res.json();
   } catch (err) {
-    if (err.message.includes('fetch') || err.message.includes('network') || err.message.includes('Failed to fetch')) {
+    if (err instanceof TypeError) {
       throw new Error('The dream realm is unreachable... check your connection and try again.');
     }
     throw err;
