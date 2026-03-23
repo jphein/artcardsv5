@@ -25,6 +25,12 @@ const schema = i.schema({
       prompt: i.string(),
       userId: i.string(),
       createdAt: i.number(),
+      model: i.string(),
+      style: i.string(),
+      cardName: i.string(),
+      cardDescription: i.string(),
+      cardKeywords: i.json(),
+      aspectRatio: i.string(),
     }),
     preferences: i.entity({
       userId: i.string(),

@@ -16,6 +16,8 @@ const rules = {
   creations: {
     allow: {
       view: "true",
+      create: "auth.id == data.userId",
+      delete: "auth.id == data.userId",
     },
   },
   $files: {

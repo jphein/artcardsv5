@@ -1,0 +1,2065 @@
+/* ═══════════════════════════════════════════════════════════════
+   The Dreambook — Mystical Card Creation Interface
+   Indigo/violet dream palette with gold accents
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Dream Color Palette ─── */
+
+:root {
+  --dream-indigo: #2d1b69;
+  --dream-violet: #7c3aed;
+  --dream-midnight: #1e1b4b;
+  --dream-gold: #d4a574;
+  --dream-gold-bright: #f0c987;
+  --dream-stardust: rgba(240, 201, 135, 0.6);
+  --dream-moonlight: rgba(200, 210, 255, 0.15);
+  --dream-veil: rgba(30, 27, 75, 0.85);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --dream-indigo: #5b4a9e;
+    --dream-violet: #9b6eff;
+    --dream-midnight: #e8e4f8;
+    --dream-gold: #8a6a3a;
+    --dream-gold-bright: #a07840;
+    --dream-stardust: rgba(140, 106, 58, 0.5);
+    --dream-moonlight: rgba(100, 90, 160, 0.1);
+    --dream-veil: rgba(232, 228, 248, 0.9);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Animations
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes starDrift {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(20px);
+    opacity: 0;
+  }
+}
+
+@keyframes mandalaForm {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0) rotate(0deg);
+  }
+  60% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(1.1) rotate(120deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotate(180deg);
+  }
+}
+
+@keyframes mandalaSpin {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes crystallize {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+    filter: blur(8px);
+  }
+  40% {
+    opacity: 0.6;
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes moonlightWash {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes dreamPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 15px rgba(124, 58, 237, 0.3),
+      0 0 30px rgba(124, 58, 237, 0.15);
+  }
+  50% {
+    box-shadow:
+      0 0 25px rgba(124, 58, 237, 0.5),
+      0 0 50px rgba(124, 58, 237, 0.25),
+      0 0 80px rgba(124, 58, 237, 0.1);
+  }
+}
+
+@keyframes sleepVeil {
+  0% {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    backdrop-filter: blur(12px);
+  }
+}
+
+@keyframes dreambook-enter {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes dreambook-shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes dreamBtnGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 20px rgba(124, 58, 237, 0.4),
+      0 0 40px rgba(45, 27, 105, 0.3),
+      inset 0 0 15px rgba(124, 58, 237, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 30px rgba(124, 58, 237, 0.6),
+      0 0 60px rgba(45, 27, 105, 0.4),
+      0 0 90px rgba(124, 58, 237, 0.15),
+      inset 0 0 20px rgba(124, 58, 237, 0.15);
+  }
+}
+
+@keyframes page-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes dreamSpinner {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Dreambook — Root Container (acts as the "book" itself)
+   ═══════════════════════════════════════════════════════════════ */
+
+.dreambook {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  background:
+    linear-gradient(
+      160deg,
+      var(--dream-midnight) 0%,
+      #151235 40%,
+      var(--dream-midnight) 100%
+    );
+  animation: dreambook-enter 0.4s ease forwards;
+  overflow: hidden;
+}
+
+/* Leather texture grain overlay */
+.dreambook::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(124, 58, 237, 0.02) 2px,
+      rgba(124, 58, 237, 0.02) 4px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 3px,
+      rgba(212, 165, 116, 0.015) 3px,
+      rgba(212, 165, 116, 0.015) 6px
+    );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Gold shimmer across the book */
+.dreambook::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(212, 165, 116, 0.03) 45%,
+    rgba(240, 201, 135, 0.08) 50%,
+    rgba(212, 165, 116, 0.03) 55%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: dreambook-shimmer 6s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Auth Gate — shown when not logged in
+   ═══════════════════════════════════════════════════════════════ */
+
+.dreambook--auth-gate {
+  align-items: center;
+  justify-content: center;
+}
+
+.dreambook__auth-veil {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 60px 40px;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+
+.dreambook__auth-mandala {
+  width: 80px;
+  height: 80px;
+  border: 2px solid rgba(212, 165, 116, 0.4);
+  border-radius: 50%;
+  animation: mandalaSpin 12s linear infinite;
+  box-shadow:
+    0 0 30px rgba(124, 58, 237, 0.3),
+    inset 0 0 30px rgba(124, 58, 237, 0.15);
+  position: relative;
+}
+
+.dreambook__auth-mandala::before {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  border-radius: 50%;
+}
+
+.dreambook__auth-mandala::after {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border: 1px dashed rgba(212, 165, 116, 0.3);
+  border-radius: 50%;
+  animation: mandalaSpin 8s linear infinite reverse;
+}
+
+.dreambook__auth-title {
+  font-family: 'Cinzel', serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--dream-gold-bright);
+  text-shadow: 0 0 12px rgba(212, 165, 116, 0.4);
+  margin: 0;
+}
+
+.dreambook__auth-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: var(--dream-gold);
+  opacity: 0.7;
+  max-width: 300px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Header — back button + title
+   ═══════════════════════════════════════════════════════════════ */
+
+.dreambook__header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px 10px;
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(212, 165, 116, 0.1);
+}
+
+.dreambook__title {
+  font-family: 'Cinzel', serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--dream-gold-bright);
+  text-shadow: 0 0 12px rgba(212, 165, 116, 0.4);
+  margin: 0;
+}
+
+.dreambook__back-btn {
+  padding: 8px 16px;
+  background: rgba(45, 27, 105, 0.4);
+  color: var(--dream-gold);
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.dreambook__back-btn:hover {
+  background: rgba(124, 58, 237, 0.15);
+  border-color: var(--dream-violet);
+  color: var(--dream-gold-bright);
+  box-shadow: 0 0 10px rgba(124, 58, 237, 0.2);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Tab Navigation — horizontal tab strip
+   ═══════════════════════════════════════════════════════════════ */
+
+.dreambook__tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 16px;
+  align-items: center;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(45, 27, 105, 0.4) 0%,
+      rgba(30, 27, 75, 0.6) 50%,
+      rgba(45, 27, 105, 0.4) 100%
+    );
+  border-bottom: 1px solid rgba(212, 165, 116, 0.2);
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+/* Tab bottom edge glow */
+.dreambook__tabs::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(124, 58, 237, 0.3) 20%,
+    rgba(212, 165, 116, 0.25) 50%,
+    rgba(124, 58, 237, 0.3) 80%,
+    transparent 100%
+  );
+  box-shadow: 0 0 8px rgba(124, 58, 237, 0.2);
+}
+
+/* ─── Tab Buttons ─── */
+
+.dreambook__tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--dream-gold);
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-align: center;
+  transition: all 0.3s ease;
+  position: relative;
+  opacity: 0.6;
+  white-space: nowrap;
+}
+
+.dreambook__tab-icon {
+  font-size: 16px;
+  filter: drop-shadow(0 0 3px rgba(124, 58, 237, 0.3));
+  transition: filter 0.3s ease;
+}
+
+.dreambook__tab-label {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.dreambook__tab:hover {
+  opacity: 0.85;
+  background: rgba(124, 58, 237, 0.1);
+  border-color: rgba(124, 58, 237, 0.2);
+}
+
+.dreambook__tab--active {
+  opacity: 1;
+  background:
+    linear-gradient(
+      160deg,
+      rgba(124, 58, 237, 0.15) 0%,
+      rgba(45, 27, 105, 0.25) 100%
+    );
+  border-color: rgba(124, 58, 237, 0.4);
+  color: var(--dream-gold-bright);
+  box-shadow:
+    0 0 12px rgba(124, 58, 237, 0.25),
+    inset 0 0 10px rgba(124, 58, 237, 0.08);
+  text-shadow: 0 0 6px rgba(240, 201, 135, 0.4);
+}
+
+.dreambook__tab--active .dreambook__tab-icon {
+  filter: drop-shadow(0 0 8px rgba(124, 58, 237, 0.6));
+}
+
+/* Active tab bottom indicator */
+.dreambook__tab--active::before {
+  content: "";
+  position: absolute;
+  left: 20%;
+  right: 20%;
+  bottom: -1px;
+  height: 2px;
+  background: var(--dream-violet);
+  border-radius: 1px;
+  box-shadow: 0 0 8px rgba(124, 58, 237, 0.6);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Content Area
+   ═══════════════════════════════════════════════════════════════ */
+
+.dreambook__content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px 28px;
+  position: relative;
+  z-index: 2;
+  animation: page-fade-in 0.35s ease-out forwards;
+}
+
+/* Scrollbar */
+.dreambook__content::-webkit-scrollbar {
+  width: 5px;
+}
+
+.dreambook__content::-webkit-scrollbar-track {
+  background: rgba(30, 27, 75, 0.4);
+}
+
+.dreambook__content::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--dream-violet), var(--dream-indigo));
+  border-radius: 3px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Pages — shared layout
+   ═══════════════════════════════════════════════════════════════ */
+
+.dreambook__page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Page title (used in all pages) */
+.dreambook__page-title {
+  font-family: 'Cinzel', serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--dream-gold-bright);
+  text-shadow: 0 0 12px rgba(212, 165, 116, 0.4);
+  margin: 0 0 4px;
+}
+
+/* Page description (used in Essences) */
+.dreambook__page-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: var(--dream-gold);
+  opacity: 0.7;
+  font-style: italic;
+  letter-spacing: 0.5px;
+  margin: 0 0 8px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Page 1: Dream Vision (Prompt)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Dream Type Selector ─── */
+
+.dreambook__type-selector {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.dreambook__type-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: rgba(45, 27, 105, 0.4);
+  color: var(--dream-gold);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.dreambook__type-btn:hover {
+  background: rgba(124, 58, 237, 0.15);
+  border-color: rgba(124, 58, 237, 0.4);
+  color: var(--dream-gold-bright);
+}
+
+.dreambook__type-btn--active {
+  background:
+    linear-gradient(
+      160deg,
+      rgba(124, 58, 237, 0.2) 0%,
+      rgba(45, 27, 105, 0.35) 100%
+    );
+  border-color: var(--dream-violet);
+  color: var(--dream-gold-bright);
+  box-shadow:
+    0 0 12px rgba(124, 58, 237, 0.3),
+    inset 0 0 10px rgba(124, 58, 237, 0.08);
+  text-shadow: 0 0 6px rgba(240, 201, 135, 0.3);
+}
+
+/* Shimmer on active type button */
+.dreambook__type-btn--active::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(124, 58, 237, 0.08) 45%,
+    rgba(200, 160, 255, 0.15) 50%,
+    rgba(124, 58, 237, 0.08) 55%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: dreambook-shimmer 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.dreambook__type-icon {
+  font-size: 16px;
+  filter: drop-shadow(0 0 3px rgba(124, 58, 237, 0.3));
+}
+
+.dreambook__type-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+/* ─── Custom Prefix Field ─── */
+
+.dreambook__custom-prefix {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ─── Shared Label ─── */
+
+.dreambook__label {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--dream-gold);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Moon decoration on labels */
+.dreambook__label::before {
+  content: "\263D";
+  font-size: 12px;
+  opacity: 0.5;
+  filter: drop-shadow(0 0 3px rgba(124, 58, 237, 0.4));
+}
+
+/* ─── Shared Input ─── */
+
+.dreambook__input {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(30, 27, 75, 0.4);
+  color: var(--dream-gold-bright);
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  border-radius: 4px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  box-sizing: border-box;
+}
+
+.dreambook__input::placeholder {
+  color: rgba(212, 165, 116, 0.35);
+  font-style: italic;
+}
+
+.dreambook__input:focus {
+  border-color: var(--dream-violet);
+  box-shadow: 0 0 12px rgba(124, 58, 237, 0.2);
+}
+
+/* ─── Vision Field (textarea wrapper) ─── */
+
+.dreambook__vision-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ─── Prompt Textarea ─── */
+
+.dreambook__textarea {
+  width: 100%;
+  min-height: 120px;
+  max-height: 220px;
+  padding: 16px 18px;
+  background: rgba(30, 27, 75, 0.5);
+  color: var(--dream-gold-bright);
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  letter-spacing: 0.3px;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow:
+    0 0 15px rgba(124, 58, 237, 0.1),
+    inset 0 0 20px rgba(30, 27, 75, 0.3);
+  box-sizing: border-box;
+}
+
+.dreambook__textarea::placeholder {
+  color: rgba(212, 165, 116, 0.35);
+  font-style: italic;
+}
+
+.dreambook__textarea:focus {
+  border-color: var(--dream-violet);
+  box-shadow:
+    0 0 20px rgba(124, 58, 237, 0.3),
+    0 0 40px rgba(124, 58, 237, 0.1),
+    inset 0 0 20px rgba(124, 58, 237, 0.05);
+}
+
+/* ─── Character Count ─── */
+
+.dreambook__char-count {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  color: var(--dream-gold);
+  opacity: 0.5;
+  text-align: right;
+  letter-spacing: 1px;
+  transition: color 0.3s ease, opacity 0.3s ease;
+}
+
+.dreambook__char-current,
+.dreambook__char-sep,
+.dreambook__char-max {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+}
+
+.dreambook__char-sep {
+  margin: 0 2px;
+  opacity: 0.4;
+}
+
+.dreambook__char-max {
+  opacity: 0.4;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Page 2: Dream Depths (Settings)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Setting Row ─── */
+
+.dreambook__setting {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dreambook__setting-hint {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: var(--dream-gold);
+  opacity: 0.5;
+  font-style: italic;
+  letter-spacing: 0.3px;
+}
+
+/* ─── Toggle Group (button row for model, aspect, quality) ─── */
+
+.dreambook__toggle-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dreambook__toggle-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 12px;
+  background: rgba(45, 27, 105, 0.3);
+  color: var(--dream-gold);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.dreambook__toggle-btn:hover {
+  background: rgba(124, 58, 237, 0.12);
+  border-color: rgba(124, 58, 237, 0.4);
+  color: var(--dream-gold-bright);
+}
+
+.dreambook__toggle-btn--active {
+  background:
+    linear-gradient(
+      160deg,
+      rgba(124, 58, 237, 0.18) 0%,
+      rgba(45, 27, 105, 0.3) 100%
+    );
+  border-color: var(--dream-violet);
+  color: var(--dream-gold-bright);
+  box-shadow:
+    0 0 15px rgba(124, 58, 237, 0.25),
+    inset 0 0 12px rgba(124, 58, 237, 0.06);
+  text-shadow: 0 0 4px rgba(240, 201, 135, 0.3);
+}
+
+.dreambook__ar-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* ─── Toggle Pill Switch ─── */
+
+.dreambook__toggle-pill {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 52px;
+  height: 26px;
+  background: rgba(30, 27, 75, 0.7);
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  border-radius: 13px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.dreambook__toggle-pill-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--dream-gold);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.dreambook__toggle-pill--active {
+  border-color: var(--dream-violet);
+  box-shadow: 0 0 10px rgba(124, 58, 237, 0.25);
+}
+
+.dreambook__toggle-pill--active .dreambook__toggle-pill-knob {
+  left: 29px;
+  background: var(--dream-gold-bright);
+  box-shadow: 0 0 8px var(--dream-stardust);
+}
+
+.dreambook__toggle-pill-label {
+  position: absolute;
+  right: -36px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--dream-gold);
+  letter-spacing: 0.3px;
+  pointer-events: none;
+}
+
+/* Star decoration on active pill */
+.dreambook__toggle-pill::before {
+  content: "\2726";
+  position: absolute;
+  top: 50%;
+  right: -50px;
+  transform: translateY(-50%);
+  font-size: 10px;
+  color: var(--dream-violet);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.dreambook__toggle-pill--active::before {
+  opacity: 0.6;
+}
+
+.dreambook__toggle-pill:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Page 3: Dream Essences (Style Presets)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Essences Grid ─── */
+
+.dreambook__essences-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 16px;
+  justify-items: center;
+}
+
+/* ─── Essence Button (medallion-style) ─── */
+
+.dreambook__essence {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 8px 12px;
+  width: 100%;
+  max-width: 110px;
+  background: rgba(45, 27, 105, 0.2);
+  border: 1px solid rgba(124, 58, 237, 0.15);
+  border-radius: 50% 50% 8px 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.dreambook__essence:hover {
+  background: rgba(124, 58, 237, 0.1);
+  border-color: rgba(124, 58, 237, 0.35);
+  transform: translateY(-2px);
+}
+
+.dreambook__essence--active {
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(124, 58, 237, 0.15) 0%,
+      rgba(45, 27, 105, 0.25) 100%
+    );
+  border-color: var(--dream-violet);
+  box-shadow:
+    0 0 20px rgba(124, 58, 237, 0.3),
+    0 0 40px rgba(124, 58, 237, 0.1);
+  animation: dreamPulse 3s ease-in-out infinite;
+}
+
+/* Dream-catcher circular border */
+.dreambook__essence::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid rgba(212, 165, 116, 0.2);
+  pointer-events: none;
+  transition: border-color 0.3s ease;
+}
+
+.dreambook__essence--active::before {
+  border-color: rgba(212, 165, 116, 0.45);
+  box-shadow: 0 0 10px rgba(212, 165, 116, 0.15);
+}
+
+/* Inner ring of dream-catcher */
+.dreambook__essence::after {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px dashed rgba(124, 58, 237, 0.15);
+  pointer-events: none;
+}
+
+.dreambook__essence--active::after {
+  border-color: rgba(124, 58, 237, 0.3);
+}
+
+.dreambook__essence-icon {
+  font-size: 24px;
+  filter: drop-shadow(0 0 4px rgba(124, 58, 237, 0.3));
+  position: relative;
+  z-index: 1;
+  transition: filter 0.3s ease;
+}
+
+.dreambook__essence--active .dreambook__essence-icon {
+  filter: drop-shadow(0 0 8px rgba(124, 58, 237, 0.6));
+}
+
+.dreambook__essence-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--dream-gold);
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  transition: color 0.3s ease;
+}
+
+.dreambook__essence--active .dreambook__essence-label {
+  color: var(--dream-gold-bright);
+  text-shadow: 0 0 6px rgba(240, 201, 135, 0.4);
+}
+
+/* Active essences summary */
+.dreambook__essences-active {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: var(--dream-gold);
+  opacity: 0.7;
+  font-style: italic;
+  padding: 8px 12px;
+  background: rgba(45, 27, 105, 0.15);
+  border: 1px solid rgba(124, 58, 237, 0.1);
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Page 4: Dream Journal (History)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Journal Filters ─── */
+
+.dreambook__journal-filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.dreambook__filter-btn {
+  padding: 5px 12px;
+  background: rgba(45, 27, 105, 0.3);
+  color: var(--dream-gold);
+  border: 1px solid rgba(124, 58, 237, 0.15);
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  transition: all 0.2s ease;
+}
+
+.dreambook__filter-btn:hover {
+  border-color: rgba(124, 58, 237, 0.35);
+  background: rgba(124, 58, 237, 0.1);
+}
+
+.dreambook__filter-btn--active {
+  border-color: var(--dream-violet);
+  background: rgba(124, 58, 237, 0.15);
+  color: var(--dream-gold-bright);
+}
+
+/* ─── Journal Grid ─── */
+
+.dreambook__journal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 14px;
+}
+
+/* ─── Journal Card ─── */
+
+.dreambook__journal-card {
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  background: rgba(30, 27, 75, 0.4);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.dreambook__journal-card:hover {
+  border-color: var(--dream-violet);
+  transform: translateY(-3px);
+  box-shadow:
+    0 0 15px rgba(124, 58, 237, 0.25),
+    0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.dreambook__journal-thumb {
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.dreambook__journal-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.dreambook__journal-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(45, 27, 105, 0.3);
+  color: var(--dream-gold);
+  opacity: 0.4;
+  font-size: 18px;
+}
+
+.dreambook__journal-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  background: linear-gradient(
+    transparent 0%,
+    rgba(30, 27, 75, 0.85) 20%,
+    rgba(30, 27, 75, 0.95) 100%
+  );
+}
+
+.dreambook__journal-name {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--dream-gold-bright);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dreambook__journal-meta {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  color: var(--dream-gold);
+  opacity: 0.6;
+}
+
+.dreambook__journal-date {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  color: var(--dream-gold);
+  opacity: 0.5;
+}
+
+.dreambook__journal-redream {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  background: rgba(30, 27, 75, 0.85);
+  color: var(--dream-gold);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 26px;
+  text-align: center;
+  padding: 0;
+  transition: all 0.3s ease;
+  opacity: 0;
+  z-index: 2;
+}
+
+.dreambook__journal-card:hover .dreambook__journal-redream {
+  opacity: 1;
+}
+
+.dreambook__journal-redream:hover {
+  background: rgba(124, 58, 237, 0.25);
+  border-color: var(--dream-violet);
+  color: var(--dream-gold-bright);
+  box-shadow: 0 0 10px rgba(124, 58, 237, 0.3);
+}
+
+/* ─── Empty Journal ─── */
+
+.dreambook__journal-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--dream-gold);
+  opacity: 0.5;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-style: italic;
+  letter-spacing: 0.5px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Journal Lightbox
+   ═══════════════════════════════════════════════════════════════ */
+
+.dreambook__lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  background: rgba(15, 10, 30, 0.92);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: dreambook-enter 0.3s ease forwards;
+  cursor: pointer;
+}
+
+.dreambook__lightbox-content {
+  position: relative;
+  max-width: 600px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+  background:
+    linear-gradient(
+      160deg,
+      var(--dream-midnight) 0%,
+      #151235 50%,
+      var(--dream-midnight) 100%
+    );
+  border: 2px solid var(--dream-violet);
+  border-radius: 12px;
+  box-shadow:
+    0 0 40px rgba(124, 58, 237, 0.3),
+    0 0 80px rgba(45, 27, 105, 0.2),
+    0 20px 60px rgba(0, 0, 0, 0.5);
+  cursor: default;
+  animation: crystallize 0.4s ease-out forwards;
+}
+
+.dreambook__lightbox-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  background: rgba(30, 27, 75, 0.8);
+  color: var(--dream-gold);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 34px;
+  text-align: center;
+  padding: 0;
+  z-index: 5;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px rgba(124, 58, 237, 0.15);
+}
+
+.dreambook__lightbox-close:hover {
+  color: var(--dream-gold-bright);
+  border-color: var(--dream-violet);
+  background: rgba(124, 58, 237, 0.15);
+  box-shadow:
+    0 0 15px rgba(124, 58, 237, 0.35),
+    0 0 30px rgba(124, 58, 237, 0.15);
+}
+
+.dreambook__lightbox-img {
+  width: 100%;
+  display: block;
+  border-radius: 12px 12px 0 0;
+}
+
+.dreambook__lightbox-meta {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dreambook__lightbox-name {
+  font-family: 'Cinzel', serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--dream-gold-bright);
+  text-shadow: 0 0 10px rgba(212, 165, 116, 0.4);
+  margin: 0;
+}
+
+.dreambook__lightbox-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--dream-gold);
+  opacity: 0.8;
+  margin: 0;
+}
+
+.dreambook__lightbox-keywords {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dreambook__lightbox-keyword {
+  padding: 4px 12px;
+  background: rgba(124, 58, 237, 0.12);
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  border-radius: 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--dream-gold);
+  letter-spacing: 0.3px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Dream Button Bar (Cast)
+   ═══════════════════════════════════════════════════════════════ */
+
+.dreambook__dream-bar {
+  padding: 16px 24px 20px;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  border-top: 1px solid rgba(212, 165, 116, 0.1);
+}
+
+.dreambook__dream-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 280px;
+  padding: 16px 32px;
+  background:
+    linear-gradient(
+      160deg,
+      rgba(45, 27, 105, 0.8) 0%,
+      rgba(30, 27, 75, 0.9) 50%,
+      rgba(45, 27, 105, 0.8) 100%
+    );
+  color: var(--dream-gold-bright);
+  border: 2px solid var(--dream-violet);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  box-shadow:
+    0 0 20px rgba(124, 58, 237, 0.4),
+    0 0 40px rgba(45, 27, 105, 0.3),
+    inset 0 0 15px rgba(124, 58, 237, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Shimmer sweep */
+.dreambook__dream-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(124, 58, 237, 0.1) 45%,
+    rgba(200, 160, 255, 0.2) 50%,
+    rgba(124, 58, 237, 0.1) 55%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: dreambook-shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Crescent moon icon */
+.dreambook__dream-moon {
+  font-size: 20px;
+  filter: drop-shadow(0 0 6px rgba(240, 201, 135, 0.5));
+}
+
+.dreambook__dream-btn:hover:not(:disabled) {
+  color: #fff;
+  border-color: #a78bfa;
+  box-shadow:
+    0 0 30px rgba(124, 58, 237, 0.6),
+    0 0 60px rgba(45, 27, 105, 0.4),
+    0 0 90px rgba(124, 58, 237, 0.15),
+    inset 0 0 20px rgba(124, 58, 237, 0.15);
+  text-shadow: 0 0 12px rgba(240, 201, 135, 0.6);
+  transform: scale(1.03);
+}
+
+.dreambook__dream-btn:active:not(:disabled) {
+  transform: scale(0.97);
+  box-shadow:
+    0 0 15px rgba(124, 58, 237, 0.3),
+    inset 0 0 25px rgba(124, 58, 237, 0.15);
+}
+
+.dreambook__dream-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dreambook__dream-btn:disabled::before {
+  animation: none;
+}
+
+/* Dreaming (generating) state */
+.dreambook__dream-btn--dreaming {
+  pointer-events: none;
+  animation: dreamBtnGlow 2s ease-in-out infinite;
+}
+
+/* Dream spinner */
+.dreambook__dream-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(240, 201, 135, 0.3);
+  border-top-color: var(--dream-gold-bright);
+  border-radius: 50%;
+  animation: dreamSpinner 1s linear infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Dreaming Animation (Sleep Veil + Mandala)
+   ═══════════════════════════════════════════════════════════════ */
+
+.dreambook__veil {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(30, 27, 75, 0.75) 0%,
+      rgba(45, 27, 105, 0.85) 50%,
+      rgba(30, 27, 75, 0.95) 100%
+    );
+  backdrop-filter: blur(12px);
+  animation: sleepVeil 0.8s ease forwards;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── Star Field ─── */
+
+.dreambook__veil-stars {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1px 1px at 10% 20%, var(--dream-gold-bright) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 25% 65%, rgba(200, 210, 255, 0.8) 0%, transparent 100%),
+    radial-gradient(1px 1px at 40% 10%, var(--dream-gold-bright) 0%, transparent 100%),
+    radial-gradient(1px 1px at 55% 80%, rgba(200, 210, 255, 0.6) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 70% 35%, var(--dream-gold-bright) 0%, transparent 100%),
+    radial-gradient(1px 1px at 85% 55%, rgba(200, 210, 255, 0.8) 0%, transparent 100%),
+    radial-gradient(1px 1px at 15% 85%, var(--dream-gold-bright) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 50% 45%, rgba(200, 210, 255, 0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 15%, var(--dream-gold-bright) 0%, transparent 100%),
+    radial-gradient(1px 1px at 35% 50%, rgba(200, 210, 255, 0.7) 0%, transparent 100%);
+  animation: starDrift 12s linear infinite;
+}
+
+/* ─── Central Mandala ─── */
+
+.dreambook__veil-mandala {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 120px;
+  height: 120px;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgba(212, 165, 116, 0.4);
+  border-radius: 50%;
+  animation: mandalaForm 1.5s ease-out forwards, mandalaSpin 12s 1.5s linear infinite;
+  box-shadow:
+    0 0 30px rgba(124, 58, 237, 0.3),
+    inset 0 0 30px rgba(124, 58, 237, 0.15);
+}
+
+/* Outer ring */
+.dreambook__veil-mandala::before {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  border-radius: 50%;
+}
+
+/* Inner ring */
+.dreambook__veil-mandala::after {
+  content: "";
+  position: absolute;
+  inset: 16px;
+  border: 1px dashed rgba(212, 165, 116, 0.3);
+  border-radius: 50%;
+  animation: mandalaSpin 8s linear infinite reverse;
+}
+
+/* ─── Dreaming Status Text ─── */
+
+.dreambook__veil-text {
+  position: absolute;
+  bottom: 25%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--dream-gold-bright);
+  text-shadow: 0 0 12px rgba(212, 165, 116, 0.5);
+  white-space: nowrap;
+  animation: dreamPulse 2s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Card Crystallization (Result)
+   ═══════════════════════════════════════════════════════════════ */
+
+.dreambook__result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 0;
+  animation: page-fade-in 0.3s ease-out forwards;
+}
+
+.dreambook__result-card {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid var(--dream-violet);
+  box-shadow:
+    0 0 25px rgba(124, 58, 237, 0.4),
+    0 0 50px rgba(124, 58, 237, 0.15),
+    0 12px 40px rgba(0, 0, 0, 0.5);
+  animation: crystallize 1.2s ease-out forwards;
+  max-width: 320px;
+  width: 100%;
+}
+
+.dreambook__result-img {
+  width: 100%;
+  display: block;
+}
+
+/* ─── Card Metadata ─── */
+
+.dreambook__result-name {
+  font-family: 'Cinzel', serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--dream-gold-bright);
+  text-shadow: 0 0 10px rgba(212, 165, 116, 0.4);
+  text-align: center;
+  margin: 0;
+}
+
+.dreambook__result-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--dream-gold);
+  text-align: center;
+  max-width: 360px;
+  opacity: 0.8;
+}
+
+.dreambook__result-keywords {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.dreambook__result-keyword {
+  padding: 4px 12px;
+  background: rgba(124, 58, 237, 0.12);
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  border-radius: 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--dream-gold);
+  letter-spacing: 0.3px;
+}
+
+/* ─── Result Actions ─── */
+
+.dreambook__result-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.dreambook__result-btn {
+  padding: 10px 20px;
+  background: rgba(45, 27, 105, 0.5);
+  color: var(--dream-gold-bright);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+}
+
+.dreambook__result-btn:hover {
+  background: rgba(124, 58, 237, 0.2);
+  border-color: var(--dream-violet);
+  box-shadow: 0 0 12px rgba(124, 58, 237, 0.25);
+  transform: translateY(-1px);
+}
+
+.dreambook__result-btn--again {
+  background:
+    linear-gradient(
+      160deg,
+      rgba(124, 58, 237, 0.25) 0%,
+      rgba(45, 27, 105, 0.4) 100%
+    );
+  border-color: var(--dream-violet);
+  box-shadow: 0 0 10px rgba(124, 58, 237, 0.2);
+}
+
+.dreambook__result-btn--again:hover {
+  box-shadow:
+    0 0 20px rgba(124, 58, 237, 0.4),
+    0 0 40px rgba(124, 58, 237, 0.15);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Error States
+   ═══════════════════════════════════════════════════════════════ */
+
+.dreambook__error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  margin: 0 24px;
+  background: rgba(45, 27, 105, 0.2);
+  border: 1px solid rgba(196, 122, 74, 0.3);
+  border-radius: 6px;
+  position: relative;
+  z-index: 2;
+}
+
+.dreambook__error-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: #e8a060;
+  line-height: 1.5;
+}
+
+.dreambook__error-dismiss {
+  padding: 4px 10px;
+  background: rgba(45, 27, 105, 0.4);
+  color: var(--dream-gold);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.dreambook__error-dismiss:hover {
+  border-color: var(--dream-violet);
+  background: rgba(124, 58, 237, 0.15);
+  box-shadow: 0 0 10px rgba(124, 58, 237, 0.2);
+  color: var(--dream-gold-bright);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Light Theme Overrides
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (prefers-color-scheme: light) {
+  .dreambook {
+    background:
+      linear-gradient(
+        160deg,
+        #e8e4f8 0%,
+        #dcd6f2 40%,
+        #e8e4f8 100%
+      );
+  }
+
+  .dreambook::before {
+    background:
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(91, 74, 158, 0.02) 2px,
+        rgba(91, 74, 158, 0.02) 4px
+      );
+  }
+
+  .dreambook__tabs {
+    background:
+      linear-gradient(
+        90deg,
+        rgba(200, 190, 230, 0.4) 0%,
+        rgba(220, 214, 242, 0.6) 50%,
+        rgba(200, 190, 230, 0.4) 100%
+      );
+    border-bottom-color: rgba(138, 106, 24, 0.2);
+  }
+
+  .dreambook__tab--active {
+    background: rgba(155, 110, 255, 0.1);
+    border-color: rgba(155, 110, 255, 0.35);
+  }
+
+  .dreambook__textarea {
+    background: rgba(245, 240, 255, 0.7);
+    border-color: rgba(155, 110, 255, 0.3);
+    color: #3d2600;
+  }
+
+  .dreambook__textarea::placeholder {
+    color: rgba(90, 61, 16, 0.35);
+  }
+
+  .dreambook__input {
+    background: rgba(245, 240, 255, 0.7);
+    border-color: rgba(155, 110, 255, 0.3);
+    color: #3d2600;
+  }
+
+  .dreambook__input::placeholder {
+    color: rgba(90, 61, 16, 0.35);
+  }
+
+  .dreambook__type-btn {
+    background: rgba(200, 190, 230, 0.3);
+    border-color: rgba(155, 110, 255, 0.2);
+  }
+
+  .dreambook__toggle-btn {
+    background: rgba(200, 190, 230, 0.2);
+    border-color: rgba(155, 110, 255, 0.2);
+  }
+
+  .dreambook__toggle-pill {
+    background: rgba(220, 214, 242, 0.7);
+    border-color: rgba(155, 110, 255, 0.25);
+  }
+
+  .dreambook__essence {
+    background: rgba(200, 190, 230, 0.15);
+    border-color: rgba(155, 110, 255, 0.15);
+  }
+
+  .dreambook__journal-card {
+    background: rgba(220, 214, 242, 0.4);
+    border-color: rgba(155, 110, 255, 0.2);
+  }
+
+  .dreambook__journal-info {
+    background: linear-gradient(
+      transparent 0%,
+      rgba(232, 228, 248, 0.85) 20%,
+      rgba(232, 228, 248, 0.95) 100%
+    );
+  }
+
+  .dreambook__dream-btn {
+    background:
+      linear-gradient(
+        160deg,
+        rgba(200, 190, 230, 0.7) 0%,
+        rgba(220, 214, 242, 0.8) 50%,
+        rgba(200, 190, 230, 0.7) 100%
+      );
+    color: #5a3d10;
+    border-color: #9b6eff;
+  }
+
+  .dreambook__veil {
+    background:
+      radial-gradient(
+        ellipse at center,
+        rgba(232, 228, 248, 0.8) 0%,
+        rgba(200, 190, 230, 0.9) 50%,
+        rgba(232, 228, 248, 0.95) 100%
+      );
+  }
+
+  .dreambook__result-card {
+    border-color: #9b6eff;
+    box-shadow:
+      0 0 25px rgba(155, 110, 255, 0.2),
+      0 12px 40px rgba(0, 0, 0, 0.15);
+  }
+
+  .dreambook__error {
+    background: rgba(200, 190, 230, 0.2);
+    border-color: rgba(160, 64, 48, 0.3);
+  }
+
+  .dreambook__error-text {
+    color: #a04030;
+  }
+
+  .dreambook--auth-gate {
+    color: #3d2600;
+  }
+
+  .dreambook__back-btn {
+    background: rgba(220, 214, 242, 0.6);
+    border-color: rgba(155, 110, 255, 0.3);
+  }
+
+  .dreambook__lightbox {
+    background: rgba(232, 228, 248, 0.92);
+  }
+
+  .dreambook__lightbox-content {
+    background:
+      linear-gradient(
+        160deg,
+        #e8e4f8 0%,
+        #dcd6f2 50%,
+        #e8e4f8 100%
+      );
+    border-color: #9b6eff;
+    box-shadow:
+      0 0 40px rgba(155, 110, 255, 0.15),
+      0 20px 60px rgba(0, 0, 0, 0.15);
+  }
+
+  .dreambook__lightbox-close {
+    background: rgba(220, 214, 242, 0.8);
+    border-color: rgba(155, 110, 255, 0.3);
+  }
+
+  .dreambook__lightbox-keyword {
+    background: rgba(155, 110, 255, 0.08);
+    border-color: rgba(155, 110, 255, 0.2);
+  }
+
+  .dreambook__result-keyword {
+    background: rgba(155, 110, 255, 0.08);
+    border-color: rgba(155, 110, 255, 0.2);
+  }
+
+  .dreambook__result-btn {
+    background: rgba(200, 190, 230, 0.4);
+    border-color: rgba(155, 110, 255, 0.3);
+    color: #5a3d10;
+  }
+
+  .dreambook__filter-btn {
+    background: rgba(200, 190, 230, 0.25);
+    border-color: rgba(155, 110, 255, 0.15);
+  }
+
+  .dreambook__content::-webkit-scrollbar-track {
+    background: rgba(220, 214, 242, 0.4);
+  }
+
+  .dreambook__content::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #9b6eff, #5b4a9e);
+  }
+
+  .dreambook__essences-active {
+    background: rgba(200, 190, 230, 0.15);
+    border-color: rgba(155, 110, 255, 0.1);
+  }
+
+  .dreambook__journal-redream {
+    background: rgba(220, 214, 242, 0.85);
+    border-color: rgba(155, 110, 255, 0.3);
+  }
+
+  .dreambook__dream-spinner {
+    border-color: rgba(90, 61, 16, 0.3);
+    border-top-color: #5a3d10;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Responsive
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .dreambook__header {
+    padding: 10px 14px 8px;
+  }
+
+  .dreambook__title {
+    font-size: 17px;
+  }
+
+  .dreambook__tabs {
+    padding: 6px 10px;
+    gap: 2px;
+  }
+
+  .dreambook__tab {
+    padding: 8px 12px;
+    gap: 4px;
+  }
+
+  .dreambook__tab-icon {
+    font-size: 14px;
+  }
+
+  .dreambook__tab-label {
+    font-size: 9px;
+  }
+
+  .dreambook__content {
+    padding: 18px 14px;
+  }
+
+  .dreambook__page-title {
+    font-size: 17px;
+  }
+
+  .dreambook__essences-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 10px;
+  }
+
+  .dreambook__essence {
+    padding: 12px 6px 10px;
+  }
+
+  .dreambook__essence-icon {
+    font-size: 20px;
+  }
+
+  .dreambook__essence-label {
+    font-size: 9px;
+  }
+
+  .dreambook__toggle-group {
+    flex-direction: column;
+  }
+
+  .dreambook__journal-grid {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 10px;
+  }
+
+  .dreambook__dream-btn {
+    max-width: 100%;
+    padding: 14px 24px;
+    font-size: 14px;
+    letter-spacing: 2px;
+  }
+
+  .dreambook__dream-bar {
+    padding: 12px 14px 16px;
+  }
+
+  .dreambook__result-card {
+    max-width: 260px;
+  }
+
+  .dreambook__result-name {
+    font-size: 18px;
+  }
+
+  .dreambook__result-desc {
+    font-size: 13px;
+  }
+
+  .dreambook__lightbox-content {
+    width: 95%;
+  }
+
+  .dreambook__lightbox-name {
+    font-size: 17px;
+  }
+
+  .dreambook__error {
+    margin: 0 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dreambook__content {
+    padding: 14px 10px;
+  }
+
+  .dreambook__type-selector {
+    flex-direction: column;
+  }
+
+  .dreambook__type-btn {
+    text-align: center;
+    justify-content: center;
+  }
+
+  .dreambook__result-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .dreambook__result-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .dreambook__lightbox-content {
+    width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+    border: none;
+  }
+
+  .dreambook__lightbox-img {
+    border-radius: 0;
+  }
+
+  .dreambook__tab-label {
+    display: none;
+  }
+
+  .dreambook__tab {
+    padding: 8px 10px;
+  }
+}

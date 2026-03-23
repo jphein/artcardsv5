@@ -3,6 +3,7 @@ import FireApp from "./logo";
 import Example from "./example";
 import CardTable from "./card-table";
 import CardPanel from "./panel";
+import CardCreator from "./card-creator";
 import AuthButton from "./auth-button";
 import PhysicalCardsSeal from "./physical-cards";
 import HelpOverlay from "./help-overlay";
@@ -49,6 +50,8 @@ const FullScreenButton = ({ autoFullscreen }) => {
           }}
           onSwitchToCarousel={() => setViewMode("carousel")}
         />
+      ) : viewMode === "create" ? (
+        <CardCreator onSwitchToTable={() => setViewMode("table")} />
       ) : (
         <Example onSwitchToTable={() => setViewMode("table")} />
       )}
@@ -85,6 +88,15 @@ const FullScreenButton = ({ autoFullscreen }) => {
           {viewMode === "carousel" && (
             <button className="top-bar__fullscreen" onClick={() => setViewMode("table")}>
               {"\u2726"} Table
+            </button>
+          )}
+          {viewMode === "create" ? (
+            <button className="top-bar__fullscreen" onClick={() => setViewMode("table")}>
+              {"\u2726"} Table
+            </button>
+          ) : (
+            <button className="top-bar__fullscreen top-bar__dreambook" onClick={() => setViewMode("create")}>
+              {"\u263D"} Dreambook
             </button>
           )}
           <SettingsMenu prefs={prefs} setPref={setPref} />
