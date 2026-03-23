@@ -234,24 +234,6 @@
   z-index: 1;
 }
 
-/* Gold shimmer across the book */
-.dreambook::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(212, 165, 116, 0.03) 45%,
-    rgba(240, 201, 135, 0.08) 50%,
-    rgba(212, 165, 116, 0.03) 55%,
-    transparent 100%
-  );
-  background-size: 200% 100%;
-  animation: dreambook-shimmer 6s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 1;
-}
 
 /* ═══════════════════════════════════════════════════════════════
    Auth Gate — shown when not logged in
