@@ -195,34 +195,41 @@
   background:
     linear-gradient(
       160deg,
-      var(--dream-midnight) 0%,
-      #151235 40%,
-      var(--dream-midnight) 100%
+      rgba(30, 27, 75, 0.82) 0%,
+      rgba(21, 18, 53, 0.78) 40%,
+      rgba(30, 27, 75, 0.82) 100%
     );
   animation: dreambook-enter 0.4s ease forwards;
   overflow: hidden;
 }
 
-/* Leather texture grain overlay */
+/* Twinkling star field overlay */
 .dreambook::before {
   content: "";
   position: absolute;
   inset: 0;
-  background:
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(124, 58, 237, 0.02) 2px,
-      rgba(124, 58, 237, 0.02) 4px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 3px,
-      rgba(212, 165, 116, 0.015) 3px,
-      rgba(212, 165, 116, 0.015) 6px
-    );
+  background-image:
+    radial-gradient(1px 1px at 10% 15%, rgba(255, 255, 255, 0.7) 50%, transparent),
+    radial-gradient(1.5px 1.5px at 25% 35%, rgba(240, 201, 135, 0.8) 50%, transparent),
+    radial-gradient(1px 1px at 40% 8%, rgba(255, 255, 255, 0.5) 50%, transparent),
+    radial-gradient(1.2px 1.2px at 55% 55%, rgba(200, 210, 255, 0.7) 50%, transparent),
+    radial-gradient(1px 1px at 70% 22%, rgba(255, 255, 255, 0.6) 50%, transparent),
+    radial-gradient(1.5px 1.5px at 85% 45%, rgba(240, 201, 135, 0.6) 50%, transparent),
+    radial-gradient(1px 1px at 15% 70%, rgba(200, 210, 255, 0.5) 50%, transparent),
+    radial-gradient(1.3px 1.3px at 35% 85%, rgba(255, 255, 255, 0.7) 50%, transparent),
+    radial-gradient(1px 1px at 60% 75%, rgba(240, 201, 135, 0.5) 50%, transparent),
+    radial-gradient(1.5px 1.5px at 78% 65%, rgba(200, 210, 255, 0.6) 50%, transparent),
+    radial-gradient(1px 1px at 92% 80%, rgba(255, 255, 255, 0.6) 50%, transparent),
+    radial-gradient(1.2px 1.2px at 5% 50%, rgba(255, 255, 255, 0.4) 50%, transparent),
+    radial-gradient(1px 1px at 48% 42%, rgba(240, 201, 135, 0.5) 50%, transparent),
+    radial-gradient(1.5px 1.5px at 65% 12%, rgba(200, 210, 255, 0.7) 50%, transparent),
+    radial-gradient(1px 1px at 30% 58%, rgba(255, 255, 255, 0.5) 50%, transparent),
+    radial-gradient(1.3px 1.3px at 88% 30%, rgba(240, 201, 135, 0.7) 50%, transparent),
+    radial-gradient(1px 1px at 50% 92%, rgba(200, 210, 255, 0.4) 50%, transparent),
+    radial-gradient(1.5px 1.5px at 18% 28%, rgba(255, 255, 255, 0.6) 50%, transparent),
+    radial-gradient(1px 1px at 72% 48%, rgba(240, 201, 135, 0.4) 50%, transparent),
+    radial-gradient(1.2px 1.2px at 42% 18%, rgba(200, 210, 255, 0.6) 50%, transparent);
+  animation: starDrift 40s linear infinite;
   pointer-events: none;
   z-index: 1;
 }
@@ -1718,21 +1725,14 @@
     background:
       linear-gradient(
         160deg,
-        #e8e4f8 0%,
-        #dcd6f2 40%,
-        #e8e4f8 100%
+        rgba(232, 228, 248, 0.88) 0%,
+        rgba(220, 214, 242, 0.85) 40%,
+        rgba(232, 228, 248, 0.88) 100%
       );
   }
 
   .dreambook::before {
-    background:
-      repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(91, 74, 158, 0.02) 2px,
-        rgba(91, 74, 158, 0.02) 4px
-      );
+    opacity: 0.4;
   }
 
   .dreambook__tabs {

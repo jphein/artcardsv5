@@ -2,19 +2,26 @@ const getBaseUrl = () =>
   process.env.REACT_APP_GENERATE_API_URL || window.location.origin + '/api';
 
 async function request(path, body) {
+  if (!process.env.REACT_APP_GENERATE_API_URL) {
+    throw new Error('The dream realm is not yet configured. Set REACT_APP_GENERATE_API_URL to your Vercel API endpoint.');
+  }
   try {
     const res = await fetch(`${getBaseUrl()}${path}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      throw new Error('The dream realm returned an unexpected response. Is the API URL configured correctly?');
+    }
     if (!res.ok) {
-      const text = await res.text();
-      throw new Error(text || `Request failed with status ${res.status}`);
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || `Request failed with status ${res.status}`);
     }
     return await res.json();
   } catch (err) {
-    if (err.message.includes('fetch') || err.message.includes('network') || err.message.includes('Failed')) {
+    if (err.message.includes('fetch') || err.message.includes('network') || err.message.includes('Failed to fetch')) {
       throw new Error('The dream realm is unreachable... check your connection and try again.');
     }
     throw err;
