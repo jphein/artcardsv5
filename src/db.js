@@ -8,6 +8,7 @@ const schema = i.schema({
       cards: i.json(),
       userId: i.string(),
       createdAt: i.number(),
+      isDreambook: i.boolean().optional(),
     }),
     cards: i.entity({
       name: i.string(),

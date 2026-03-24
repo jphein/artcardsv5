@@ -1,4 +1,4 @@
-import React, { useState, useMemo, forwardRef, useImperativeHandle, useCallback } from "react";
+import React, { useState, useMemo, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from "react";
 import { CloudinaryImage } from "@cloudinary/url-gen";
 import { AdvancedImage } from "@cloudinary/react";
 import SpreadView from "./spread-view";
@@ -79,30 +79,38 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
     [dreamscapeCards, fileUrlMap]
   );
 
-  // Build synthetic Dreambook deck from user's journal creations
-  const dreambookDeck = useMemo(() => {
-    if (!userId || userCreations.length === 0) return null;
+  // Sync Dreambook deck entity from user's journal creations
+  const dreambookDeck = useMemo(() => decks.find((d) => d.isDreambook), [decks]);
+  const lastSyncRef = useRef(null);
+  useEffect(() => {
+    if (!userId) return;
     const creationCards = userCreations
       .filter((c) => c.imagePath && fileUrlMap[c.imagePath])
       .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
       .map((c) => ({
         public_id: c.id,
         source: "dreamscape",
-        imageUrl: fileUrlMap[c.imagePath],
+        imagePath: c.imagePath,
         cardName: c.cardName || "Unnamed Dream",
         cardDescription: c.cardDescription || "",
       }));
-    if (creationCards.length === 0) return null;
-    return {
-      id: "__dreambook__",
-      name: "Dreambook",
-      spreadType: "freeform",
-      cards: creationCards,
-      userId,
-      createdAt: userCreations.reduce((max, c) => Math.max(max, c.createdAt || 0), 0),
-      isDreambook: true,
-    };
-  }, [userId, userCreations, fileUrlMap]);
+    const syncKey = creationCards.map((c) => c.public_id + ":" + c.cardName).join(",");
+    if (lastSyncRef.current === syncKey) return;
+    lastSyncRef.current = syncKey;
+    if (creationCards.length === 0 && !dreambookDeck) return;
+    if (dreambookDeck) {
+      db.transact(db.tx.decks[dreambookDeck.id].update({ cards: creationCards }));
+    } else if (creationCards.length > 0) {
+      db.transact(db.tx.decks[id()].update({
+        name: "Dreambook",
+        spreadType: "freeform",
+        cards: creationCards,
+        userId,
+        createdAt: Date.now(),
+        isDreambook: true,
+      }));
+    }
+  }, [userId, userCreations, fileUrlMap, dreambookDeck]);
 
   useImperativeHandle(ref, () => ({
     addCard(cardData) {
@@ -189,7 +197,10 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
   };
 
   const handleLoadSavedDeck = (deck) => {
-    setCards(deck.cards || []);
+    const resolved = (deck.cards || []).map((c) =>
+      c.imagePath && fileUrlMap[c.imagePath] ? { ...c, imageUrl: fileUrlMap[c.imagePath] } : c
+    );
+    setCards(resolved);
     const st = deck.spreadType || "three";
     setSpreadType(st);
     if (setPref) setPref("spreadType", st);
@@ -201,13 +212,17 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
     setPublishingDeckId(deck.id);
     setPublishError(null);
     try {
-      const result = await publishDeck(deck);
+      const resolvedDeck = {
+        ...deck,
+        cards: (deck.cards || []).map((c) =>
+          c.imagePath && fileUrlMap[c.imagePath] ? { ...c, imageUrl: fileUrlMap[c.imagePath] } : c
+        ),
+      };
+      const result = await publishDeck(resolvedDeck);
       if (result.error) {
         throw new Error(result.error);
       }
-      if (!deck.isDreambook) {
-        await db.transact(db.tx.decks[deck.id].update({ tgcGameId: result.gameId, tgcShopUrl: result.shopUrl }));
-      }
+      await db.transact(db.tx.decks[deck.id].update({ tgcGameId: result.gameId, tgcShopUrl: result.shopUrl }));
     } catch (err) {
       console.error("Publish deck failed:", err);
       setPublishError(deck.id);
@@ -236,8 +251,15 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
     }
   };
 
+  // Resolve card image URL — prefers fresh fileUrlMap for imagePath cards
+  const resolveCardUrl = useCallback((card) => {
+    if (card.imagePath && fileUrlMap[card.imagePath]) return fileUrlMap[card.imagePath];
+    return card.imageUrl;
+  }, [fileUrlMap]);
+
   const renderCard = (card) => {
     const isDreamscape = card.source === "dreamscape";
+    const imgUrl = resolveCardUrl(card);
     return (
       <div
         key={card.public_id}
@@ -246,7 +268,7 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
         onDragStart={(e) => {
           e.dataTransfer.setData(
             "application/json",
-            JSON.stringify({ ...card, fromDock: true })
+            JSON.stringify({ ...card, imageUrl: imgUrl, fromDock: true })
           );
           e.dataTransfer.effectAllowed = "move";
           onDockDragStart && onDockDragStart();
@@ -261,7 +283,7 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
         title={isDreamscape ? card.cardName || "Dreamscape card" : "Click to focus"}
       >
         {isDreamscape ? (
-          <img src={card.imageUrl} alt={card.cardName || "Dreamscape card"} />
+          <img src={imgUrl} alt={card.cardName || "Dreamscape card"} />
         ) : (
           <AdvancedImage
             cldImg={getCldImage(card.public_id, card.cloud_name)}
@@ -295,7 +317,7 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
             style={{ zIndex: previews.length - i }}
           >
             {card.source === "dreamscape" ? (
-              <img src={card.imageUrl} alt="" />
+              <img src={resolveCardUrl(card)} alt="" />
             ) : (
               <AdvancedImage
                 cldImg={getCldImage(card.public_id, card.cloud_name)}
@@ -311,11 +333,14 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
     );
   };
 
-  const sortedDecks = useMemo(() => {
-    const sorted = [...decks].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    if (dreambookDeck) sorted.unshift(dreambookDeck);
-    return sorted;
-  }, [decks, dreambookDeck]);
+  const sortedDecks = useMemo(() =>
+    [...decks].sort((a, b) => {
+      if (a.isDreambook) return -1;
+      if (b.isDreambook) return 1;
+      return (b.createdAt || 0) - (a.createdAt || 0);
+    }),
+    [decks]
+  );
   const currentLayout = SPREAD_LAYOUTS[spreadType];
 
   // ─── Tab Content Renderers ───
