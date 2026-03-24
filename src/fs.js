@@ -55,32 +55,34 @@ const FullScreenButton = ({ autoFullscreen }) => {
       ) : (
         <Example onSwitchToTable={() => setViewMode("table")} />
       )}
-      <CardPanel
-        ref={cardPanelRef}
-        prefs={prefs}
-        setPref={setPref}
-        onNavigate={(slideIndex) => {
-          if (cardTableRef.current) {
-            cardTableRef.current.focusCard(slideIndex);
-          }
-        }}
-        onCollect={(publicId) => {
-          if (cardTableRef.current) {
-            cardTableRef.current.collectCard(publicId);
-          }
-        }}
-        onUncollect={(publicId) => {
-          if (cardTableRef.current) {
-            cardTableRef.current.uncollectCard(publicId);
-          }
-        }}
-        onToggle={() => {}}
-        onDockDragStart={() => setDockDragging(true)}
-        onDockDragEnd={() => setDockDragging(false)}
-      />
-      <PhysicalCardsSeal />
+      {viewMode !== "create" && (
+        <CardPanel
+          ref={cardPanelRef}
+          prefs={prefs}
+          setPref={setPref}
+          onNavigate={(slideIndex) => {
+            if (cardTableRef.current) {
+              cardTableRef.current.focusCard(slideIndex);
+            }
+          }}
+          onCollect={(publicId) => {
+            if (cardTableRef.current) {
+              cardTableRef.current.collectCard(publicId);
+            }
+          }}
+          onUncollect={(publicId) => {
+            if (cardTableRef.current) {
+              cardTableRef.current.uncollectCard(publicId);
+            }
+          }}
+          onToggle={() => {}}
+          onDockDragStart={() => setDockDragging(true)}
+          onDockDragEnd={() => setDockDragging(false)}
+        />
+      )}
+      {viewMode !== "create" && <PhysicalCardsSeal />}
 
-      <div className="top-bar">
+      <div className="top-bar" style={viewMode === "create" ? { display: "none" } : undefined}>
         <button className="top-bar__fullscreen" onClick={requestFullscreen}>
           Fullscreen
         </button>
