@@ -226,7 +226,6 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
     } catch (err) {
       const msg = err.message || "Unknown error";
       console.error("Publish deck failed:", msg, err);
-      alert("Publish failed: " + msg);
       setPublishError({ deckId: deck.id, message: msg });
       setTimeout(() => setPublishError(null), 8000);
     } finally {

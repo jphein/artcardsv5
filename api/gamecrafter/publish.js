@@ -65,13 +65,16 @@ async function tgcPut(path, body) {
 // ---------------------------------------------------------------------------
 
 const TGC_SQUARE_SIZE = 1125;
+const CLOUDINARY_CLOUD = "dqm00mcjs";
 
 function resizeForTGC(url) {
+  // Cloudinary native URLs: add transform inline
   const match = url.match(/^(https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/)(.*)/);
   if (match) {
     return `${match[1]}c_pad,w_${TGC_SQUARE_SIZE},h_${TGC_SQUARE_SIZE},b_black/${match[2]}`;
   }
-  return url;
+  // Non-Cloudinary URLs (InstantDB, etc.): proxy through Cloudinary fetch for resize
+  return `https://res.cloudinary.com/${CLOUDINARY_CLOUD}/image/fetch/c_pad,w_${TGC_SQUARE_SIZE},h_${TGC_SQUARE_SIZE},b_black/${url}`;
 }
 
 async function downloadImage(url) {
