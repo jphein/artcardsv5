@@ -1145,6 +1145,22 @@
     inset 0 0 15px rgba(240, 216, 117, 0.08) !important;
 }
 
+.card-panel__deck-item--dreambook {
+  border-color: rgba(147, 130, 220, 0.4);
+  background: linear-gradient(135deg, rgba(147, 130, 220, 0.08), rgba(30, 27, 75, 0.3));
+}
+
+.card-panel__deck-item--dreambook:hover {
+  border-color: rgba(147, 130, 220, 0.7);
+  box-shadow:
+    0 0 12px rgba(147, 130, 220, 0.3),
+    inset 0 0 8px rgba(147, 130, 220, 0.05);
+}
+
+.card-panel__deck-dreambook-icon {
+  opacity: 0.8;
+}
+
 /* Mini card stack thumbnails */
 
 .card-panel__deck-thumbs {

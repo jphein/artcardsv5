@@ -50,8 +50,13 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
   const { data: deckData } = db.useQuery(deckQuery);
   const decks = deckData?.decks || [];
 
-  // Query dreamscape cards + files
+  // Query dreamscape cards + files + user creations
   const { data: instantData } = db.useQuery({ cards: {}, $files: {} });
+  const creationsQuery = userId
+    ? { creations: { $: { where: { userId } } } }
+    : null;
+  const { data: creationsData } = db.useQuery(creationsQuery);
+  const userCreations = creationsData?.creations || [];
   const dreamscapeCards = instantData?.cards || [];
   const instantFiles = instantData?.$files || [];
   const fileUrlMap = useMemo(() => {
@@ -73,6 +78,31 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
       })),
     [dreamscapeCards, fileUrlMap]
   );
+
+  // Build synthetic Dreambook deck from user's journal creations
+  const dreambookDeck = useMemo(() => {
+    if (!userId || userCreations.length === 0) return null;
+    const creationCards = userCreations
+      .filter((c) => c.imagePath && fileUrlMap[c.imagePath])
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+      .map((c) => ({
+        public_id: c.id,
+        source: "dreamscape",
+        imageUrl: fileUrlMap[c.imagePath],
+        cardName: c.cardName || "Unnamed Dream",
+        cardDescription: c.cardDescription || "",
+      }));
+    if (creationCards.length === 0) return null;
+    return {
+      id: "__dreambook__",
+      name: "Dreambook",
+      spreadType: "freeform",
+      cards: creationCards,
+      userId,
+      createdAt: userCreations.reduce((max, c) => Math.max(max, c.createdAt || 0), 0),
+      isDreambook: true,
+    };
+  }, [userId, userCreations, fileUrlMap]);
 
   useImperativeHandle(ref, () => ({
     addCard(cardData) {
@@ -175,7 +205,9 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
       if (result.error) {
         throw new Error(result.error);
       }
-      await db.transact(db.tx.decks[deck.id].update({ tgcGameId: result.gameId, tgcShopUrl: result.shopUrl }));
+      if (!deck.isDreambook) {
+        await db.transact(db.tx.decks[deck.id].update({ tgcGameId: result.gameId, tgcShopUrl: result.shopUrl }));
+      }
     } catch (err) {
       console.error("Publish deck failed:", err);
       setPublishError(deck.id);
@@ -279,10 +311,11 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
     );
   };
 
-  const sortedDecks = useMemo(() =>
-    [...decks].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)),
-    [decks]
-  );
+  const sortedDecks = useMemo(() => {
+    const sorted = [...decks].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    if (dreambookDeck) sorted.unshift(dreambookDeck);
+    return sorted;
+  }, [decks, dreambookDeck]);
   const currentLayout = SPREAD_LAYOUTS[spreadType];
 
   // ─── Tab Content Renderers ───
@@ -362,23 +395,27 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
             {sortedDecks.map((deck) => (
               <div
                 key={deck.id}
-                className={`card-panel__deck-item${dropTargetDeck === deck.id ? " card-panel__deck-item--drop" : ""}`}
+                className={`card-panel__deck-item${dropTargetDeck === deck.id ? " card-panel__deck-item--drop" : ""}${deck.isDreambook ? " card-panel__deck-item--dreambook" : ""}`}
                 onClick={() => handleLoadSavedDeck(deck)}
-                onDragOver={(e) => {
+                onDragOver={deck.isDreambook ? undefined : (e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   setDropTargetDeck(deck.id);
                 }}
-                onDragLeave={() => setDropTargetDeck(null)}
-                onDrop={(e) => handleDeckDrop(e, deck)}
-                title="Click to load \u2022 Drag cards here to add"
+                onDragLeave={deck.isDreambook ? undefined : () => setDropTargetDeck(null)}
+                onDrop={deck.isDreambook ? undefined : (e) => handleDeckDrop(e, deck)}
+                title={deck.isDreambook ? "Click to load your Dreambook journal" : "Click to load \u2022 Drag cards here to add"}
               >
                 {renderDeckPreview(deck.cards)}
                 <div className="card-panel__deck-info">
-                  <span className="card-panel__deck-name">{deck.name}</span>
+                  <span className="card-panel__deck-name">
+                    {deck.isDreambook && <span className="card-panel__deck-dreambook-icon">{"\u263D"} </span>}
+                    {deck.name}
+                  </span>
                   <span className="card-panel__deck-meta">
                     {deck.cards ? deck.cards.length : 0} cards
                     {deck.spreadType && <> &middot; {deck.spreadType}</>}
+                    {deck.isDreambook && <> &middot; auto</>}
                   </span>
                 </div>
                 {deck.tgcShopUrl ? (
@@ -405,13 +442,15 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
                 {publishError === deck.id && (
                   <span className="card-panel__deck-publish-error">Failed</span>
                 )}
-                <button
-                  className="card-panel__deck-delete"
-                  onClick={(e) => handleDeleteDeck(e, deck.id)}
-                  title="Delete deck"
-                >
-                  &times;
-                </button>
+                {!deck.isDreambook && (
+                  <button
+                    className="card-panel__deck-delete"
+                    onClick={(e) => handleDeleteDeck(e, deck.id)}
+                    title="Delete deck"
+                  >
+                    &times;
+                  </button>
+                )}
               </div>
             ))}
           </div>
