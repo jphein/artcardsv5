@@ -470,9 +470,9 @@
 
 .card-table__deck-pile {
   position: absolute;
-  top: 50%;
+  top: 55%;
   left: 50%;
-  transform: translate(-50%, -55%);
+  transform: translate(-50%, -50%);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -485,17 +485,17 @@
 @keyframes deck-pile-appear {
   0% {
     opacity: 0;
-    transform: translate(-50%, -55%) scale(0.5) translateY(50px);
+    transform: translate(-50%, -50%) scale(0.5) translateY(50px);
     filter: blur(6px);
   }
   60% {
     opacity: 1;
-    transform: translate(-50%, -55%) scale(1.04) translateY(-5px);
+    transform: translate(-50%, -50%) scale(1.04) translateY(-5px);
     filter: blur(0);
   }
   100% {
     opacity: 1;
-    transform: translate(-50%, -55%) scale(1) translateY(0);
+    transform: translate(-50%, -50%) scale(1) translateY(0);
     filter: blur(0);
   }
 }
