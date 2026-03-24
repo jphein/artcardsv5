@@ -225,8 +225,8 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
       await db.transact(db.tx.decks[deck.id].update({ tgcGameId: result.gameId, tgcShopUrl: result.shopUrl }));
     } catch (err) {
       console.error("Publish deck failed:", err);
-      setPublishError(deck.id);
-      setTimeout(() => setPublishError(null), 5000);
+      setPublishError({ deckId: deck.id, message: err.message || "Unknown error" });
+      setTimeout(() => setPublishError(null), 8000);
     } finally {
       setPublishingDeckId(null);
     }
@@ -464,8 +464,10 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
                     {publishingDeckId === deck.id ? "Publishing\u2026" : "\u2726 Publish"}
                   </button>
                 )}
-                {publishError === deck.id && (
-                  <span className="card-panel__deck-publish-error">Failed</span>
+                {publishError && publishError.deckId === deck.id && (
+                  <span className="card-panel__deck-publish-error" title={publishError.message}>
+                    {publishError.message.length > 40 ? publishError.message.slice(0, 40) + "\u2026" : publishError.message}
+                  </span>
                 )}
                 {!deck.isDreambook && (
                   <button
