@@ -1,15 +1,21 @@
-import React, { useRef, useState, useCallback, useEffect } from "react";
-import FireApp from "./logo";
-import Example from "./example";
+import React, { useRef, useState, useCallback, useEffect, Suspense } from "react";
+import FireAppBase from "./logo";
 import CardTable from "./card-table";
 import CardPanel from "./panel";
-import CardCreator from "./card-creator";
 import AuthButton from "./auth-button";
-import PhysicalCardsSeal from "./physical-cards";
-import HelpOverlay from "./help-overlay";
+import PhysicalCardsSealBase from "./physical-cards";
 import SettingsMenu from "./settings-menu";
 import usePreferences from "./use-preferences";
 import { VERSION_HASH, VERSION_NAME } from "./version-info";
+
+// Memoize prop-less components to prevent re-renders from parent state changes
+const FireApp = React.memo(FireAppBase);
+const PhysicalCardsSeal = React.memo(PhysicalCardsSealBase);
+
+// Lazy-load non-critical components to reduce initial bundle size
+const Example = React.lazy(() => import("./example"));
+const CardCreator = React.lazy(() => import("./card-creator"));
+const HelpOverlay = React.lazy(() => import("./help-overlay"));
 
 const FullScreenButton = ({ autoFullscreen }) => {
   const appContainerRef = useRef(null);
@@ -40,22 +46,24 @@ const FullScreenButton = ({ autoFullscreen }) => {
   return (
     <div ref={appContainerRef} className="app-container">
       <FireApp />
-      {viewMode === "table" ? (
-        <CardTable
-          ref={cardTableRef}
-          dockDragging={dockDragging}
-          onCardToDock={(cardData) => {
-            if (cardPanelRef.current) {
-              cardPanelRef.current.addCard(cardData);
-            }
-          }}
-          onSwitchToCarousel={() => setViewMode("carousel")}
-        />
-      ) : viewMode === "create" ? (
-        <CardCreator onSwitchToTable={() => setViewMode("table")} />
-      ) : (
-        <Example onSwitchToTable={() => setViewMode("table")} />
-      )}
+      <Suspense fallback={<div className="card-table__loading">Loading...</div>}>
+        {viewMode === "table" ? (
+          <CardTable
+            ref={cardTableRef}
+            dockDragging={dockDragging}
+            onCardToDock={(cardData) => {
+              if (cardPanelRef.current) {
+                cardPanelRef.current.addCard(cardData);
+              }
+            }}
+            onSwitchToCarousel={() => setViewMode("carousel")}
+          />
+        ) : viewMode === "create" ? (
+          <CardCreator onSwitchToTable={() => setViewMode("table")} />
+        ) : (
+          <Example onSwitchToTable={() => setViewMode("table")} />
+        )}
+      </Suspense>
       {viewMode !== "create" && (
         <CardPanel
           ref={cardPanelRef}
@@ -103,7 +111,7 @@ const FullScreenButton = ({ autoFullscreen }) => {
             </button>
           )}
           <SettingsMenu prefs={prefs} setPref={setPref} />
-          <HelpOverlay />
+          <Suspense fallback={null}><HelpOverlay /></Suspense>
           <AuthButton />
         </div>
       </div>

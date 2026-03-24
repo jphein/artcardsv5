@@ -162,12 +162,23 @@ const SpreadView = ({
   const handleDragStart = useCallback((event) => {
     setActiveDragId(event.active.id);
     setHoverSlotIndex(-1);
+    lastDragDelta.current = { x: 0, y: 0 };
     bringToFront(event.active.id);
   }, [bringToFront]);
+
+  // Track last drag position to skip redundant findClosestSlot calls
+  const lastDragDelta = useRef({ x: 0, y: 0 });
 
   const handleDragMove = useCallback((event) => {
     if (isFreeform || !layout) { setHoverSlotIndex(-1); return; }
     const { active, delta } = event;
+
+    // Skip recalculation if drag hasn't moved by more than 10px since last check
+    const dx = delta.x - lastDragDelta.current.x;
+    const dy = delta.y - lastDragDelta.current.y;
+    if (dx * dx + dy * dy < 100) return; // 10px threshold squared
+    lastDragDelta.current = { x: delta.x, y: delta.y };
+
     const draggedIndex = activeCards.findIndex((c) => c.public_id === active.id);
     if (draggedIndex < 0) { setHoverSlotIndex(-1); return; }
     setHoverSlotIndex(findClosestSlot(layout, activeCards, draggedIndex, delta));
@@ -239,10 +250,49 @@ const SpreadView = ({
     bringToFront(publicId);
   }, [bringToFront]);
 
-  // ─── Non-passive wheel for scaling/rotation ───
+  // ─── Non-passive wheel for scaling/rotation (RAF-coalesced) ───
   useEffect(() => {
     const container = cardsContainerRef.current;
     if (!container) return;
+
+    let wheelRaf = null;
+    const pendingScale = {};
+    const pendingRotation = {};
+    let pendingFrontId = null;
+
+    const flushWheel = () => {
+      wheelRaf = null;
+
+      const scaleEntries = Object.entries(pendingScale);
+      if (scaleEntries.length > 0) {
+        setScaleMap((prev) => {
+          const next = { ...prev };
+          for (const [pid, delta] of scaleEntries) {
+            const current = next[pid] || 1;
+            next[pid] = Math.min(2.5, Math.max(0.3, current + delta));
+          }
+          return next;
+        });
+        for (const key of Object.keys(pendingScale)) delete pendingScale[key];
+      }
+
+      const rotEntries = Object.entries(pendingRotation);
+      if (rotEntries.length > 0) {
+        setRotationMap((prev) => {
+          const next = { ...prev };
+          for (const [pid, delta] of rotEntries) {
+            next[pid] = (next[pid] || 0) + delta;
+          }
+          return next;
+        });
+        for (const key of Object.keys(pendingRotation)) delete pendingRotation[key];
+      }
+
+      if (pendingFrontId) {
+        bringToFront(pendingFrontId);
+        pendingFrontId = null;
+      }
+    };
 
     const onWheel = (e) => {
       const cardEl = e.target.closest(".spread-view__card-wrapper");
@@ -253,30 +303,31 @@ const SpreadView = ({
 
       if (e.shiftKey) {
         const rotDelta = e.deltaY < 0 ? -5 : 5;
-        setRotationMap((prev) => ({
-          ...prev,
-          [publicId]: (prev[publicId] || 0) + rotDelta,
-        }));
+        pendingRotation[publicId] = (pendingRotation[publicId] || 0) + rotDelta;
       } else {
         const delta = e.deltaY < 0 ? 0.05 : -0.05;
-        setScaleMap((prev) => {
-          const current = prev[publicId] || 1;
-          const next = Math.min(2.5, Math.max(0.3, current + delta));
-          return { ...prev, [publicId]: next };
-        });
+        pendingScale[publicId] = (pendingScale[publicId] || 0) + delta;
       }
-      bringToFront(publicId);
+      pendingFrontId = publicId;
+
+      if (!wheelRaf) {
+        wheelRaf = requestAnimationFrame(flushWheel);
+      }
     };
 
     container.addEventListener("wheel", onWheel, { passive: false });
-    return () => container.removeEventListener("wheel", onWheel);
+    return () => {
+      container.removeEventListener("wheel", onWheel);
+      if (wheelRaf) cancelAnimationFrame(wheelRaf);
+    };
   }, [bringToFront]);
 
-  // ─── 3D tilt effect on hover ───
+  // ─── 3D tilt effect on hover (RAF-throttled) ───
   useEffect(() => {
     const container = cardsContainerRef.current;
     if (!container) return;
     let activeCard = null;
+    let tiltRaf = null;
 
     const onMove = (e) => {
       const cardEl = e.target.closest(".spread-view__card-wrapper");
@@ -290,13 +341,20 @@ const SpreadView = ({
         activeCard = cardEl;
       }
       if (!cardEl) return;
-      const rect = cardEl.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = (e.clientY - rect.top) / rect.height;
-      cardEl.style.setProperty("--tilt-x", `${(0.5 - y) * 18}deg`);
-      cardEl.style.setProperty("--tilt-y", `${(x - 0.5) * 18}deg`);
-      cardEl.style.setProperty("--light-x", `${x * 100}%`);
-      cardEl.style.setProperty("--light-y", `${y * 100}%`);
+      // Throttle tilt computation to one per animation frame
+      if (tiltRaf) return;
+      const cx = e.clientX, cy = e.clientY;
+      tiltRaf = requestAnimationFrame(() => {
+        tiltRaf = null;
+        if (!activeCard) return;
+        const rect = activeCard.getBoundingClientRect();
+        const x = (cx - rect.left) / rect.width;
+        const y = (cy - rect.top) / rect.height;
+        activeCard.style.setProperty("--tilt-x", `${(0.5 - y) * 18}deg`);
+        activeCard.style.setProperty("--tilt-y", `${(x - 0.5) * 18}deg`);
+        activeCard.style.setProperty("--light-x", `${x * 100}%`);
+        activeCard.style.setProperty("--light-y", `${y * 100}%`);
+      });
     };
 
     const onLeave = (e) => {
@@ -315,6 +373,7 @@ const SpreadView = ({
     return () => {
       container.removeEventListener("mousemove", onMove);
       container.removeEventListener("mouseleave", onLeave, true);
+      if (tiltRaf) cancelAnimationFrame(tiltRaf);
     };
   }, []);
 

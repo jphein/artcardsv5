@@ -23,28 +23,32 @@
     0 -8px 30px rgba(240, 216, 117, 0.5),
     0 -4px 60px rgba(201, 168, 76, 0.25),
     inset 0 0 20px rgba(240, 216, 117, 0.1);
+}
+
+/* Peek glow: ::after pseudo with opacity animation (GPU-composited) instead of box-shadow keyframes */
+.card-panel--peek:not(.card-panel--open) .card-panel__toggle::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 14px 14px 0 0;
+  pointer-events: none;
+  box-shadow:
+    0 -12px 40px rgba(240, 216, 117, 0.7),
+    0 -6px 80px rgba(201, 168, 76, 0.35),
+    inset 0 0 25px rgba(240, 216, 117, 0.15);
   animation: peek-glow 1.5s ease-in-out infinite alternate;
 }
 
 @keyframes peek-glow {
-  0% {
-    box-shadow:
-      0 -8px 30px rgba(240, 216, 117, 0.5),
-      0 -4px 60px rgba(201, 168, 76, 0.25),
-      inset 0 0 20px rgba(240, 216, 117, 0.1);
-  }
-  100% {
-    box-shadow:
-      0 -12px 40px rgba(240, 216, 117, 0.7),
-      0 -6px 80px rgba(201, 168, 76, 0.35),
-      inset 0 0 25px rgba(240, 216, 117, 0.15);
-  }
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 }
 
 /* ─── Toggle Button: Gold Ornate Tab ─── */
 
 .card-panel__toggle {
   display: block;
+  touch-action: manipulation;
   width: 240px;
   margin: 0 auto;
   padding: 10px 24px;
@@ -72,10 +76,11 @@
   letter-spacing: 1px;
   text-align: center;
   backdrop-filter: blur(10px);
+  will-change: transform;
   box-shadow:
     0 -4px 15px rgba(201, 168, 76, 0.2),
     inset 0 0 15px rgba(201, 168, 76, 0.05);
-  transition: all 0.3s ease;
+  transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, text-shadow 0.3s ease;
 }
 
 .card-panel__toggle:hover {
@@ -145,6 +150,7 @@
 
 .card-panel__tab {
   flex: 1;
+  touch-action: manipulation;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -160,7 +166,7 @@
   letter-spacing: 1px;
   text-transform: uppercase;
   font-family: 'Inter', sans-serif;
-  transition: all 0.3s ease;
+  transition: color 0.3s ease, background 0.3s ease, border-color 0.3s ease, text-shadow 0.3s ease;
   position: relative;
 }
 
@@ -216,7 +222,7 @@
   background: rgba(201, 168, 76, 0.15);
   color: #c9a84c;
   border: 1px solid rgba(166, 124, 0, 0.3);
-  transition: all 0.3s ease;
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .card-panel__tab--active .card-panel__tab-badge {
@@ -246,6 +252,7 @@
       rgba(5, 3, 0, 0.95) 100%
     );
   backdrop-filter: blur(16px);
+  will-change: transform;
   transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -385,6 +392,7 @@
 
 .card-panel__card {
   position: relative;
+  touch-action: manipulation;
   width: 110px;
   height: 110px;
   border-radius: 6px;
@@ -396,7 +404,9 @@
     0 0 10px rgba(201, 168, 76, 0.25),
     0 4px 12px rgba(0, 0, 0, 0.5),
     inset 0 0 8px rgba(0, 0, 0, 0.4);
-  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+              border-color 0.35s ease,
+              box-shadow 0.35s ease;
   animation: card-slot-appear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
@@ -448,7 +458,7 @@
   text-align: center;
   padding: 0;
   opacity: 0;
-  transition: all 0.2s ease;
+  transition: opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card-panel__card:hover .card-panel__remove {
@@ -528,7 +538,7 @@
   border-radius: 6px;
   cursor: pointer;
   color: #8a7340;
-  transition: all 0.3s ease;
+  transition: border-color 0.3s ease, color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease, text-shadow 0.3s ease;
   min-width: 90px;
 }
 
@@ -647,7 +657,8 @@
     0 0 12px rgba(201, 168, 76, 0.3),
     0 0 24px rgba(201, 168, 76, 0.1),
     inset 0 0 12px rgba(201, 168, 76, 0.06);
-  transition: all 0.4s ease;
+  transition: color 0.4s ease, border-color 0.4s ease, background 0.4s ease,
+              box-shadow 0.4s ease, transform 0.4s ease, text-shadow 0.4s ease;
   position: relative;
   overflow: hidden;
 }
@@ -898,7 +909,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background 0.3s ease;
 }
 
 .card-panel__section-header--toggle:hover .card-panel__section-title {
@@ -973,7 +984,7 @@
   font-weight: 700;
   letter-spacing: 1.2px;
   text-transform: uppercase;
-  transition: all 0.3s ease;
+  transition: color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, text-shadow 0.3s ease;
   position: relative;
   overflow: hidden;
 }
@@ -1016,7 +1027,7 @@
   font-size: 12px;
   outline: none;
   font-family: inherit;
-  transition: all 0.3s ease;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .card-panel__decks-input::placeholder {
@@ -1040,7 +1051,7 @@
   font-weight: 700;
   letter-spacing: 0.8px;
   text-transform: uppercase;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card-panel__decks-confirm:hover:not(:disabled) {
@@ -1064,7 +1075,7 @@
   line-height: 22px;
   text-align: center;
   flex-shrink: 0;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .card-panel__decks-cancel:hover {
@@ -1107,7 +1118,7 @@
   border: 1px solid rgba(166, 124, 0, 0.2);
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
   position: relative;
   overflow: hidden;
 }
@@ -1248,7 +1259,7 @@
   text-align: center;
   opacity: 0;
   flex-shrink: 0;
-  transition: all 0.2s ease;
+  transition: opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
   position: relative;
   z-index: 1;
 }
@@ -1281,7 +1292,7 @@
   white-space: nowrap;
   flex-shrink: 0;
   opacity: 0;
-  transition: all 0.25s ease;
+  transition: opacity 0.25s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, text-shadow 0.25s ease;
   position: relative;
   z-index: 1;
 }
@@ -1342,7 +1353,7 @@
   box-shadow:
     0 0 8px rgba(240, 216, 117, 0.25),
     0 0 16px rgba(201, 168, 76, 0.1);
-  transition: all 0.3s ease;
+  transition: color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, text-shadow 0.3s ease;
   position: relative;
   z-index: 1;
 }
@@ -1428,7 +1439,9 @@
   cursor: grab;
   position: relative;
   flex-shrink: 0;
-  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+              border-color 0.35s ease,
+              box-shadow 0.35s ease;
   box-shadow:
     0 0 8px rgba(124, 58, 237, 0.25),
     0 3px 8px rgba(0, 0, 0, 0.4),

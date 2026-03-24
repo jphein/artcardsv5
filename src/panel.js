@@ -27,6 +27,142 @@ const TABS = [
   { key: "spread", icon: "\u2727", label: "Spread" },
 ];
 
+// ─── Memoized Sub-Components ───
+
+const CardThumbnail = React.memo(({ card, isDreamscape, imgUrl, onDragStart, onDragEnd, onClick, onRemove }) => (
+  <div
+    className={`card-panel__card${isDreamscape ? " card-panel__card--dreamscape" : ""}`}
+    draggable
+    onDragStart={onDragStart}
+    onDragEnd={onDragEnd}
+    onClick={onClick}
+    title={isDreamscape ? card.cardName || "Dreamscape card" : "Click to focus"}
+  >
+    {isDreamscape ? (
+      <img src={imgUrl} alt={card.cardName || "Dreamscape card"} />
+    ) : (
+      <AdvancedImage
+        cldImg={getCldImage(card.public_id, card.cloud_name)}
+        alt={card.public_id}
+      />
+    )}
+    {isDreamscape && card.cardName && (
+      <span className="card-panel__card-name">{card.cardName}</span>
+    )}
+    <button
+      className="card-panel__remove"
+      onClick={onRemove}
+    >
+      &times;
+    </button>
+  </div>
+));
+CardThumbnail.displayName = "CardThumbnail";
+
+const DeckPreview = React.memo(({ deckCards, resolveCardUrl }) => {
+  const previews = (deckCards || []).slice(0, 4);
+  return (
+    <div className="card-panel__deck-thumbs">
+      {previews.map((card, i) => (
+        <div
+          key={card.public_id || i}
+          className="card-panel__deck-thumb"
+          style={{ zIndex: previews.length - i }}
+        >
+          {card.source === "dreamscape" ? (
+            <img src={resolveCardUrl(card)} alt="" />
+          ) : (
+            <AdvancedImage
+              cldImg={getCldImage(card.public_id, card.cloud_name)}
+              alt=""
+            />
+          )}
+        </div>
+      ))}
+      {previews.length === 0 && (
+        <div className="card-panel__deck-thumb card-panel__deck-thumb--empty" />
+      )}
+    </div>
+  );
+});
+DeckPreview.displayName = "DeckPreview";
+
+const DeckItem = React.memo(({ deck, isDropTarget, onLoad, onDragOver, onDragLeave, onDrop, onPublish, onDelete, publishingDeckId, publishError, resolveCardUrl }) => (
+  <div
+    className={`card-panel__deck-item${isDropTarget ? " card-panel__deck-item--drop" : ""}${deck.isDreambook ? " card-panel__deck-item--dreambook" : ""}`}
+    onClick={onLoad}
+    onDragOver={onDragOver}
+    onDragLeave={onDragLeave}
+    onDrop={onDrop}
+    title={deck.isDreambook ? "Click to load your Dreambook journal" : "Click to load \u2022 Drag cards here to add"}
+  >
+    <DeckPreview deckCards={deck.cards} resolveCardUrl={resolveCardUrl} />
+    <div className="card-panel__deck-info">
+      <span className="card-panel__deck-name">
+        {deck.isDreambook && <span className="card-panel__deck-dreambook-icon">{"\u263D"} </span>}
+        {deck.name}
+      </span>
+      <span className="card-panel__deck-meta">
+        {deck.cards ? deck.cards.length : 0} cards
+        {deck.spreadType && <> &middot; {deck.spreadType}</>}
+        {deck.isDreambook && <> &middot; auto</>}
+      </span>
+    </div>
+    {deck.tgcShopUrl ? (
+      <a
+        className="card-panel__deck-buy"
+        href={deck.tgcShopUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        title="Buy this deck on The Game Crafter"
+      >
+        Buy Deck
+      </a>
+    ) : (
+      <button
+        className={`card-panel__deck-publish${publishingDeckId === deck.id ? " card-panel__deck-publish--loading" : ""}`}
+        onClick={onPublish}
+        disabled={publishingDeckId === deck.id}
+        title="Publish to The Game Crafter"
+      >
+        {publishingDeckId === deck.id ? "Publishing\u2026" : "\u2726 Publish"}
+      </button>
+    )}
+    {publishError && publishError.deckId === deck.id && (
+      <span className="card-panel__deck-publish-error" title={publishError.message}>
+        {publishError.message.length > 40 ? publishError.message.slice(0, 40) + "\u2026" : publishError.message}
+      </span>
+    )}
+    {!deck.isDreambook && (
+      <button
+        className="card-panel__deck-delete"
+        onClick={onDelete}
+        title="Delete deck"
+      >
+        &times;
+      </button>
+    )}
+  </div>
+));
+DeckItem.displayName = "DeckItem";
+
+const DreamscapeCardItem = React.memo(({ card, onDragStart, onDragEnd }) => (
+  <div
+    className="card-panel__deck-dream-card"
+    draggable
+    onDragStart={onDragStart}
+    onDragEnd={onDragEnd}
+    title={card.cardName || "Dreamscape card"}
+  >
+    <img src={card.imageUrl} alt={card.cardName || ""} />
+    {card.cardName && (
+      <span className="card-panel__deck-dream-name">{card.cardName}</span>
+    )}
+  </div>
+));
+DreamscapeCardItem.displayName = "DreamscapeCardItem";
+
 const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, onDockDragStart, onDockDragEnd, prefs, setPref }, ref) => {
   const { user } = useCurrentUser();
   const userId = user ? user.id : null;
@@ -35,9 +171,7 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
   const [dragOver, setDragOver] = useState(false);
   const [showSpread, setShowSpread] = useState(false);
   const [spreadType, setSpreadType] = useState(prefs ? prefs.spreadType : "three");
-  const [lightboxCard, setLightboxCard] = useState(null);
-  const [lightboxLabel, setLightboxLabel] = useState(null);
-  const [lightboxSublabel, setLightboxSublabel] = useState(null);
+  const [lightbox, setLightbox] = useState({ card: null, label: null, sublabel: null });
   const [activeTab, setActiveTab] = useState("hand");
   const [savingDeck, setSavingDeck] = useState(false);
   const [deckName, setDeckName] = useState("");
@@ -126,17 +260,17 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
     },
   }));
 
-  const handleDragOver = (e) => {
+  const handleDragOver = useCallback((e) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "copy";
     setDragOver(true);
-  };
+  }, []);
 
-  const handleDragLeave = () => {
+  const handleDragLeave = useCallback(() => {
     setDragOver(false);
-  };
+  }, []);
 
-  const handleDrop = (e) => {
+  const handleDrop = useCallback((e) => {
     e.preventDefault();
     setDragOver(false);
     try {
@@ -153,12 +287,12 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
       if (setPref) setPref("dockOpen", true);
     }
     setActiveTab("hand");
-  };
+  }, [cards, open, onCollect, onToggle, setPref]);
 
-  const removeCard = (public_id) => {
+  const removeCard = useCallback((public_id) => {
     setCards((prev) => prev.filter((c) => c.public_id !== public_id));
     onUncollect && onUncollect(public_id);
-  };
+  }, [onUncollect]);
 
   const handleLoadDeck = useCallback((deckCards, deckSpreadType) => {
     setCards(deckCards);
@@ -166,17 +300,19 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
     if (setPref) setPref("spreadType", deckSpreadType);
   }, [setPref]);
 
-  const handleCardClick = (card) => {
+  const handleCardClick = useCallback((card) => {
     const layout = SPREAD_LAYOUTS[spreadType];
     const index = cards.indexOf(card);
     const position = layout && layout.positions[index];
-    setLightboxCard(card);
-    setLightboxLabel(position ? position.label : null);
-    setLightboxSublabel(position ? position.sublabel : null);
-  };
+    setLightbox({
+      card,
+      label: position ? position.label : null,
+      sublabel: position ? position.sublabel : null,
+    });
+  }, [spreadType, cards]);
 
   // Deck operations
-  const handleSaveDeck = async () => {
+  const handleSaveDeck = useCallback(async () => {
     if (!deckName.trim() || !userId) return;
     await db.transact(
       db.tx.decks[id()].update({
@@ -189,14 +325,14 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
     );
     setDeckName("");
     setSavingDeck(false);
-  };
+  }, [deckName, userId, spreadType, cards]);
 
-  const handleDeleteDeck = async (e, deckId) => {
+  const handleDeleteDeck = useCallback(async (e, deckId) => {
     e.stopPropagation();
     await db.transact(db.tx.decks[deckId].delete());
-  };
+  }, []);
 
-  const handleLoadSavedDeck = (deck) => {
+  const handleLoadSavedDeck = useCallback((deck) => {
     const resolved = (deck.cards || []).map((c) =>
       c.imagePath && fileUrlMap[c.imagePath] ? { ...c, imageUrl: fileUrlMap[c.imagePath] } : c
     );
@@ -205,9 +341,9 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
     setSpreadType(st);
     if (setPref) setPref("spreadType", st);
     setActiveTab("hand");
-  };
+  }, [fileUrlMap, setPref]);
 
-  const handlePublishDeck = async (e, deck) => {
+  const handlePublishDeck = useCallback(async (e, deck) => {
     e.stopPropagation();
     setPublishingDeckId(deck.id);
     setPublishError(null);
@@ -231,10 +367,10 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
     } finally {
       setPublishingDeckId(null);
     }
-  };
+  }, [fileUrlMap]);
 
   // Drop card onto a specific deck
-  const handleDeckDrop = async (e, deck) => {
+  const handleDeckDrop = useCallback(async (e, deck) => {
     e.preventDefault();
     e.stopPropagation();
     setDropTargetDeck(null);
@@ -250,89 +386,13 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
     } catch {
       return;
     }
-  };
+  }, []);
 
   // Resolve card image URL — prefers fresh fileUrlMap for imagePath cards
   const resolveCardUrl = useCallback((card) => {
     if (card.imagePath && fileUrlMap[card.imagePath]) return fileUrlMap[card.imagePath];
     return card.imageUrl;
   }, [fileUrlMap]);
-
-  const renderCard = (card) => {
-    const isDreamscape = card.source === "dreamscape";
-    const imgUrl = resolveCardUrl(card);
-    return (
-      <div
-        key={card.public_id}
-        className={`card-panel__card${isDreamscape ? " card-panel__card--dreamscape" : ""}`}
-        draggable
-        onDragStart={(e) => {
-          e.dataTransfer.setData(
-            "application/json",
-            JSON.stringify({ ...card, imageUrl: imgUrl, fromDock: true })
-          );
-          e.dataTransfer.effectAllowed = "move";
-          onDockDragStart && onDockDragStart();
-        }}
-        onDragEnd={(e) => {
-          onDockDragEnd && onDockDragEnd();
-          if (e.dataTransfer.dropEffect === "move") {
-            removeCard(card.public_id);
-          }
-        }}
-        onClick={() => onNavigate && onNavigate(card.slideIndex)}
-        title={isDreamscape ? card.cardName || "Dreamscape card" : "Click to focus"}
-      >
-        {isDreamscape ? (
-          <img src={imgUrl} alt={card.cardName || "Dreamscape card"} />
-        ) : (
-          <AdvancedImage
-            cldImg={getCldImage(card.public_id, card.cloud_name)}
-            alt={card.public_id}
-          />
-        )}
-        {isDreamscape && card.cardName && (
-          <span className="card-panel__card-name">{card.cardName}</span>
-        )}
-        <button
-          className="card-panel__remove"
-          onClick={(e) => {
-            e.stopPropagation();
-            removeCard(card.public_id);
-          }}
-        >
-          &times;
-        </button>
-      </div>
-    );
-  };
-
-  const renderDeckPreview = (deckCards) => {
-    const previews = (deckCards || []).slice(0, 4);
-    return (
-      <div className="card-panel__deck-thumbs">
-        {previews.map((card, i) => (
-          <div
-            key={card.public_id || i}
-            className="card-panel__deck-thumb"
-            style={{ zIndex: previews.length - i }}
-          >
-            {card.source === "dreamscape" ? (
-              <img src={resolveCardUrl(card)} alt="" />
-            ) : (
-              <AdvancedImage
-                cldImg={getCldImage(card.public_id, card.cloud_name)}
-                alt=""
-              />
-            )}
-          </div>
-        ))}
-        {previews.length === 0 && (
-          <div className="card-panel__deck-thumb card-panel__deck-thumb--empty" />
-        )}
-      </div>
-    );
-  };
 
   const sortedDecks = useMemo(() =>
     [...decks].sort((a, b) => {
@@ -344,9 +404,109 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
   );
   const currentLayout = SPREAD_LAYOUTS[spreadType];
 
-  // ─── Tab Content Renderers ───
+  // ─── Stable callbacks for memoized sub-components ───
 
-  const renderHandTab = () => (
+  const handleCardDragStart = useCallback((e, card, imgUrl) => {
+    e.dataTransfer.setData(
+      "application/json",
+      JSON.stringify({ ...card, imageUrl: imgUrl, fromDock: true })
+    );
+    e.dataTransfer.effectAllowed = "move";
+    onDockDragStart && onDockDragStart();
+  }, [onDockDragStart]);
+
+  const handleCardDragEnd = useCallback((e, publicId) => {
+    onDockDragEnd && onDockDragEnd();
+    if (e.dataTransfer.dropEffect === "move") {
+      removeCard(publicId);
+    }
+  }, [onDockDragEnd, removeCard]);
+
+  const handleCardNavigate = useCallback((slideIndex) => {
+    onNavigate && onNavigate(slideIndex);
+  }, [onNavigate]);
+
+  const handleCardRemove = useCallback((e, publicId) => {
+    e.stopPropagation();
+    removeCard(publicId);
+  }, [removeCard]);
+
+  const handleDreamDragStart = useCallback((e, card) => {
+    e.dataTransfer.setData(
+      "application/json",
+      JSON.stringify({ ...card, fromCollection: true })
+    );
+    e.dataTransfer.effectAllowed = "copy";
+    onDockDragStart && onDockDragStart();
+  }, [onDockDragStart]);
+
+  const handleDreamDragEnd = useCallback(() => {
+    onDockDragEnd && onDockDragEnd();
+  }, [onDockDragEnd]);
+
+  const handleDeckItemDragOver = useCallback((e, deckId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDropTargetDeck(deckId);
+  }, []);
+
+  const handleDeckItemDragLeave = useCallback(() => {
+    setDropTargetDeck(null);
+  }, []);
+
+  const closeLightbox = useCallback(() => {
+    setLightbox({ card: null, label: null, sublabel: null });
+  }, []);
+
+  const openSpread = useCallback(() => setShowSpread(true), []);
+  const closeSpread = useCallback(() => setShowSpread(false), []);
+
+  const handleSpreadChange = useCallback((st) => {
+    setSpreadType(st);
+    if (setPref) setPref("spreadType", st);
+  }, [setPref]);
+
+  const handleAddCard = useCallback((cardData, atIndex) => {
+    setCards((prev) => {
+      if (prev.some((c) => c.public_id === cardData.public_id)) return prev;
+      if (typeof atIndex === "number" && atIndex >= 0) {
+        const next = [...prev];
+        next.splice(atIndex, 0, cardData);
+        return next;
+      }
+      return [...prev, cardData];
+    });
+  }, []);
+
+  const handleToggle = useCallback(() => {
+    const next = !open;
+    setOpen(next);
+    onToggle && onToggle(next);
+    if (setPref) setPref("dockOpen", next);
+  }, [open, onToggle, setPref]);
+
+  const handleToggleDragOver = useCallback((e) => {
+    e.preventDefault();
+    if (!open) {
+      setOpen(true);
+      onToggle && onToggle(true);
+      if (setPref) setPref("dockOpen", true);
+    }
+  }, [open, onToggle, setPref]);
+
+  const handleSetSpreadType = useCallback((key) => {
+    setSpreadType(key);
+    if (setPref) setPref("spreadType", key);
+  }, [setPref]);
+
+  const cancelSaveDeck = useCallback(() => {
+    setSavingDeck(false);
+    setDeckName("");
+  }, []);
+
+  // ─── Memoized Tab Content ───
+
+  const handTab = useMemo(() => (
     <div className="card-panel__tab-content card-panel__tab-content--hand">
       {cards.length === 0 ? (
         <div className="card-panel__empty">
@@ -355,14 +515,29 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
         </div>
       ) : (
         <div className="card-panel__hand-scroll">
-          {cards.map(renderCard)}
+          {cards.map((card) => {
+            const isDreamscape = card.source === "dreamscape";
+            const imgUrl = resolveCardUrl(card);
+            return (
+              <CardThumbnail
+                key={card.public_id}
+                card={card}
+                isDreamscape={isDreamscape}
+                imgUrl={imgUrl}
+                onDragStart={(e) => handleCardDragStart(e, card, imgUrl)}
+                onDragEnd={(e) => handleCardDragEnd(e, card.public_id)}
+                onClick={() => handleCardNavigate(card.slideIndex)}
+                onRemove={(e) => handleCardRemove(e, card.public_id)}
+              />
+            );
+          })}
         </div>
       )}
       <PhysicalCardsHint cardCount={cards.length} />
     </div>
-  );
+  ), [cards, resolveCardUrl, handleCardDragStart, handleCardDragEnd, handleCardNavigate, handleCardRemove]);
 
-  const renderDecksTab = () => (
+  const decksTab = useMemo(() => (
     <div className="card-panel__tab-content card-panel__tab-content--decks">
       {!userId ? (
         <div className="card-panel__decks-signin">
@@ -403,7 +578,7 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
                 </button>
                 <button
                   className="card-panel__decks-cancel"
-                  onClick={() => { setSavingDeck(false); setDeckName(""); }}
+                  onClick={cancelSaveDeck}
                 >
                   &times;
                 </button>
@@ -419,67 +594,20 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
               </div>
             )}
             {sortedDecks.map((deck) => (
-              <div
+              <DeckItem
                 key={deck.id}
-                className={`card-panel__deck-item${dropTargetDeck === deck.id ? " card-panel__deck-item--drop" : ""}${deck.isDreambook ? " card-panel__deck-item--dreambook" : ""}`}
-                onClick={() => handleLoadSavedDeck(deck)}
-                onDragOver={deck.isDreambook ? undefined : (e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setDropTargetDeck(deck.id);
-                }}
-                onDragLeave={deck.isDreambook ? undefined : () => setDropTargetDeck(null)}
+                deck={deck}
+                isDropTarget={dropTargetDeck === deck.id}
+                onLoad={() => handleLoadSavedDeck(deck)}
+                onDragOver={deck.isDreambook ? undefined : (e) => handleDeckItemDragOver(e, deck.id)}
+                onDragLeave={deck.isDreambook ? undefined : handleDeckItemDragLeave}
                 onDrop={deck.isDreambook ? undefined : (e) => handleDeckDrop(e, deck)}
-                title={deck.isDreambook ? "Click to load your Dreambook journal" : "Click to load \u2022 Drag cards here to add"}
-              >
-                {renderDeckPreview(deck.cards)}
-                <div className="card-panel__deck-info">
-                  <span className="card-panel__deck-name">
-                    {deck.isDreambook && <span className="card-panel__deck-dreambook-icon">{"\u263D"} </span>}
-                    {deck.name}
-                  </span>
-                  <span className="card-panel__deck-meta">
-                    {deck.cards ? deck.cards.length : 0} cards
-                    {deck.spreadType && <> &middot; {deck.spreadType}</>}
-                    {deck.isDreambook && <> &middot; auto</>}
-                  </span>
-                </div>
-                {deck.tgcShopUrl ? (
-                  <a
-                    className="card-panel__deck-buy"
-                    href={deck.tgcShopUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    title="Buy this deck on The Game Crafter"
-                  >
-                    Buy Deck
-                  </a>
-                ) : (
-                  <button
-                    className={`card-panel__deck-publish${publishingDeckId === deck.id ? " card-panel__deck-publish--loading" : ""}`}
-                    onClick={(e) => handlePublishDeck(e, deck)}
-                    disabled={publishingDeckId === deck.id}
-                    title="Publish to The Game Crafter"
-                  >
-                    {publishingDeckId === deck.id ? "Publishing\u2026" : "\u2726 Publish"}
-                  </button>
-                )}
-                {publishError && publishError.deckId === deck.id && (
-                  <span className="card-panel__deck-publish-error" title={publishError.message}>
-                    {publishError.message.length > 40 ? publishError.message.slice(0, 40) + "\u2026" : publishError.message}
-                  </span>
-                )}
-                {!deck.isDreambook && (
-                  <button
-                    className="card-panel__deck-delete"
-                    onClick={(e) => handleDeleteDeck(e, deck.id)}
-                    title="Delete deck"
-                  >
-                    &times;
-                  </button>
-                )}
-              </div>
+                onPublish={(e) => handlePublishDeck(e, deck)}
+                onDelete={(e) => handleDeleteDeck(e, deck.id)}
+                publishingDeckId={publishingDeckId}
+                publishError={publishError}
+                resolveCardUrl={resolveCardUrl}
+              />
             ))}
           </div>
 
@@ -491,28 +619,12 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
               </div>
               <div className="card-panel__decks-dreamscape-grid">
                 {resolvedDreamCards.map((card) => (
-                  <div
+                  <DreamscapeCardItem
                     key={card.public_id}
-                    className="card-panel__deck-dream-card"
-                    draggable
-                    onDragStart={(e) => {
-                      e.dataTransfer.setData(
-                        "application/json",
-                        JSON.stringify({ ...card, fromCollection: true })
-                      );
-                      e.dataTransfer.effectAllowed = "copy";
-                      onDockDragStart && onDockDragStart();
-                    }}
-                    onDragEnd={() => {
-                      onDockDragEnd && onDockDragEnd();
-                    }}
-                    title={card.cardName || "Dreamscape card"}
-                  >
-                    <img src={card.imageUrl} alt={card.cardName || ""} />
-                    {card.cardName && (
-                      <span className="card-panel__deck-dream-name">{card.cardName}</span>
-                    )}
-                  </div>
+                    card={card}
+                    onDragStart={(e) => handleDreamDragStart(e, card)}
+                    onDragEnd={handleDreamDragEnd}
+                  />
                 ))}
               </div>
             </div>
@@ -520,9 +632,13 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
         </>
       )}
     </div>
-  );
+  ), [userId, savingDeck, deckName, cards.length, sortedDecks, dropTargetDeck,
+      publishingDeckId, publishError, resolvedDreamCards, resolveCardUrl,
+      handleSaveDeck, cancelSaveDeck, handleLoadSavedDeck, handleDeckItemDragOver,
+      handleDeckItemDragLeave, handleDeckDrop, handlePublishDeck, handleDeleteDeck,
+      handleDreamDragStart, handleDreamDragEnd]);
 
-  const renderSpreadTab = () => (
+  const spreadTab = useMemo(() => (
     <div className="card-panel__tab-content card-panel__tab-content--spread">
       {/* Spread type selector as visual cards */}
       <div className="card-panel__spread-picker">
@@ -530,7 +646,7 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
           <button
             key={key}
             className={`card-panel__spread-option${spreadType === key ? " card-panel__spread-option--active" : ""}`}
-            onClick={() => { setSpreadType(key); if (setPref) setPref("spreadType", key); }}
+            onClick={() => handleSetSpreadType(key)}
           >
             <span className="card-panel__spread-option-name">{layout.name}</span>
             <span className="card-panel__spread-option-count">
@@ -561,33 +677,21 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
       {/* Open Spread View button */}
       <button
         className="card-panel__spread-btn"
-        onClick={() => setShowSpread(true)}
+        onClick={openSpread}
         disabled={cards.length === 0}
       >
         Open Spread View
       </button>
     </div>
-  );
+  ), [spreadType, currentLayout, cards.length, handleSetSpreadType, openSpread]);
 
   return (
     <>
       <div className={`card-panel ${open ? "card-panel--open" : ""}`}>
         <button
           className="card-panel__toggle"
-          onClick={() => {
-            const next = !open;
-            setOpen(next);
-            onToggle && onToggle(next);
-            if (setPref) setPref("dockOpen", next);
-          }}
-          onDragOver={(e) => {
-            e.preventDefault();
-            if (!open) {
-              setOpen(true);
-              onToggle && onToggle(true);
-              if (setPref) setPref("dockOpen", true);
-            }
-          }}
+          onClick={handleToggle}
+          onDragOver={handleToggleDragOver}
         >
           <span className="card-panel__toggle-arrow">
             {open ? "\u25BC" : "\u25B2"}
@@ -622,9 +726,9 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
-          {activeTab === "hand" && renderHandTab()}
-          {activeTab === "decks" && renderDecksTab()}
-          {activeTab === "spread" && renderSpreadTab()}
+          {activeTab === "hand" && handTab}
+          {activeTab === "decks" && decksTab}
+          {activeTab === "spread" && spreadTab}
         </div>
       </div>
 
@@ -632,34 +736,25 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
         <SpreadView
           cards={cards}
           spreadType={spreadType}
-          onClose={() => setShowSpread(false)}
+          onClose={closeSpread}
           onCardClick={handleCardClick}
           onReorder={setCards}
-          onSpreadChange={(st) => { setSpreadType(st); if (setPref) setPref("spreadType", st); }}
+          onSpreadChange={handleSpreadChange}
           onLoadDeck={handleLoadDeck}
           userId={userId}
           collectionCards={resolvedDreamCards}
-          onAddCard={(cardData, atIndex) => {
-            if (cards.some((c) => c.public_id === cardData.public_id)) return;
-            if (typeof atIndex === "number" && atIndex >= 0) {
-              setCards((prev) => {
-                const next = [...prev];
-                next.splice(atIndex, 0, cardData);
-                return next;
-              });
-            } else {
-              setCards((prev) => [...prev, cardData]);
-            }
-          }}
+          onAddCard={handleAddCard}
         />
       )}
 
-      <Lightbox
-        card={lightboxCard}
-        label={lightboxLabel}
-        sublabel={lightboxSublabel}
-        onClose={() => setLightboxCard(null)}
-      />
+      {lightbox.card && (
+        <Lightbox
+          card={lightbox.card}
+          label={lightbox.label}
+          sublabel={lightbox.sublabel}
+          onClose={closeLightbox}
+        />
+      )}
     </>
   );
 });

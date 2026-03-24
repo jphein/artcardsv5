@@ -115,5 +115,7 @@ export default function usePreferences() {
     };
   }, []);
 
-  return [prefs, setPref];
+  // Memoize the return tuple to avoid creating a new array reference every render,
+  // which would cause unnecessary re-renders in consuming components
+  return useMemo(() => [prefs, setPref], [prefs, setPref]);
 }

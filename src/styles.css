@@ -254,6 +254,7 @@ body {
 }
 
 .top-bar__fullscreen {
+  touch-action: manipulation;
   color: var(--text-secondary);
   background: linear-gradient(160deg, var(--bg-elevated) 0%, var(--bg-base) 50%, var(--bg-elevated) 100%);
   border: 1px solid var(--border-primary);
@@ -266,8 +267,9 @@ body {
   letter-spacing: 2px;
   text-transform: uppercase;
   box-shadow: 0 0 12px rgba(201, 168, 76, 0.25), inset 0 0 10px rgba(201, 168, 76, 0.05);
-  transition: all 0.3s ease;
+  transition: color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
   backdrop-filter: blur(10px);
+  will-change: transform;
   position: relative;
   overflow: hidden;
 }

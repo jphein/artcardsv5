@@ -9,6 +9,10 @@ import React, {
 } from "react";
 import { CloudinaryImage } from "@cloudinary/url-gen";
 import { AdvancedImage } from "@cloudinary/react";
+import { scale } from "@cloudinary/url-gen/actions/resize";
+import { format, quality } from "@cloudinary/url-gen/actions/delivery";
+import { auto } from "@cloudinary/url-gen/qualifiers/format";
+import { auto as autoQuality } from "@cloudinary/url-gen/qualifiers/quality";
 import { db } from "./db";
 import CardBack from "./card-back";
 import { useHints } from "./hints";
@@ -18,13 +22,21 @@ const CLOUD_NAME = "dqm00mcjs";
 const TAG = "carousel";
 
 // CloudinaryImage cache — prevents re-creating instances on every render
+// Applies optimized transformations: auto format (webp/avif), auto quality, and 320px width (2x for 160px display)
 const cldImageCache = new Map();
 function getCldImage(publicId) {
   if (!cldImageCache.has(publicId)) {
-    cldImageCache.set(publicId, new CloudinaryImage(publicId, { cloudName: CLOUD_NAME }));
+    const cldImg = new CloudinaryImage(publicId, { cloudName: CLOUD_NAME });
+    cldImg.resize(scale().width(320));
+    cldImg.delivery(format(auto()));
+    cldImg.delivery(quality(autoQuality()));
+    cldImageCache.set(publicId, cldImg);
   }
   return cldImageCache.get(publicId);
 }
+
+// Fallback placeholder for broken dreamscape images (1x1 transparent gif)
+const BROKEN_IMG_FALLBACK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
 function shuffle(arr) {
   const a = [...arr];
@@ -204,8 +216,16 @@ const CardTable = forwardRef((props, ref) => {
   }, [recomputePositions]);
 
   useEffect(() => {
-    window.addEventListener("resize", recomputePositions);
-    return () => window.removeEventListener("resize", recomputePositions);
+    let rafId;
+    const onResize = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(recomputePositions);
+    };
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      cancelAnimationFrame(rafId);
+    };
   }, [recomputePositions]);
 
   // Start dealing when user taps the deck
@@ -266,6 +286,10 @@ const CardTable = forwardRef((props, ref) => {
       el,
     };
 
+    // Cache dock elements at drag start to avoid querySelector per move/up event
+    const cachedDockEl = document.querySelector(".card-panel");
+    const cachedTrayEl = document.querySelector(".card-panel__tray");
+
     const onMove = (ev) => {
       const d = dragRef.current;
       if (!d.el) return;
@@ -301,10 +325,9 @@ const CardTable = forwardRef((props, ref) => {
       d.el.style.transform = d.el.dataset.dragTransform || "";
 
       // Peek the dock open when cursor is near the bottom
-      const dockEl = document.querySelector(".card-panel");
-      if (dockEl) {
+      if (cachedDockEl) {
         const nearBottom = ev.clientY > window.innerHeight - 150;
-        dockEl.classList.toggle("card-panel--peek", nearBottom);
+        cachedDockEl.classList.toggle("card-panel--peek", nearBottom);
       }
     };
 
@@ -312,8 +335,7 @@ const CardTable = forwardRef((props, ref) => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
       // Remove dock peek
-      const dockEl = document.querySelector(".card-panel");
-      if (dockEl) dockEl.classList.remove("card-panel--peek");
+      if (cachedDockEl) cachedDockEl.classList.remove("card-panel--peek");
       const d = dragRef.current;
 
       if (d.active && d.el && tableRef.current) {
@@ -342,23 +364,20 @@ const CardTable = forwardRef((props, ref) => {
           return next;
         });
 
-        // Check dock drop
+        // Check dock drop using cached tray element
         const imgs = imagesRef.current;
-        if (imgs && props.onCardToDock) {
-          const dockEl = document.querySelector(".card-panel__tray");
-          if (dockEl) {
-            const dockRect = dockEl.getBoundingClientRect();
-            if (
-              ev.clientX >= dockRect.left && ev.clientX <= dockRect.right &&
-              ev.clientY >= dockRect.top && ev.clientY <= dockRect.bottom
-            ) {
-              const img = imgs[index];
-              if (img) {
-                const cardData = img.source === "dreamscape"
-                  ? { public_id: img.public_id, imageUrl: img.imageUrl, cardName: img.cardName, cardDescription: img.cardDescription, source: "dreamscape", slideIndex: index }
-                  : { public_id: img.public_id, cloud_name: CLOUD_NAME, slideIndex: index };
-                props.onCardToDock(cardData);
-              }
+        if (imgs && props.onCardToDock && cachedTrayEl) {
+          const dockRect = cachedTrayEl.getBoundingClientRect();
+          if (
+            ev.clientX >= dockRect.left && ev.clientX <= dockRect.right &&
+            ev.clientY >= dockRect.top && ev.clientY <= dockRect.bottom
+          ) {
+            const img = imgs[index];
+            if (img) {
+              const cardData = img.source === "dreamscape"
+                ? { public_id: img.public_id, imageUrl: img.imageUrl, cardName: img.cardName, cardDescription: img.cardDescription, source: "dreamscape", slideIndex: index }
+                : { public_id: img.public_id, cloud_name: CLOUD_NAME, slideIndex: index };
+              props.onCardToDock(cardData);
             }
           }
         }
@@ -457,9 +476,55 @@ const CardTable = forwardRef((props, ref) => {
   }));
 
   // Non-passive wheel listener: scroll = scale, Shift+scroll = rotate
+  // Coalesces rapid wheel events into a single state update per animation frame
   useEffect(() => {
     const table = tableRef.current;
     if (!table) return;
+
+    let wheelRaf = null;
+    // Accumulated deltas per card, keyed by publicId
+    const pendingScale = {};   // publicId → accumulated delta
+    const pendingRotation = {}; // publicId → { idx, accumulated rotDelta }
+    let pendingFrontId = null;
+
+    const flushWheel = () => {
+      wheelRaf = null;
+
+      // Apply accumulated scale changes
+      const scaleEntries = Object.entries(pendingScale);
+      if (scaleEntries.length > 0) {
+        setScaleMap((prev) => {
+          const next = { ...prev };
+          for (const [pid, delta] of scaleEntries) {
+            const current = next[pid] || 1;
+            next[pid] = Math.min(2.0, Math.max(0.5, current + delta));
+          }
+          return next;
+        });
+        // Clear after applying
+        for (const key of Object.keys(pendingScale)) delete pendingScale[key];
+      }
+
+      // Apply accumulated rotation changes
+      const rotEntries = Object.entries(pendingRotation);
+      if (rotEntries.length > 0) {
+        setPositions((prev) => {
+          const next = [...prev];
+          for (const [, { idx, delta }] of rotEntries) {
+            if (next[idx]) {
+              next[idx] = { ...next[idx], rotation: (next[idx].rotation || 0) + delta };
+            }
+          }
+          return next;
+        });
+        for (const key of Object.keys(pendingRotation)) delete pendingRotation[key];
+      }
+
+      if (pendingFrontId) {
+        bringToFront(pendingFrontId);
+        pendingFrontId = null;
+      }
+    };
 
     const onWheel = (e) => {
       let cardEl = e.target.closest(".card-table__card");
@@ -471,33 +536,35 @@ const CardTable = forwardRef((props, ref) => {
       if (!publicId) return;
 
       if (e.shiftKey) {
-        // Shift+scroll = rotate
+        // Shift+scroll = rotate — accumulate
         const rotDelta = e.deltaY < 0 ? -5 : 5;
         const imgs = imagesRef.current;
         if (!imgs) return;
         const idx = imgs.findIndex(img => img.public_id === publicId);
         if (idx === -1) return;
-        setPositions((prev) => {
-          const next = [...prev];
-          if (next[idx]) {
-            next[idx] = { ...next[idx], rotation: (next[idx].rotation || 0) + rotDelta };
-          }
-          return next;
-        });
+        if (pendingRotation[publicId]) {
+          pendingRotation[publicId].delta += rotDelta;
+        } else {
+          pendingRotation[publicId] = { idx, delta: rotDelta };
+        }
       } else {
-        // Normal scroll = scale
+        // Normal scroll = scale — accumulate
         const delta = e.deltaY < 0 ? 0.05 : -0.05;
-        setScaleMap((prev) => {
-          const current = prev[publicId] || 1;
-          const next = Math.min(2.0, Math.max(0.5, current + delta));
-          return { ...prev, [publicId]: next };
-        });
+        pendingScale[publicId] = (pendingScale[publicId] || 0) + delta;
       }
-      bringToFront(publicId);
+      pendingFrontId = publicId;
+
+      // Schedule a single flush per animation frame
+      if (!wheelRaf) {
+        wheelRaf = requestAnimationFrame(flushWheel);
+      }
     };
 
     table.addEventListener("wheel", onWheel, { passive: false });
-    return () => table.removeEventListener("wheel", onWheel);
+    return () => {
+      table.removeEventListener("wheel", onWheel);
+      if (wheelRaf) cancelAnimationFrame(wheelRaf);
+    };
   }, [bringToFront]);
 
   // 3D tilt effect — sets CSS custom properties on hover for GPU-accelerated transforms
@@ -779,11 +846,24 @@ const CardTable = forwardRef((props, ref) => {
                     src={img.imageUrl}
                     alt={img.cardName || "Dreamscape card"}
                     className="card-table__dreamscape-img"
+                    loading="lazy"
+                    decoding="async"
+                    width={160}
+                    height={240}
+                    onError={(e) => {
+                      if (e.target.src !== BROKEN_IMG_FALLBACK) {
+                        e.target.src = BROKEN_IMG_FALLBACK;
+                      }
+                    }}
                   />
                 ) : (
                   <AdvancedImage
                     cldImg={getCldImage(img.public_id)}
                     alt={img.public_id}
+                    loading="lazy"
+                    decoding="async"
+                    width={160}
+                    height={240}
                   />
                 )}
               </span>

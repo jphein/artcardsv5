@@ -19,6 +19,7 @@
 .card-table__card {
   position: absolute;
   will-change: transform;
+  contain: layout style paint;
   perspective: 800px;
   /* Smooth animation when switching between layout modes */
   transition: left 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
@@ -69,6 +70,7 @@
 .card-table__card .card-table__card-front {
   display: block;
   position: relative;
+  touch-action: manipulation;
   width: 160px;
   border-radius: 8px;
   border: 2px solid #a67c00;
@@ -98,11 +100,7 @@
   transform: scale(1.15) translateY(-8px);
   border-color: #f0d875;
   z-index: 50;
-  box-shadow:
-    0 12px 25px rgba(0, 0, 0, 0.6),
-    0 0 20px rgba(240, 216, 117, 0.4),
-    0 0 40px rgba(201, 168, 76, 0.2),
-    inset 0 0 10px rgba(201, 168, 76, 0.05);
+  /* Hover glow handled by ::before pseudo (GPU-composited opacity animation) */
 }
 
 /* ─── Dragging on Table ─── */
@@ -255,11 +253,7 @@
 
 .card-table__card--dreamscape .card-table__card-front:hover {
   border-color: #a78bfa;
-  box-shadow:
-    0 12px 25px rgba(0, 0, 0, 0.6),
-    0 0 20px rgba(167, 139, 250, 0.4),
-    0 0 40px rgba(124, 58, 237, 0.2),
-    inset 0 0 10px rgba(167, 139, 250, 0.05);
+  /* Hover glow handled by ::before pseudo (GPU-composited opacity animation) */
 }
 
 .card-table__dreamscape-img {
@@ -302,6 +296,7 @@
   border: 1px solid;
   border-image: linear-gradient(180deg, #f0d875 0%, #c9a84c 50%, #f0d875 100%) 1;
   backdrop-filter: blur(10px);
+  will-change: transform;
   box-shadow:
     0 0 12px rgba(201, 168, 76, 0.2),
     inset 0 0 10px rgba(0, 0, 0, 0.3);
@@ -316,7 +311,8 @@
   background: transparent;
   border: 1px solid transparent;
   cursor: pointer;
-  transition: all 0.3s ease;
+  touch-action: manipulation;
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
   position: relative;
   overflow: hidden;
 }
@@ -325,7 +321,7 @@
   font-size: 18px;
   color: #a67c00;
   filter: drop-shadow(0 0 2px rgba(201, 168, 76, 0.3));
-  transition: all 0.3s ease;
+  transition: color 0.3s ease, filter 0.3s ease, transform 0.3s ease;
 }
 
 .card-table__mode-label {
@@ -336,6 +332,35 @@
   color: #8a7340;
   font-family: 'Cinzel', serif;
   transition: color 0.3s ease;
+}
+
+/* ─── Hover Glow Pseudo-Element (GPU-composited via opacity) ─── */
+.card-table__card .card-table__card-front::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 10px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  box-shadow:
+    0 12px 25px rgba(0, 0, 0, 0.6),
+    0 0 20px rgba(240, 216, 117, 0.4),
+    0 0 40px rgba(201, 168, 76, 0.2),
+    inset 0 0 10px rgba(201, 168, 76, 0.05);
+  z-index: -1;
+}
+
+.card-table__card .card-table__card-front:hover::before {
+  opacity: 1;
+}
+
+.card-table__card--dreamscape .card-table__card-front::before {
+  box-shadow:
+    0 12px 25px rgba(0, 0, 0, 0.6),
+    0 0 20px rgba(167, 139, 250, 0.4),
+    0 0 40px rgba(124, 58, 237, 0.2),
+    inset 0 0 10px rgba(167, 139, 250, 0.05);
 }
 
 /* Hover */
@@ -473,6 +498,7 @@
   top: 55%;
   left: 50%;
   transform: translate(-50%, -50%);
+  touch-action: manipulation;
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -599,6 +625,7 @@
   border-radius: 8px;
   border: 2px solid #a67c00;
   overflow: hidden;
+  contain: layout style paint;
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.4),
     0 0 6px rgba(201, 168, 76, 0.1);
