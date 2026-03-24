@@ -224,8 +224,10 @@ const CardPanel = forwardRef(({ onNavigate, onCollect, onUncollect, onToggle, on
       }
       await db.transact(db.tx.decks[deck.id].update({ tgcGameId: result.gameId, tgcShopUrl: result.shopUrl }));
     } catch (err) {
-      console.error("Publish deck failed:", err);
-      setPublishError({ deckId: deck.id, message: err.message || "Unknown error" });
+      const msg = err.message || "Unknown error";
+      console.error("Publish deck failed:", msg, err);
+      alert("Publish failed: " + msg);
+      setPublishError({ deckId: deck.id, message: msg });
       setTimeout(() => setPublishError(null), 8000);
     } finally {
       setPublishingDeckId(null);
