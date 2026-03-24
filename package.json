@@ -24,7 +24,9 @@
     "gh-pages": "^6.3.0"
   },
   "scripts": {
+    "prestart": "node scripts/version.js",
     "start": "react-scripts start",
+    "prebuild": "node scripts/version.js",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "predeploy": "npm run build",

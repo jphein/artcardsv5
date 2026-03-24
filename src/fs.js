@@ -9,6 +9,7 @@ import PhysicalCardsSeal from "./physical-cards";
 import HelpOverlay from "./help-overlay";
 import SettingsMenu from "./settings-menu";
 import usePreferences from "./use-preferences";
+import { VERSION_HASH, VERSION_NAME } from "./version-info";
 
 const FullScreenButton = ({ autoFullscreen }) => {
   const appContainerRef = useRef(null);
@@ -106,6 +107,7 @@ const FullScreenButton = ({ autoFullscreen }) => {
           <AuthButton />
         </div>
       </div>
+      <div className="version-seal">{VERSION_NAME} · {VERSION_HASH}</div>
     </div>
   );
 };

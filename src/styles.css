@@ -308,6 +308,30 @@ body {
   font-family: 'Cinzel', serif;
 }
 
+/* ─── Version Seal ─── */
+.version-seal {
+  position: fixed;
+  z-index: 2;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 2.5px;
+  color: rgba(201, 168, 76, 0.2);
+  text-shadow: 0 0 8px rgba(201, 168, 76, 0.08);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  animation: version-reveal 2.5s ease-out 1.5s forwards;
+}
+
+@keyframes version-reveal {
+  0% { opacity: 0; transform: translateX(-50%) translateY(4px); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
 /* ═══════════════════════════════════════════════════════
    Light Theme Overrides — prefers-color-scheme: light
    Warm parchment/cream aesthetic that complements the gold accents.

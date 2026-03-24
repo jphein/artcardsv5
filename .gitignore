@@ -7,6 +7,9 @@ node_modules
 build/
 .playwright-mcp/
 
+# Generated version file
+src/version-info.js
+
 # Screenshots and dev images
 *.jpeg
 *.png
