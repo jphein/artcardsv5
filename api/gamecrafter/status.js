@@ -1,6 +1,7 @@
 const TGC_BASE = "https://www.thegamecrafter.com/api";
 
 const ALLOWED_ORIGINS = [
+  "https://artcards.imaginalvision.com",
   "https://jphein.github.io",
   "http://localhost:3000",
 ];

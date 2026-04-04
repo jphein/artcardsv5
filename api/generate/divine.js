@@ -7,6 +7,7 @@ const { SignatureV4 } = require("@smithy/signature-v4");
 const { Sha256 } = require("@aws-crypto/sha256-js");
 
 const ALLOWED_ORIGINS = [
+  "https://artcards.imaginalvision.com",
   "https://jphein.github.io",
   "http://localhost:3000",
 ];

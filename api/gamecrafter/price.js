@@ -1,4 +1,5 @@
 const ALLOWED_ORIGINS = [
+  "https://artcards.imaginalvision.com",
   "https://jphein.github.io",
   "http://localhost:3000",
 ];
