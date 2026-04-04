@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "keywords": [],
-  "homepage": "https://jphein.github.io/artcardsv5",
+  "homepage": "https://artcards.imaginalvision.com",
   "main": "src/index.js",
   "dependencies": {
     "@aws-crypto/sha256-js": "^5.2.0",
