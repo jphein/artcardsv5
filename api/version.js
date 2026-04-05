@@ -26,6 +26,13 @@ const startTime = Date.now();
 const startISO = new Date().toISOString();
 
 function gitInfo() {
+  // Vercel provides these env vars at build time (frozen into the serverless bundle)
+  const sha = process.env.VERCEL_GIT_COMMIT_SHA;
+  const ref = process.env.VERCEL_GIT_COMMIT_REF;
+  if (sha) {
+    return { hash: sha.slice(0, 7), branch: ref || 'unknown', dirty: false };
+  }
+  // Fallback: try git (works locally, not on Vercel)
   const info = { hash: 'dev', branch: 'unknown', dirty: false };
   try {
     info.hash = execFileSync('git', ['rev-parse', '--short', 'HEAD'], { encoding: 'utf8' }).trim() || 'dev';
