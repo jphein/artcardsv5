@@ -31,7 +31,8 @@ jobs:
       - run: npm run build
         env:
           REACT_APP_INSTANTDB_ID: ${{ secrets.INSTANTDB_APP_ID }}
-          REACT_APP_GENERATE_API_URL: https://artcardsv5.vercel.app/api
+          REACT_APP_GENERATE_API_URL: https://artcards-api.jp5.workers.dev/api
+          REACT_APP_TGC_PROXY_URL: https://artcards-api.jp5.workers.dev/api/gamecrafter
 
       - uses: actions/configure-pages@v4
       - uses: actions/upload-pages-artifact@v3

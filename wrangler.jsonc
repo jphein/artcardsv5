@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "artcards-api",
+  "main": "worker/index.js",
+  "workers_dev": true,
+  "compatibility_date": "2025-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "AWS_REGION": "us-west-2"
+  }
+}

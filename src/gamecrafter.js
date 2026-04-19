@@ -1,4 +1,4 @@
-const PROXY_BASE = process.env.REACT_APP_TGC_PROXY_URL || 'https://artcardsv5.vercel.app/api/gamecrafter';
+const PROXY_BASE = process.env.REACT_APP_TGC_PROXY_URL || 'https://artcards-api.jp5.workers.dev/api/gamecrafter';
 
 function resolveImageUrl(card) {
   if (card.source === 'dreamscape' && card.imageUrl) {

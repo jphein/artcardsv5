@@ -7,8 +7,12 @@ node_modules
 build/
 .playwright-mcp/
 
-# Generated version file
+# Generated version files
 src/version-info.js
+worker/version-info.js
+
+# Cloudflare Worker build artifacts
+.wrangler/
 
 # Screenshots and dev images
 *.jpeg

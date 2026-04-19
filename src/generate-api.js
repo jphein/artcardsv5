@@ -1,10 +1,7 @@
 const getBaseUrl = () =>
-  process.env.REACT_APP_GENERATE_API_URL || window.location.origin + '/api';
+  process.env.REACT_APP_GENERATE_API_URL || 'https://artcards-api.jp5.workers.dev/api';
 
 async function request(path, body) {
-  if (!process.env.REACT_APP_GENERATE_API_URL) {
-    throw new Error('The dream realm is not yet configured. Set REACT_APP_GENERATE_API_URL to your Vercel API endpoint.');
-  }
   try {
     const res = await fetch(`${getBaseUrl()}${path}`, {
       method: 'POST',

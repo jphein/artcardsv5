@@ -21,7 +21,8 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
-    "gh-pages": "^6.3.0"
+    "gh-pages": "^6.3.0",
+    "wrangler": "^4.83.0"
   },
   "scripts": {
     "prestart": "node scripts/version.js",
@@ -32,7 +33,12 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
     "eject": "react-scripts eject",
-    "post-update": "yarn upgrade"
+    "post-update": "yarn upgrade",
+    "cf:version": "node scripts/worker-version.js",
+    "cf:dev": "npm run cf:version && wrangler dev",
+    "precf:deploy": "npm run cf:version",
+    "cf:deploy": "wrangler deploy",
+    "cf:tail": "wrangler tail"
   },
   "browserslist": [
     ">0.2%",
