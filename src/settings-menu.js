@@ -88,6 +88,7 @@ export default function SettingsMenu({ prefs, setPref }) {
               onClick={() => setPref("autoDeal", !prefs.autoDeal)}
               role="switch"
               aria-checked={prefs.autoDeal}
+              aria-label="Auto-Deal"
             />
           </div>
         </div>
@@ -97,6 +98,7 @@ export default function SettingsMenu({ prefs, setPref }) {
           <span className="settings-menu__label">Default Spread</span>
           <select
             className="settings-menu__select"
+            aria-label="Default Spread"
             value={prefs.spreadType}
             onChange={(e) => setPref("spreadType", e.target.value)}
           >

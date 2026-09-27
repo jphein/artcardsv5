@@ -44,7 +44,7 @@ const FullScreenButton = ({ autoFullscreen }) => {
   }, [autoFullscreen, requestFullscreen]);
 
   return (
-    <div ref={appContainerRef} className="app-container">
+    <main ref={appContainerRef} className="app-container">
       <FireApp />
       <Suspense fallback={<div className="card-table__loading">Loading...</div>}>
         {viewMode === "table" ? (
@@ -116,7 +116,7 @@ const FullScreenButton = ({ autoFullscreen }) => {
         </div>
       </div>
       <div className="version-seal">{VERSION_NAME} · {VERSION_HASH}</div>
-    </div>
+    </main>
   );
 };
 
