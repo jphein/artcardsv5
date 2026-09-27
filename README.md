@@ -49,3 +49,7 @@ index.js → PhoneDetector (mobile.js)
 - **Cloudinary** (`@cloudinary/react`, `@cloudinary/url-gen`) — image hosting and delivery
 - **react-spring-3d-carousel** — 3D carousel with spring physics
 - **GitHub Pages** — hosting via Actions workflow
+
+## License
+
+AGPL-3.0-or-later © 2023–2026 Jeffrey Pine Hein. See [LICENSE](LICENSE).
