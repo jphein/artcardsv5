@@ -81,15 +81,18 @@ index.js → App → PhoneDetector (mobile.js)
 
 Auth: Google OAuth + magic code email. Permissions: decks owner-only, others public-read.
 
-### Serverless API: Vercel + The Game Crafter
+### Serverless API: Cloudflare Worker (artcards-api) + The Game Crafter
 
 | Endpoint | Purpose |
 |----------|---------|
 | `POST /api/gamecrafter/publish` | Create TGC game, upload cards, publish |
 | `POST /api/gamecrafter/status` | Check publication status |
 | `POST /api/gamecrafter/price` | Estimate deck price |
+| `POST /api/generate/cast` | Image generation (Azure OpenAI) |
+| `POST /api/generate/divine` | Card metadata (AWS Bedrock Claude, SigV4) |
+| `GET /api/version` | realm-sigil version |
 
-Vercel env vars: `TGC_API_KEY`, `TGC_USERNAME`, `TGC_PASSWORD`.
+One Worker, `artcards-api` at https://artcards-api.jp5.workers.dev (`worker/index.js` routes; `wrangler.jsonc`; `npm run cf:dev` / `cf:deploy` / `cf:tail`). It replaced the Vercel functions on 2026-04-19 (fd22ca9). Worker secrets (`wrangler secret put`): `TGC_API_KEY`, `TGC_USERNAME`, `TGC_PASSWORD`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` (`AWS_REGION` is a plain var). `api/` and `vercel.json` are the old Vercel copies, kept only as the April rollback; the Vercel project is being deleted (JP 2026-11-08), so they go next.
 
 ### Key Patterns
 
@@ -104,7 +107,8 @@ Vercel env vars: `TGC_API_KEY`, `TGC_USERNAME`, `TGC_PASSWORD`.
 
 ```
 REACT_APP_INSTANTDB_ID=<instantdb-app-id>
-REACT_APP_TGC_PROXY_URL=<vercel-api-url>     # Optional
+REACT_APP_TGC_PROXY_URL=<worker-url>/api/gamecrafter   # Optional; default https://artcards-api.jp5.workers.dev/api/gamecrafter
+REACT_APP_GENERATE_API_URL=<worker-url>/api            # Optional; default https://artcards-api.jp5.workers.dev/api
 ```
 
 ## Source Files
@@ -167,7 +171,7 @@ Single (1), Three Card (3), Four Elements (4), Five Card Cross (5), Freeform (un
 ## Deployment
 
 1. **GitHub Pages** (frontend): Auto-deploy on push to main via GitHub Actions.
-2. **Vercel** (API only): Hosts `api/gamecrafter/*` functions.
+2. **Cloudflare Worker** `artcards-api` (API only): `worker/*`, deployed with `npm run cf:deploy` (wrangler). The deploy workflow bakes the Worker URLs into the Pages build.
 
 External services: Cloudinary (cloud `dqm00mcjs`), InstantDB, The Game Crafter.
 
