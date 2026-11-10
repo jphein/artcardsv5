@@ -209,6 +209,14 @@ export default function HelpOverlay() {
                 </li>
               </ul>
             </div>
+
+            <div className="help-divider" />
+            <p className="help-credit">
+              Website by{" "}
+              <a href="https://techempower.org" target="_blank" rel="noopener noreferrer">
+                JP Hein, founder of TechEMPOWER
+              </a>
+            </p>
           </div>
         </>
       )}

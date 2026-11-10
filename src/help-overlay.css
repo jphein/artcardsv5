@@ -297,3 +297,24 @@
     transparent 100%
   );
 }
+
+/* ─── Credit ─── */
+
+.help-credit {
+  margin: 0;
+  font-size: 11px;
+  text-align: center;
+  color: #8a7340;
+}
+
+.help-credit a {
+  color: #c9a84c;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.help-credit a:hover,
+.help-credit a:focus-visible {
+  color: #f0d875;
+}
