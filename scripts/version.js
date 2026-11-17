@@ -62,4 +62,28 @@ export { VERSION_HASH, VERSION_NAME };
 `;
 
 fs.writeFileSync(outPath, content);
+
+// The realm-sigil static contract (JP 2026-11-17 05:07: every web project in status carries the sigil;
+// status.realm.watch CHECK sigil-coverage reads /version.json): build/ copies public/, so this lands at the site root.
+let branch = "unknown";
+let dirty = true;
+try {
+  branch = execFileSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], { encoding: "utf-8" }).trim();
+  dirty = execFileSync("git", ["status", "--porcelain", "--untracked-files=no"], { encoding: "utf-8" }).trim() !== "";
+} catch {
+  /* not a checkout: keep unknown / dirty */
+}
+const sigil = {
+  name: "artcards",
+  description: "Art Cards",
+  version: `${versionName} · ${shortHash}`,
+  hash: shortHash,
+  branch,
+  dirty,
+  built: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"),
+  realm: "tarot",
+  repo: "https://github.com/jphein/artcardsv5",
+  commit_url: shortHash === "dev" ? "" : `https://github.com/jphein/artcardsv5/commit/${shortHash}`,
+};
+fs.writeFileSync(path.join(__dirname, "..", "public", "version.json"), JSON.stringify(sigil, null, 2) + "\n");
 console.log(`Version: ${versionName} · ${shortHash}`);
