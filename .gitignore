@@ -10,6 +10,7 @@ build/
 # Generated version files
 src/version-info.js
 worker/version-info.js
+public/version.json
 
 # Cloudflare Worker build artifacts
 .wrangler/
